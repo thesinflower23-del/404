@@ -1,0 +1,77 @@
+/* ============================================
+   BestBuddies Pet Grooming - Staff Dashboard Styles
+   ============================================ */
+
+/* Staff Dashboard Specific Styles */
+.staff-dashboard-content {
+  padding: 2rem 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .staff-dashboard-content {
+    padding: 1rem 0;
+  }
+}
+
+/* ============================================
+   Mobile Phone Portrait (max 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+  .staff-dashboard-content {
+    padding: 0.75rem 0;
+  }
+
+  .card {
+    padding: 1rem !important;
+  }
+
+  .card-header {
+    padding: 0.75rem 0 !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .card-title {
+    font-size: 1.1rem !important;
+  }
+
+  .card-body {
+    padding: 0 !important;
+  }
+
+  .card-footer {
+    padding: 0.75rem 0 !important;
+    margin-top: 0.75rem !important;
+  }
+
+  .form-group {
+    margin-bottom: 0.75rem !important;
+  }
+
+  .form-label {
+    font-size: 0.95rem !important;
+  }
+
+  .form-input,
+  .form-select {
+    font-size: 16px !important;
+    padding: 0.75rem !important;
+  }
+
+  .btn {
+    font-size: 0.9rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  .btn-sm {
+    font-size: 0.8rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+}
+

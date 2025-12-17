@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Dashboard - BestBuddies Pet Grooming</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/customer-dashboard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="logo" href="index.html">
+        <img src="assets/logo.png" alt="BestBuddies logo" class="logo-mark">
+        <div class="logo-text">
+          <span class="logo-wordmark">BestBuddies Pet Grooming</span>
+        </div>
+      </a>
+      <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="reviews.html">Reviews</a></li>
+        <li><a href="policy.html">Policy</a></li>
+        <li><a href="#" onclick="logout(event)">Logout</a></li>
+      </ul>
+    </nav>
+    <div class="mobile-drawer-overlay"></div>
+    <div class="mobile-drawer">
+      <div class="mobile-drawer-header">
+        <a class="logo" href="index.html" style="display: flex; align-items: center; gap: 0.85rem;">
+          <img src="assets/logo.png" alt="BestBuddies logo" class="logo-mark" style="width: 48px; height: 48px;">
+          <div class="logo-text">
+            <span class="logo-wordmark" style="font-size: 1rem;">BestBuddies Pet Grooming</span>
+          </div>
+        </a>
+        <button class="mobile-drawer-close" aria-label="Close menu">×</button>
+      </div>
+      <ul class="mobile-drawer-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="reviews.html">Reviews</a></li>
+        <li><a href="policy.html">Policy</a></li>
+        <li><a href="booking.html">Book Now</a></li>
+        <li><a href="#" onclick="logout(event)">Logout</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <div class="container-lg" id="customerDashboard">
+      <div class="customer-layout" id="customerLayout">
+        <!-- Mobile Menu Toggle -->
+        <div class="mobile-menu-toggle-bar">
+           <button id="mobileMenuBtn" class="btn btn-outline btn-sm">☰ Menu</button>
+           <span style="font-weight: 600; color: var(--gray-700);">Dashboard</span>
+        </div>
+
+        <!-- Left Sidebar - Navigation & Gallery -->
+        <div class="sidebar"
+          style="background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; height: fit-content; position: sticky; top: 100px;">
+          <!-- Navigation Menu -->
+          <ul class="sidebar-menu" style="list-style: none; padding: 0; margin: 0; margin-bottom: 2rem;">
+            <li style="margin-bottom: 0.5rem;">
+              <a href="#" data-view="overview" class="active"
+                style="display: block; padding: 0.75rem 1rem; border-radius: var(--radius-sm); transition: var(--transition); color: var(--gray-700); font-weight: 500; text-decoration: none;">
+                📊 Dashboard Overview
+              </a>
+            </li>
+
+            <!-- Bookings Dropdown -->
+            <li class="menu-item-dropdown" style="margin-bottom: 0.5rem;">
+              <div class="dropdown-toggle"
+                style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-radius: var(--radius-sm); transition: var(--transition); color: var(--gray-700); font-weight: 500; cursor: pointer;">
+                <span>📅 My Bookings</span>
+                <span class="dropdown-arrow" style="font-size: 0.75rem; transition: transform 0.3s ease;">▼</span>
+              </div>
+              <ul class="dropdown-submenu"
+                style="list-style: none; padding: 0; margin: 0; max-height: 0; overflow: hidden; transition: max-height 0.3s ease; margin-left: 0.5rem; padding-left: 1rem; border-left: 2px solid var(--gray-200);">
+                <li style="margin-bottom: 0.25rem; margin-top: 0.5rem;">
+                  <a href="#" data-filter="pending" class="submenu-link"
+                    style="display: block; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); transition: var(--transition); color: var(--gray-700); font-weight: 500; text-decoration: none; font-size: 0.9rem;">
+                    ⏳ Pending Bookings
+                  </a>
+                </li>
+                <li style="margin-bottom: 0.25rem;">
+                  <a href="#" data-filter="confirmed" class="submenu-link"
+                    style="display: block; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); transition: var(--transition); color: var(--gray-700); font-weight: 500; text-decoration: none; font-size: 0.9rem;">
+                    ✅ Confirmed Bookings
+                  </a>
+                </li>
+                <li style="margin-bottom: 0.5rem;">
+                  <a href="#" data-view="history" class="submenu-link"
+                    style="display: block; padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); transition: var(--transition); color: var(--gray-700); font-weight: 500; text-decoration: none; font-size: 0.9rem;">
+                    📋 Booking History
+                  </a>
+                </li>
+
+              </ul>
+            </li>
+            <li style="margin-bottom: 0.5rem;">
+              <a href="#" data-view="calendar"
+                style="display: block; padding: 0.75rem 1rem; border-radius: var(--radius-sm); transition: var(--transition); color: var(--gray-700); font-weight: 500; text-decoration: none;">
+                📆 Calendar View
+              </a>
+            </li>
+            <li style="margin-bottom: 0.5rem;">
+              <a href="#" data-view="gallery"
+                style="display: block; padding: 0.75rem 1rem; border-radius: var(--radius-sm); transition: var(--transition); color: var(--gray-700); font-weight: 500; text-decoration: none;">
+                📸 My Pet's Gallery
+              </a>
+            </li>
+            <li style="margin-bottom: 0.5rem;">
+              <a href="#" data-view="profile"
+                style="display: block; padding: 0.75rem 1rem; border-radius: var(--radius-sm); transition: var(--transition); color: var(--gray-700); font-weight: 500; text-decoration: none;">
+                👤 My Profile
+              </a>
+            </li>
+            <li style="margin-bottom: 0.5rem;">
+              <a href="#" data-view="account"
+                style="display: block; padding: 0.75rem 1rem; border-radius: var(--radius-sm); transition: var(--transition); color: var(--gray-700); font-weight: 500; text-decoration: none;">
+                🔒 Change Password
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div>
+          <!-- Overview View -->
+          <div id="overviewView">
+            <!-- Welcome Section -->
+            <div class="dashboard-header"
+              style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(222, 222, 222, 0.7)); border: none;">
+              <div>
+                <h1 class="dashboard-title" style="margin-bottom: 0.5rem;">
+                  👋 Welcome back, <span id="welcomeName" style="color: var(--purple);">Customer</span>!
+                </h1>
+                <p style="color: var(--gray-600); font-size: 1.125rem;">
+                  Manage your pet grooming appointments with ease
+                </p>
+              </div>
+              <a href="booking.html" class="btn btn-primary btn-lg"
+                style="white-space: nowrap; background: #000; color: #fff; border: 2px solid #000;">
+                ➕ Book New Appointment
+              </a>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="stats-grid" id="quickStats" style="margin-top: 2rem; margin-bottom: 2rem;">
+              <!-- Stats will be loaded here -->
+            </div>
+
+            <!-- Recent Bookings Section -->
+            <div id="recentBookingsSection" style="margin-bottom: 2rem;">
+              <h2 class="section-title" style="margin: 0; text-align: left; margin-bottom:1rem;">📅 Recent Bookings</h2>
+
+              <!-- Search Box (Admin Style) -->
+              <div class="search-bar" style="margin-bottom: 1rem;">
+                <input type="text" id="myBookingsSearch" class="search-input"
+                  placeholder="🔍 Search by pet name, service, or date..."
+                  onkeyup="searchCustomerBookings(this.value)">
+              </div>
+
+
+              <div id="bookingsContainer">
+                <!-- Bookings will be loaded here -->
+              </div>
+              <div id="customerBookingPagination" style="margin-top: 1.5rem;"></div>
+            </div>
+
+            <!-- Team calendar preview -->
+            <div class="card" style="margin-top: 2rem;" id="teamCalendarCard">
+              <div class="card-header" style="border: none; padding-bottom:0;">
+                <h2 class="card-title" style="margin:0;">📅 Team availability</h2>
+                <p style="color: var(--gray-600); margin-top:0.25rem;">See which days still have slots before booking.
+                </p>
+              </div>
+              <div id="customerTeamCalendar" style="margin-top:1rem;"></div>
+              <div id="calendarSlotSummary" style="margin-top:1rem; display:flex; flex-direction:column; gap:0.35rem;">
+                <!-- populated via JS -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bookings View (now empty, content moved to overview) -->
+          <div id="bookingsView" style="display: none;">
+          </div>
+
+          <!-- Calendar View -->
+          <div id="calendarView" style="display: none;">
+            <h2 class="section-title" style="text-align:left; margin-bottom: 1.5rem;">📅 Booking Calendar</h2>
+            
+            <!-- Account Statistics in Calendar View -->
+            <div class="card" style="margin-bottom: 2rem;">
+              <div class="card-header">
+                <h3 class="card-title">📊 Your Account Overview</h3>
+                <p style="color: var(--gray-600); margin-top: 0.25rem;">Quick stats about your booking history and spending.</p>
+              </div>
+              <div class="card-body">
+                <div id="calendarViewStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+                  <!-- Stats will be loaded here -->
+                </div>
+              </div>
+            </div>
+            
+            <div id="customerCalendar"></div>
+          </div>
+
+          <!-- Booking History View -->
+          <div id="historyView" style="display: none;">
+            <h2 class="section-title" style="text-align:left; margin-bottom: 1.5rem;">🧾 Booking History</h2>
+            <div id="customerHistoryControls"></div>
+            <div id="customerHistoryTable"></div>
+          </div>
+
+          <div id="accountView" style="display: none;">
+            <div class="card" style="max-width: 600px;">
+              <div class="card-header">
+                <h2 class="card-title">🔒 Change Password</h2>
+                <p style="color: var(--gray-600); margin-top: 0.25rem;">Update your password regularly to keep your
+                  account secured.</p>
+              </div>
+              <div class="card-body">
+                <form id="customerPasswordForm">
+                  <div class="form-group">
+                    <label for="customerCurrentPassword" class="form-label">Current Password</label>
+                    <input type="password" id="customerCurrentPassword" class="form-input" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="customerNewPassword" class="form-label">New Password</label>
+                    <input type="password" id="customerNewPassword" class="form-input" minlength="6" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="customerConfirmPassword" class="form-label">Confirm New Password</label>
+                    <input type="password" id="customerConfirmPassword" class="form-input" minlength="6" required>
+                  </div>
+                  <button type="submit" class="btn btn-primary" style="width: 100%;">Update Password</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Profile Management View -->
+          <div id="profileView" style="display: none;">
+            <h2 class="section-title" style="text-align:left; margin-bottom: 1.5rem;">👤 My Profile</h2>
+            <p style="color: var(--gray-600); margin-bottom: 1.5rem;">Manage your personal information and account settings.</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+              <!-- Personal Information -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Personal Information</h3>
+                  <p style="color: var(--gray-600); margin-top: 0.25rem;">Update your basic profile details.</p>
+                </div>
+                <div class="card-body">
+                  <form id="customerProfileForm">
+                    <div class="form-group">
+                      <label for="profileName" class="form-label">Full Name</label>
+                      <input type="text" id="profileName" class="form-input" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="profileEmail" class="form-label">Email Address</label>
+                      <input type="email" id="profileEmail" class="form-input" placeholder="Enter your email" readonly style="background: #f5f5f5; cursor: not-allowed;">
+                      <small class="form-hint">Email cannot be changed. Contact support if needed.</small>
+                    </div>
+                    <div class="form-group">
+                      <label for="profilePhone" class="form-label">Phone Number</label>
+                      <input type="tel" id="profilePhone" class="form-input" placeholder="+63 9XX XXX XXXX" pattern="(\+63|0)[0-9]{10}" maxlength="13">
+                    </div>
+                    <div class="form-group">
+                      <label for="profileAddress" class="form-label">Address</label>
+                      <textarea id="profileAddress" class="form-textarea" rows="3" placeholder="Enter your complete address"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Update Profile</button>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Pet Information -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Default Pet Information</h3>
+                  <p style="color: var(--gray-600); margin-top: 0.25rem;">Set default pet details for faster booking.</p>
+                </div>
+                <div class="card-body">
+                  <form id="customerPetForm">
+                    <div class="form-group">
+                      <label for="defaultPetName" class="form-label">Pet Name</label>
+                      <input type="text" id="defaultPetName" class="form-input" placeholder="Enter your pet's name">
+                    </div>
+                    <div class="form-group">
+                      <label for="defaultPetType" class="form-label">Pet Type</label>
+                      <select id="defaultPetType" class="form-select">
+                        <option value="">Select pet type...</option>
+                        <option value="dog">Dog</option>
+                        <option value="cat">Cat</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="defaultPetBreed" class="form-label">Breed</label>
+                      <input type="text" id="defaultPetBreed" class="form-input" placeholder="e.g., Golden Retriever">
+                    </div>
+                    <div class="form-group">
+                      <label for="defaultPetAge" class="form-label">Age</label>
+                      <select id="defaultPetAge" class="form-select">
+                        <option value="">Select age...</option>
+                        <option value="Less than 1 month">Less than 1 month</option>
+                        <option value="1 month">1 month</option>
+                        <option value="2 months">2 months</option>
+                        <option value="3 months">3 months</option>
+                        <option value="4 months">4 months</option>
+                        <option value="5 months">5 months</option>
+                        <option value="6 months">6 months</option>
+                        <option value="1 year">1 year</option>
+                        <option value="2 years">2 years</option>
+                        <option value="3 years">3 years</option>
+                        <option value="4 years">4 years</option>
+                        <option value="5+ years">5+ years</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Weight Category</label>
+                      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        <label class="addon-chip">
+                          <input type="radio" name="defaultPetWeight" value="5kg & below">
+                          <span>5kg & below</span>
+                        </label>
+                        <label class="addon-chip">
+                          <input type="radio" name="defaultPetWeight" value="5.1 – 8kg">
+                          <span>5.1 – 8kg</span>
+                        </label>
+                        <label class="addon-chip">
+                          <input type="radio" name="defaultPetWeight" value="8.1 – 15kg">
+                          <span>8.1 – 15kg</span>
+                        </label>
+                        <label class="addon-chip">
+                          <input type="radio" name="defaultPetWeight" value="15.1 – 30kg">
+                          <span>15.1 – 30kg</span>
+                        </label>
+                        <label class="addon-chip">
+                          <input type="radio" name="defaultPetWeight" value="30kg & above">
+                          <span>30kg & above</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="defaultMedicalNotes" class="form-label">Medical Notes</label>
+                      <textarea id="defaultMedicalNotes" class="form-textarea" rows="2" placeholder="Allergies, medications, special conditions..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Save Pet Profile</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Account Statistics -->
+            <div class="card" style="margin-top: 2rem;">
+              <div class="card-header">
+                <h3 class="card-title">Account Statistics</h3>
+                <p style="color: var(--gray-600); margin-top: 0.25rem;">Your booking history and account overview.</p>
+              </div>
+              <div class="card-body">
+                <div id="profileStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                  <!-- Stats will be loaded here -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gallery View - My Pet's Before & After Photos -->
+          <div id="galleryView" style="display: none;">
+            <h2 class="section-title" style="text-align:left; margin-bottom: 1.5rem;">📸 My Pet's Gallery</h2>
+            <p style="color: var(--gray-600); margin-bottom: 1.5rem;">View before & after photos of your pets from completed grooming sessions. You can choose to share them publicly on the Reviews page.</p>
+            <div id="myPetGalleryContainer">
+              <!-- Pet gallery will be loaded here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Sidebar - Safety Record & Quick Rebook -->
+        <div class="sidebar"
+          style="background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; height: fit-content; position: sticky; top: 100px;">
+          <div class="sidebar-panel">
+            <div id="warningPanel" class="card" style="margin-bottom:1.5rem; padding: 1rem;"></div>
+            <div class="card" style="margin-bottom:1.5rem; padding: 1rem;">
+              <h3 style="margin-bottom:0.5rem; font-size: 1rem;">🔁 Quick Rebook</h3>
+              <p style="color:var(--gray-600); font-size:0.9rem;">We saved your latest profile so you can book again
+                without retyping the details.</p>
+              <button class="btn btn-primary btn-sm"
+                onclick="sessionStorage.setItem('autoLoadProfile', 'true'); redirect('booking.html')"
+                style="margin-top: 0.5rem;">Use
+                Saved Details</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Yen's Pet Shop. All rights reserved.</p>
+      <p style="margin-top: 0.5rem; font-size: 0.9rem;">📞 0951 986 5882 | ✉️ yenspetshop@gmail.com</p>
+    </div>
+  </footer>
+
+  <div id="modalRoot"></div>
+
+  <!-- Uplift Modal -->
+  <div id="upliftModal"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:20000;">
+    <div
+      style="width:90%; max-width:520px; background:var(--white); border-radius:12px; padding:1rem; box-shadow:var(--shadow);">
+      <h3 style="margin-top:0;">Request Ban Uplift</h3>
+      <p style="color:var(--gray-600);">Upload proof of payment (₱500) and add a short note. An admin will review your
+        request.</p>
+      <div style="display:flex; flex-direction:column; gap:0.75rem; margin-top:0.5rem;">
+        <label style="font-weight:600;">Proof of payment (image or PDF)</label>
+        <input type="file" id="upliftProofInput" accept="image/*,.pdf" />
+        <label style="font-weight:600;">Note (optional)</label>
+        <textarea id="upliftNote" rows="4"
+          style="width:100%; padding:0.5rem; border:1px solid var(--gray-200); border-radius:6px;"></textarea>
+        <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+          <button id="cancelUpliftBtn" class="btn btn-outline">Cancel</button>
+          <button id="submitUpliftBtn" class="btn btn-primary">Submit Request</button>
+        </div>
+        <div id="upliftFeedback" style="display:none; color:var(--gray-700); font-size:0.9rem;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/firebase-db.js"></script>
+  <link rel="stylesheet" href="css/custom-alert.css">
+  <script src="js/main.js"></script>
+  <script src="js/custom-alert.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script src="js/customer.js"></script>
+</body>
+
+</html>

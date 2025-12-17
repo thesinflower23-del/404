@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Success - BestBuddies Pet Grooming</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/booking-success.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="logo" href="index.html">
+        <img src="assets/logo.png" alt="BestBuddies logo" class="logo-mark">
+        <div class="logo-text">
+          <span class="logo-wordmark">BestBuddies Pet Grooming</span>
+        </div>
+      </a>
+      <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="reviews.html">Reviews</a></li>
+        <li><a href="login.html">Login</a></li>
+      </ul>
+    </nav>
+    <div class="mobile-drawer-overlay"></div>
+    <div class="mobile-drawer">
+      <div class="mobile-drawer-header">
+        <a class="logo" href="index.html" style="display: flex; align-items: center; gap: 0.85rem;">
+          <img src="assets/logo.png" alt="BestBuddies logo" class="logo-mark" style="width: 48px; height: 48px;">
+          <div class="logo-text">
+            <span class="logo-wordmark" style="font-size: 1rem;">BestBuddies Pet Grooming</span>
+          </div>
+        </a>
+        <button class="mobile-drawer-close" aria-label="Close menu">×</button>
+      </div>
+      <ul class="mobile-drawer-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="reviews.html">Reviews</a></li>
+        <li><a href="login.html">Login</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <div class="container-sm">
+      <div class="success-message fade-in">
+        <div class="success-icon">✓</div>
+        <h2>Booking Request Submitted!</h2>
+        <p style="color: var(--gray-600); margin-bottom: 2rem;">
+          Your appointment request has been received. We'll confirm it shortly.
+        </p>
+
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
+          <div class="card-header">
+            <h3 class="card-title">Booking Details</h3>
+          </div>
+          <div class="card-body" id="bookingDetails">
+            <!-- Booking details will be loaded here -->
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:1.5rem;">
+          <h3>Important Reminders</h3>
+          <div style="color:var(--gray-600); font-size:0.9rem;">
+            <div style="margin-bottom: 0.75rem;"> No refunds for no-shows. Rescheduling requires a new booking.</div>
+            <div style="margin-bottom: 0.75rem;"> Three warnings = close monitoring. Five warnings trigger an automatic
+              temporary ban.</div>
+            <div style="margin-bottom: 0.75rem;"> Need to lift a ban? Visit the shop or email hello@bestbuddies.pet with
+              proof of payment.</div>
+          </div>
+          <div style="margin-top: 1.5rem; padding: 1rem; background: var(--gray-100); border-radius: var(--radius-sm);">
+            <h4 style="margin-bottom: 0.5rem;">📞 Contact Us to Accept Your Booking</h4>
+            <p style="color: var(--gray-700); font-size: 0.95rem; margin-bottom: 0.5rem;">
+              To confirm and accept your booking, please contact us at:
+            </p>
+            <p style="font-size: 1.125rem; font-weight: 600; color: #000;">
+              <a href="tel:09519865882" style="color: #000; text-decoration: none;">0951 986 5882</a> <br>
+              <a href="mailto:yenspetshop@gmail.com"
+                style="color: #000; text-decoration: none;">yenspetshop@gmail.com</a>
+            </p>
+            <p style="color: var(--gray-600); font-size: 0.85rem; margin-top: 0.5rem;">
+              Our team will review your booking request and confirm it shortly.
+            </p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;" id="successActions">
+          <a href="customer-dashboard.html" class="btn btn-primary" id="backToDashboardBtn">Back to Dashboard</a>
+          <a href="booking.html" class="btn btn-outline" id="bookAnotherBtn">Book Another Appointment</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Yen's Pet Shop. All rights reserved.</p>
+      <p style="margin-top: 0.5rem; font-size: 0.9rem;">📞 0951 986 5882 | ✉️ yenspetshop@gmail.com</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script>
+    // Helper function for escaping HTML
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Load booking details from sessionStorage
+    document.addEventListener('DOMContentLoaded', function () {
+      // Use helpers from main.js (they're global)
+      if (typeof formatDate === 'undefined' || typeof formatTime === 'undefined' || typeof formatCurrency === 'undefined') {
+        console.error('format helpers not available');
+        return;
+      }
+
+      // Check if booking came from admin walk-in
+      const bookingSource = sessionStorage.getItem('bookingSource');
+      const isAdminWalkIn = bookingSource === 'admin';
+      
+      // Update buttons based on source
+      const backBtn = document.getElementById('backToDashboardBtn');
+      const bookAnotherBtn = document.getElementById('bookAnotherBtn');
+      
+      if (isAdminWalkIn) {
+        if (backBtn) {
+          backBtn.href = 'admin-dashboard.html';
+          backBtn.textContent = 'Back to Admin Dashboard';
+        }
+        if (bookAnotherBtn) {
+          bookAnotherBtn.href = 'booking.html?source=admin';
+        }
+        // Clear the source after use
+        sessionStorage.removeItem('bookingSource');
+      }
+
+      const bookingStr = sessionStorage.getItem('lastBooking');
+      if (!bookingStr) {
+        // Redirect if no booking found
+        window.location.href = isAdminWalkIn ? 'admin-dashboard.html' : 'customer-dashboard.html';
+        return;
+      }
+
+      try {
+        const booking = JSON.parse(bookingStr);
+        const profile = booking.profile || {};
+        const container = document.getElementById('bookingDetails');
+
+        if (!container) {
+          console.error('Booking details container not found');
+          return;
+        }
+
+        let cost = booking.cost || null;
+
+
+        // Recalculate cost if missing or invalid (for old bookings or single-service bookings with packagePrice: 0)
+        if (!cost || (booking.packageId === 'single-service' && (!cost.packagePrice || cost.packagePrice === 0))) {
+          if (typeof computeBookingCost === 'function') {
+            cost = computeBookingCost(booking.packageId, booking.petWeight, booking.addOns, booking.singleServices);
+          }
+        }
+
+        // Ensure arrays exist to prevent crashes (fixes TypeError: Cannot read properties of undefined (reading 'length'))
+        if (cost) {
+          cost.addOns = cost.addOns || [];
+          cost.services = cost.services || [];
+        }
+
+        const weightLabel = booking.petWeight || profile.weight || '';
+        const addOnDisplay = cost?.addOns?.length
+          ? cost.addOns.map(addon => `${escapeHtml(addon.label)} (${formatCurrency(addon.price)})`).join(', ')
+          : (booking.addOns && booking.addOns.length ? escapeHtml(booking.addOns.join(', ')) : 'None');
+
+        const bookingCode = typeof getBookingDisplayCode === 'function'
+          ? getBookingDisplayCode(booking)
+          : (booking.shortId || booking.id);
+
+        container.innerHTML = `
+          <div class="summary-item">
+            <span class="summary-label">Pet Name:</span>
+            <span class="summary-value">${escapeHtml(booking.petName || 'N/A')}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Booking Code:</span>
+            <span class="summary-value">${escapeHtml(bookingCode || 'N/A')}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Owner:</span>
+            <span class="summary-value">${escapeHtml(profile.ownerName || booking.customerName || 'N/A')}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Pet Type:</span>
+            <span class="summary-value">${escapeHtml(booking.petType ? booking.petType.charAt(0).toUpperCase() + booking.petType.slice(1) : 'N/A')}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Package:</span>
+            <span class="summary-value">${escapeHtml(booking.packageName || 'N/A')}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Weight:</span>
+            <span class="summary-value">${weightLabel ? escapeHtml(weightLabel) : 'Not specified'}</span>
+          </div>
+          ${booking.packageId === 'single-service' ? `
+            <div class="summary-item">
+              <span class="summary-label">Services:</span>
+              <span class="summary-value">
+                ${booking.singleServices && booking.singleServices.length
+              ? booking.singleServices.map(id => {
+                const serviceLabel = window.SINGLE_SERVICE_PRICING?.[id]?.label || id;
+                // Try to get price from cost object
+                if (cost && cost.services && cost.services.length) {
+                  const serviceCost = cost.services.find(s => s.serviceId === id);
+                  if (serviceCost && serviceCost.price) {
+                    return `${serviceLabel} (${formatCurrency(serviceCost.price)})`;
+                  }
+                }
+                // Fallback: try to calculate price if weight is available
+                if (booking.petWeight && typeof getSingleServicePrice === 'function') {
+                  const priceInfo = getSingleServicePrice(id, booking.petWeight);
+                  if (priceInfo && priceInfo.price) {
+                    return `${serviceLabel} (${formatCurrency(priceInfo.price)})`;
+                  }
+                }
+                return serviceLabel;
+              }).join(', ')
+              : 'No services selected'}
+              </span>
+            </div>
+          ` : ''}
+          <div class="summary-item">
+            <span class="summary-label">Groomer:</span>
+            <span class="summary-value">${escapeHtml(booking.groomerName || 'Auto-assign')}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Date:</span>
+            <span class="summary-value">${booking.date ? formatDate(booking.date) : 'N/A'}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Time:</span>
+            <span class="summary-value">${booking.time ? formatTime(booking.time) : 'N/A'}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Customer:</span>
+            <span class="summary-value">${escapeHtml(booking.customerName || 'N/A')}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Phone:</span>
+            <span class="summary-value">${escapeHtml(booking.phone || 'N/A')}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Add-ons:</span>
+            <span class="summary-value">${addOnDisplay}</span>
+          </div>
+          ${booking.bookingNotes && booking.bookingNotes.trim() ? `
+            <div class="summary-item">
+              <span class="summary-label">Preferred Cut/Notes:</span>
+              <span class="summary-value" style="font-size: 0.9rem; line-height: 1.4; background: #e8f5e9; padding: 0.5rem; border-radius: 0.25rem; color: #2e7d32; font-weight: 500;">✂️ ${escapeHtml(booking.bookingNotes)}</span>
+            </div>
+          ` : ''}
+
+          <div class="summary-item">
+            <span class="summary-label">Status:</span>
+            <span class="summary-value">
+              <span class="badge badge-pending">${escapeHtml(booking.status || 'pending')}</span>
+            </span>
+          </div>
+        `;
+
+        if (cost) {
+          const isSingleService = booking.packageId === 'single-service';
+          const servicesTotal = cost.services?.reduce((sum, s) => sum + (s.price || 0), 0) || 0;
+          
+          container.innerHTML += `
+            <div class="summary-divider" style="margin: 1.25rem 0; border-top: 1px solid var(--gray-200);"></div>
+            ${isSingleService && cost.services && cost.services.length ? `
+              <div class="summary-item">
+                <span class="summary-label">Single Services:</span>
+                <span class="summary-value">
+                  ${cost.services.map(service => `${escapeHtml(service.label)} (${service.price ? formatCurrency(service.price) : 'Select weight for pricing'})`).join('<br>')}
+                </span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Services Total:</span>
+                <span class="summary-value">${formatCurrency(servicesTotal)}</span>
+              </div>
+            ` : `
+              <div class="summary-item">
+                <span class="summary-label">Package (${escapeHtml(cost.weightLabel)}):</span>
+                <span class="summary-value">${formatCurrency(cost.packagePrice)}</span>
+              </div>
+            `}
+            <div class="summary-item">
+              <span class="summary-label">Add-ons:</span>
+              <span class="summary-value">${cost.addOns.length ? cost.addOns.map(addon => `${escapeHtml(addon.label)} (${formatCurrency(addon.price)})`).join(', ') : 'None'}</span>
+            </div>
+            <div class="summary-item" style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--gray-300); font-weight: 600; color: var(--primary, #000);">
+              <span class="summary-label">Total Amount:</span>
+              <span class="summary-value">${formatCurrency(cost.totalAmount || (cost.subtotal + (cost.bookingFee || cost.totalDueToday || 100)))}</span>
+            </div>
+            ${cost.bookingFee ? `
+            <div class="summary-item" style="margin-top: 0.5rem; padding: 0.5rem; background: #fff3e0; border-left: 3px solid #ff9800; color: #e65100;">
+              <span class="summary-label">Booking Fee Discount:</span>
+              <span class="summary-value">-${formatCurrency(cost.bookingFee)}</span>
+            </div>
+            ` : ''}
+            <div class="summary-item" style="margin-top: 0.5rem; padding-top: 0.5rem; font-weight: 700; color: var(--success-600); font-size: 1.1rem;">
+              <span class="summary-label">Amount to Pay:</span>
+              <span class="summary-value">${formatCurrency((cost.totalAmount || cost.subtotal) - (cost.bookingFee || 0))}</span>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading booking details:', error);
+        const container = document.getElementById('bookingDetails');
+        if (container) {
+          container.innerHTML = '<p style="color: var(--gray-600);">Error loading booking details. Please check your dashboard.</p>';
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

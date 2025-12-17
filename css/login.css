@@ -1,0 +1,113 @@
+/* ============================================
+   BestBuddies Pet Grooming - Login Page Styles
+   ============================================ */
+
+/* Login Form Container */
+.container-sm .card {
+  max-width: 500px;
+  margin: 3rem auto;
+}
+
+/* Google Sign-In Button */
+.btn[onclick="handleGoogleSignIn()"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn[onclick="handleGoogleSignIn()"] svg {
+  flex-shrink: 0;
+}
+
+/* Form Styling */
+#loginForm {
+  margin-bottom: 1.5rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .container-sm .card {
+    margin: 2rem auto;
+    padding: 1.5rem !important;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+/* ============================================
+   Mobile Phone Portrait (max 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+  .container-sm {
+    padding: 1rem;
+  }
+
+  .container-sm .card {
+    margin: 1.5rem auto;
+    padding: 1rem !important;
+    border-radius: var(--radius);
+  }
+
+  .card-header {
+    padding: 0 0 1rem 0 !important;
+  }
+
+  .card-title {
+    font-size: 1.25rem !important;
+  }
+
+  .card-body {
+    padding: 0 !important;
+  }
+
+  .form-group {
+    margin-bottom: 1rem !important;
+  }
+
+  .form-label {
+    font-size: 0.95rem !important;
+  }
+
+  .form-input {
+    font-size: 16px !important;
+    padding: 0.75rem !important;
+  }
+
+  .btn {
+    width: 100% !important;
+    font-size: 0.95rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  .btn[onclick="handleGoogleSignIn()"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+  }
+
+  .btn[onclick="handleGoogleSignIn()"] svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* Links */
+  div[style*="text-align: center"] {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+
+  div[style*="text-align: center"] p {
+    margin: 0.5rem 0;
+  }
+
+  div[style*="text-align: center"] a {
+    word-break: break-word;
+  }
+}
+

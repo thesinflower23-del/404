@@ -1,0 +1,188 @@
+/* ============================================
+   BestBuddies Pet Grooming - Groomer Dashboard Styles
+   ============================================ */
+
+/* Groomer Stats Grid */
+#groomerStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+/* Profile Form */
+#groomerProfileForm {
+  margin-top: 1rem;
+}
+
+#groomerProfileForm .form-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Absence History */
+.absence-card {
+  cursor: pointer;
+  transition: var(--transition);
+  margin-bottom: 1rem;
+}
+
+.absence-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Calendar */
+#groomerCalendar {
+  min-height: 400px;
+}
+
+/* Bookings Container */
+#groomerBookingsContainer .card {
+  margin-bottom: 1rem;
+  transition: var(--transition);
+}
+
+#groomerBookingsContainer .card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  #groomerStats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ============================================
+   Mobile Phone Portrait (max 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+  #groomerStats {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  #groomerStats .card {
+    padding: 1rem !important;
+  }
+
+  #groomerStats .card-body p {
+    font-size: 0.9rem !important;
+  }
+
+  #groomerStats .card-body .stat-number {
+    font-size: 1.5rem !important;
+  }
+
+  /* Profile Form */
+  #groomerProfileForm {
+    padding: 1rem !important;
+  }
+
+  #groomerProfileForm .form-group {
+    margin-bottom: 1rem !important;
+  }
+
+  #groomerProfileForm .form-input,
+  #groomerProfileForm .form-select {
+    font-size: 16px !important;
+    padding: 0.75rem !important;
+  }
+
+  /* Form sections */
+  .form-section-title {
+    font-size: 1rem !important;
+    margin: 1rem 0 0.75rem 0 !important;
+  }
+
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Calendar */
+  #groomerCalendar {
+    min-height: 300px;
+    font-size: 0.85rem !important;
+  }
+
+  /* Bookings */
+  #groomerBookingsContainer .card {
+    padding: 1rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  #groomerBookingsContainer .card-header {
+    padding: 0.75rem 0 !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  #groomerBookingsContainer .card-title {
+    font-size: 1.1rem !important;
+  }
+
+  #groomerBookingsContainer .card-body {
+    font-size: 0.9rem !important;
+  }
+
+  /* Absence cards */
+  .absence-card {
+    padding: 1rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .absence-card h4 {
+    font-size: 1rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .absence-card p {
+    font-size: 0.85rem !important;
+  }
+
+  /* Buttons */
+  .btn {
+    font-size: 0.9rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  .btn-sm {
+    font-size: 0.8rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    padding: 1rem !important;
+  }
+
+  .sidebar h2 {
+    font-size: 1.1rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .sidebar-menu a {
+    font-size: 0.9rem !important;
+    padding: 0.75rem !important;
+  }
+
+  /* Card containers */
+  .card {
+    padding: 1rem !important;
+  }
+
+  .card-header {
+    padding: 0.75rem 0 !important;
+  }
+
+  .card-footer {
+    padding: 0.75rem 0 !important;
+  }
+}
+

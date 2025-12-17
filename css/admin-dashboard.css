@@ -1,0 +1,735 @@
+/* ============================================
+   BestBuddies Pet Grooming - Admin Dashboard Styles
+   ============================================ */
+
+/* Full-width dashboard container override */
+#adminDashboard.container-lg {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 0 2rem !important;
+  margin: 0 !important;
+}
+
+/* Admin Layout - Edge to Edge */
+.admin-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2rem;
+  padding: 1.5rem 0;
+}
+
+/* Sidebar Styling - Sticky */
+.sidebar {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  height: fit-content;
+  position: sticky;
+  top: 140px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+/* Black & White Striped Table Theme */
+.table-striped thead tr {
+  background: var(--gray-900);
+  color: white;
+}
+
+.table-striped tbody tr:nth-child(odd) {
+  background: white;
+}
+
+.table-striped tbody tr:nth-child(even) {
+  background: var(--gray-100);
+}
+
+.table-striped th,
+.table-striped td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--gray-300);
+}
+
+.stats-grid .stat-card {
+  cursor: default;
+}
+
+/* Admin Community Grooming Feed - 4 columns, big images, small details */
+#adminReviewFeed.review-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  max-width: 100%;
+}
+
+#adminReviewFeed .review-card {
+  background: var(--white);
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--gray-200);
+  overflow: hidden;
+}
+
+#adminReviewFeed .review-card-gallery {
+  aspect-ratio: 16 / 9;
+  min-height: 150px;
+}
+
+#adminReviewFeed .review-card-gallery img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#adminReviewFeed .review-card-content {
+  padding: 0.35rem 0.5rem;
+  background: var(--gray-50);
+}
+
+#adminReviewFeed .review-card-content p {
+  font-size: 0.65rem;
+  margin: 0;
+  line-height: 1.2;
+  color: var(--gray-600);
+}
+
+#adminReviewFeed .review-card-content p:first-child {
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+/* Hide extra details in admin feed */
+#adminReviewFeed .review-card-content p:nth-child(n+4) {
+  display: none;
+}
+
+/* Tablet - 3 columns */
+@media (max-width: 1200px) {
+  #adminReviewFeed.review-feed-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Mobile - 2 columns */
+@media (max-width: 768px) {
+  #adminReviewFeed.review-feed-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  
+  #adminReviewFeed .review-card-gallery {
+    min-height: 120px;
+  }
+}
+
+/* Small mobile - 2 columns still */
+@media (max-width: 480px) {
+  #adminReviewFeed.review-feed-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  #adminReviewFeed .review-card-gallery {
+    min-height: 100px;
+  }
+  
+  #adminReviewFeed .review-card-content p {
+    font-size: 0.6rem;
+  }
+}
+
+.booking-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0;
+  align-items: center;
+}
+
+.booking-filter-select {
+  border: 1px solid var(--gray-300);
+  border-radius: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--white);
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--gray-700);
+  min-width: 60px;
+  text-align: center;
+}
+
+.booking-filter-select:hover {
+  border-color: var(--gray-400);
+  background: var(--gray-50);
+}
+
+.booking-filter-select:focus {
+  outline: none;
+  border-color: var(--gray-500);
+  box-shadow: 0 0 0 2px rgba(18, 18, 18, 0.1);
+}
+
+.sidebar-menu a.active {
+  background: linear-gradient(135deg, rgba(18, 18, 18, 0.08), rgba(72, 72, 72, 0.08));
+  color: var(--gray-900);
+  font-weight: 600;
+}
+
+/* Walk-In Booking Layout */
+.walk-in-booking-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.walk-in-main-content {
+  order: 1;
+}
+
+.walk-in-summary-sidebar {
+  order: 2;
+}
+
+/* Booking Steps */
+.booking-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.booking-steps::before {
+  content: '';
+  position: absolute;
+  top: 1.5rem;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gray-200);
+  z-index: 0;
+}
+
+.booking-steps .step {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.booking-steps .step-number {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--gray-200);
+  color: var(--gray-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin: 0 auto 0.5rem;
+  transition: var(--transition);
+}
+
+.booking-steps .step.active .step-number {
+  background: linear-gradient(135deg, var(--gray-900), var(--gray-600));
+  color: var(--white);
+  box-shadow: var(--shadow);
+}
+
+.booking-steps .step.completed .step-number {
+  background: var(--gray-900);
+  color: var(--white);
+}
+
+.booking-steps .step-label {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+.booking-steps .step.active .step-label {
+  color: var(--gray-900);
+  font-weight: 600;
+}
+
+/* Booking Step Content */
+.booking-step-content {
+  display: none;
+}
+
+#walkInStep1.booking-step-content,
+#walkInStep2.booking-step-content,
+#walkInStep3.booking-step-content,
+#walkInStep4.booking-step-content,
+#walkInStep5.booking-step-content {
+  display: block !important;
+}
+
+/* Package Cards in Walk-In */
+#walkInPackagesContainer .package-card {
+  cursor: pointer;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: var(--transition);
+}
+
+#walkInPackagesContainer .package-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+#walkInPackagesContainer .package-card.selected {
+  border-color: var(--gray-900);
+  background: linear-gradient(135deg, rgba(18, 18, 18, 0.08), rgba(72, 72, 72, 0.08));
+}
+
+/* Mobile Responsive */
+@media (max-width: 992px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: relative !important;
+    top: auto !important;
+    margin-bottom: 1.5rem;
+  }
+
+  .walk-in-booking-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .walk-in-summary-sidebar {
+    position: relative !important;
+    top: auto !important;
+    margin-top: 2rem;
+  }
+
+  .booking-steps {
+    overflow-x: auto;
+    padding: 1rem 0.5rem;
+  }
+
+  .booking-steps .step {
+    min-width: 70px;
+    flex-shrink: 0;
+  }
+
+  .booking-steps .step-number {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  .booking-steps .step-label {
+    font-size: 0.75rem !important;
+    white-space: nowrap;
+  }
+
+  #walkInPackagesContainer .package-card {
+    padding: 1.5rem !important;
+  }
+
+  #walkInPackagesContainer .package-card h3 {
+    font-size: 1.1rem !important;
+  }
+
+  #walkInPackagesContainer .package-card p {
+    font-size: 0.9rem !important;
+    line-height: 1.4;
+  }
+}
+
+/* ============================================
+   Mobile Phone Portrait (max 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .sidebar {
+    position: relative !important;
+    top: auto !important;
+    margin-bottom: 1rem;
+    padding: 1rem !important;
+  }
+
+  .sidebar h2 {
+    font-size: 1.1rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .sidebar-menu {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .sidebar-menu a {
+    font-size: 0.9rem !important;
+    padding: 0.75rem !important;
+  }
+
+  .panel-header {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .panel-header h2 {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .panel-header .btn {
+    font-size: 0.85rem !important;
+    padding: 0.75rem !important;
+  }
+
+  .walk-in-booking-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .walk-in-summary-sidebar {
+    position: relative !important;
+    top: auto !important;
+    margin-top: 1rem;
+  }
+
+  .booking-steps {
+    overflow-x: auto;
+    padding: 0.75rem 0.5rem;
+    gap: 0.35rem;
+  }
+
+  .booking-steps .step {
+    min-width: 55px !important;
+    flex-shrink: 0;
+  }
+
+  .booking-steps .step-number {
+    width: 2rem !important;
+    height: 2rem !important;
+    font-size: 0.65rem !important;
+    margin: 0 auto 0.25rem !important;
+  }
+
+  .booking-steps .step-label {
+    font-size: 0.6rem !important;
+    white-space: nowrap;
+    line-height: 1.1;
+  }
+
+  #walkInPackagesContainer {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  #walkInPackagesContainer .package-card {
+    padding: 1rem !important;
+    min-height: 120px;
+  }
+
+  #walkInPackagesContainer .package-card h3 {
+    font-size: 1rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  #walkInPackagesContainer .package-card p {
+    font-size: 0.8rem !important;
+    line-height: 1.4;
+  }
+
+  /* Form elements */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 16px !important;
+    padding: 0.75rem !important;
+  }
+
+  .form-group {
+    margin-bottom: 0.75rem !important;
+  }
+
+  .form-section-title {
+    font-size: 1rem !important;
+    margin: 1rem 0 0.75rem 0 !important;
+  }
+
+  /* Buttons */
+  .btn {
+    font-size: 0.9rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  .btn-sm {
+    font-size: 0.8rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  /* Tables and lists */
+  table {
+    font-size: 0.85rem !important;
+  }
+
+  .table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Modal adjustments */
+  .modal-content {
+    padding: 1rem !important;
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+  }
+
+  .modal-header {
+    padding: 1rem !important;
+  }
+
+  .modal-title {
+    font-size: 1.1rem !important;
+  }
+
+  .modal-body {
+    padding: 1rem !important;
+  }
+
+  .modal-footer {
+    padding: 1rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .modal-footer .btn {
+    flex: 1 !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Grid adjustments */
+  .grid,
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Card padding */
+  .card {
+    padding: 1rem !important;
+  }
+
+  .card-header {
+    padding: 0.75rem 0 !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .card-body {
+    padding: 0 !important;
+  }
+
+  .card-footer {
+    padding: 0.75rem 0 !important;
+    margin-top: 1rem !important;
+  }
+}
+
+
+
+
+/* ============================================
+   Action Dropdown Menu
+   ============================================ */
+
+.action-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.action-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  z-index: 10;
+  min-width: 150px;
+  margin-top: 0.25rem;
+  overflow: hidden;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.action-dropdown-menu.show {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.action-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--gray-700);
+  transition: var(--transition);
+  font-weight: 500;
+}
+
+.action-dropdown-item:hover {
+  background: var(--gray-50);
+  color: var(--gray-900);
+}
+
+.action-dropdown-item:first-child {
+  border-top: none;
+}
+
+.action-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+
+/* ============================================
+   CALENDAR HORIZONTAL SCROLL - MOBILE
+   ============================================ */
+@media (max-width: 968px) {
+  /* Calendar container - enable horizontal scroll */
+  .mega-calendar,
+  .calendar-container,
+  #adminCalendar,
+  [class*="calendar"] {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: thin !important;
+  }
+
+  /* Show scrollbar hint */
+  .mega-calendar::-webkit-scrollbar,
+  .calendar-container::-webkit-scrollbar,
+  #adminCalendar::-webkit-scrollbar {
+    height: 6px !important;
+  }
+
+  .mega-calendar::-webkit-scrollbar-track,
+  .calendar-container::-webkit-scrollbar-track,
+  #adminCalendar::-webkit-scrollbar-track {
+    background: var(--gray-100) !important;
+    border-radius: 3px !important;
+  }
+
+  .mega-calendar::-webkit-scrollbar-thumb,
+  .calendar-container::-webkit-scrollbar-thumb,
+  #adminCalendar::-webkit-scrollbar-thumb {
+    background: var(--gray-400) !important;
+    border-radius: 3px !important;
+  }
+
+  /* Calendar grid - minimum width to ensure all 7 days visible */
+  .calendar-grid,
+  .calendar-grid-head,
+  .calendar-grid-body {
+    min-width: 420px !important;
+    width: max-content !important;
+  }
+
+  /* Calendar cells - fixed minimum size */
+  .calendar-cell {
+    min-width: 55px !important;
+    min-height: 60px !important;
+  }
+}
+
+/* Extra small phones */
+@media (max-width: 400px) {
+  .calendar-grid,
+  .calendar-grid-head,
+  .calendar-grid-body {
+    min-width: 380px !important;
+  }
+
+  .calendar-cell {
+    min-width: 48px !important;
+    min-height: 55px !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+/* ============================================
+   ADMIN DASHBOARD - RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1400px) and (min-width: 993px) {
+  #adminDashboard.container-lg {
+    padding: 0 1.5rem !important;
+  }
+  
+  .admin-layout {
+    grid-template-columns: 240px 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 992px) {
+  #adminDashboard.container-lg {
+    padding: 0 1.25rem !important;
+  }
+  
+  .admin-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1rem 0;
+  }
+  
+  .sidebar {
+    position: relative !important;
+    top: auto !important;
+    max-height: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #adminDashboard.container-lg {
+    padding: 0 1rem !important;
+  }
+  
+  .admin-layout {
+    gap: 1rem;
+    padding: 1rem 0;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem !important;
+  }
+  
+  .sidebar {
+    padding: 1rem !important;
+  }
+}

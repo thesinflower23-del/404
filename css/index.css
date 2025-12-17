@@ -1,0 +1,932 @@
+/* ============================================
+   BestBuddies Pet Grooming - Index Page Styles
+   ============================================ */
+
+/* Hero Section Enhancements */
+.hero {
+  text-align: center;
+  padding: 4rem 0;
+  background: linear-gradient(135deg, rgba(18, 18, 18, 0.05), rgba(72, 72, 72, 0.12));
+  border-radius: var(--radius);
+  margin-bottom: 3rem;
+}
+
+.hero h1 {
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--gray-900), var(--gray-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero p {
+  font-size: 1.25rem;
+  color: var(--gray-600);
+  margin-bottom: 2rem;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ============================================
+   Index Page Container - Centered with padding
+   ============================================ */
+
+#services .container,
+.section .container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 3rem;
+}
+
+/* ============================================
+   Service Card Hover Effect - BIGGER & More Attractive
+   ============================================ */
+
+.service-card-hover {
+  width: 100%;
+  height: 420px;
+  background: transparent;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 2rem;
+  box-sizing: border-box;
+  border: 2px solid #000;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.service-icon {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: all 0.3s ease-in-out;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.service-icon a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  text-decoration: none;
+}
+
+.service-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+  transition: all 0.3s ease-in-out;
+}
+
+.service-content {
+  opacity: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  transition: all 0.2s ease-in-out;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+}
+
+.service-description {
+  opacity: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  transition: opacity 0.2s ease-in-out;
+  text-align: center;
+}
+
+.service-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+.service-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #fff;
+  margin: 0;
+  font-weight: 500;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+}
+
+.service-pricing {
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  transition: all 0.3s ease-in-out;
+  position: absolute;
+  width: calc(100% - 4rem);
+  background: transparent;
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+/* FORCE TRANSPARENT - ALL SCREEN SIZES - HIGHEST SPECIFICITY */
+div.service-card-hover,
+div.service-card-hover div.service-content,
+div.service-card-hover div.service-pricing,
+div.service-card-hover div.pricing-list,
+div.service-card-hover div.price-item,
+.grid .service-card-hover,
+.grid .service-card-hover .service-content,
+.grid .service-card-hover .service-pricing,
+.grid .service-card-hover .pricing-list,
+.grid .service-card-hover .price-item {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* Mobile: transparent pricing background - all mobile sizes */
+@media (max-width: 768px) {
+  .service-pricing {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+  
+  .service-card-hover {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+  
+  .service-card-hover .service-content {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+  
+  .service-card-hover .service-pricing {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+}
+
+.pricing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.price-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  color: #000;
+}
+
+.price-item:last-child {
+  border-bottom: none;
+}
+
+.price-item span {
+  font-size: 0.8rem;
+  color: black;
+  font-weight: 500;
+}
+
+/* Hover Effect */
+.service-card-hover:hover {
+  transform: scale(1.04) rotate(-1deg);
+}
+
+.service-card-hover:hover .service-icon {
+  height: 65%;
+  filter: opacity(50%) blur(12px);
+  animation: floatAnim 3s infinite;
+}
+
+.service-card-hover:hover .service-description {
+  opacity: 0;
+}
+
+.service-card-hover:hover .service-title {
+  color: white;
+}
+
+.service-card-hover:hover .service-text {
+  color: white;
+}
+
+.service-card-hover:hover .service-pricing {
+  opacity: 1;
+}
+
+@keyframes floatAnim {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   Static Service Card (No Hover Effect)
+   For Add-ons and Booking Checklist
+   ============================================ */
+.service-card-static {
+  width: 100%;
+  min-height: 420px;
+  background: linear-gradient(145deg, #f8f8f8 0%, #e8e8e8 100%);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  color: #000;
+  position: relative;
+  overflow: hidden;
+  padding: 2rem;
+  box-sizing: border-box;
+  border: 2px solid #000;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Add subtle pattern/texture to static cards */
+.service-card-static::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(0,0,0,0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0,0,0,0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.service-card-static .service-content {
+  position: relative;
+  z-index: 1;
+}
+
+.service-card-static .service-content {
+  opacity: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.service-card-static .service-description {
+  opacity: 1;
+  text-align: center;
+  background: rgba(255,255,255,0.8);
+  padding: 1rem;
+  border-radius: 10px;
+  width: 100%;
+}
+
+.service-card-static .service-title {
+  color: #000 !important;
+  text-shadow: none !important;
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.service-card-static .service-text {
+  color: #333 !important;
+  text-shadow: none !important;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.service-card-static .service-pricing {
+  opacity: 1;
+  width: 100%;
+  position: relative;
+  background: rgba(255,255,255,0.9);
+  padding: 1rem;
+  border-radius: 10px;
+}
+
+.service-card-static .pricing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.service-card-static .price-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid #ddd;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #000;
+  background: rgba(255,255,255,0.5);
+  border-radius: 6px;
+  margin-bottom: 0.25rem;
+}
+
+.service-card-static .price-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.service-card-static .price-item span {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.95rem;
+  text-align: right;
+}
+
+/* Services Section */
+#services .grid {
+  margin-top: 2rem;
+  gap: 2rem;
+}
+
+#services .grid-3 {
+  gap: 2rem;
+}
+
+/* Reviews Section */
+#testimonials .card {
+  transition: transform 0.3s ease;
+}
+
+#testimonials .card:hover {
+  transform: translateY(-2px);
+}
+
+#testimonials .card-body p {
+  font-style: italic;
+  margin-bottom: 1rem;
+  color: var(--gray-700);
+}
+
+/* Public review feed grid (before & after galleries) */
+.review-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2x2 layout */
+  gap: 1.5rem;
+  align-items: start;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.review-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--gray-200);
+  overflow: hidden;
+  width: 100%;
+}
+
+.review-card-gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  min-height: 220px; /* Bigger images */
+  overflow: hidden;
+  background: var(--gray-100);
+  position: relative;
+}
+
+.review-card-gallery img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.review-card-gallery img:hover {
+  transform: scale(1.05);
+}
+
+.review-card-content {
+  padding: 0.75rem;
+  background: #fff;
+  border-top: 1px solid var(--gray-200);
+}
+
+.review-card-content p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--gray-700);
+}
+
+.review-card-content strong {
+  color: var(--gray-900);
+}
+
+/* Tablet - still 2 columns */
+@media (max-width: 1024px) {
+  .review-feed-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .review-card-gallery {
+    min-height: 180px;
+  }
+}
+
+/* Mobile - 1 column for bigger cards */
+@media (max-width: 768px) {
+  .review-feed-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    max-width: 500px;
+  }
+  
+  .review-card-gallery {
+    min-height: 200px;
+  }
+  
+  .review-card-content {
+    padding: 0.75rem;
+  }
+  
+  .review-card-content p {
+    font-size: 0.85rem;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .review-feed-grid {
+    max-width: 100%;
+  }
+  
+  .review-card-gallery {
+    min-height: 160px;
+  }
+}
+
+
+/* Booking Policy Card */
+.section .card[style*="border: 2px solid #000"] {
+  border: 2px solid #000 !important;
+  background: #fff !important;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .hero {
+    padding: 2rem 0;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .hero p {
+    font-size: 1rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-buttons .btn {
+    width: 100%;
+  }
+
+  #services .grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .service-card-hover {
+    height: 280px;
+  }
+
+  .service-icon {
+    font-size: 3rem;
+  }
+
+  .service-title {
+    font-size: 1.1rem;
+  }
+
+  .service-text {
+    font-size: 0.8rem;
+  }
+
+  .price-item {
+    font-size: 0.85rem;
+  }
+}
+
+/* Card alignment for package cards */
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.card-body>div:last-child {
+  margin-top: auto;
+}
+
+/* ============================================
+   Lightbox Modal for Images
+   ============================================ */
+
+#lightbox {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+#lightbox.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#lightbox-image {
+  max-width: 90%;
+  max-height: 90vh;
+  object-fit: contain;
+  animation: slideIn 0.3s ease;
+}
+
+#lightbox-close {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+  background: none;
+  border: none;
+  z-index: 10000;
+  transition: transform 0.2s ease;
+}
+
+#lightbox-close:hover {
+  transform: scale(1.2);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+
+/* ============================================
+   Mobile Phone Portrait (max 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 1.5rem 0;
+    margin-bottom: 2rem;
+  }
+
+  .hero h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero p {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .hero-buttons .btn {
+    width: 100%;
+    font-size: 0.95rem;
+    padding: 0.75rem;
+  }
+
+  /* Services Grid - Single column */
+  #services {
+    margin-top: 1.5rem;
+  }
+
+  #services .grid-3 {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+
+  /* Service Cards - Mobile: No scroll, always show pricing */
+  .service-card-hover {
+    height: auto !important;
+    min-height: auto !important;
+    padding: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #000;
+    background: none !important;
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+
+  .service-card-hover .service-icon {
+    height: 180px !important;
+    position: relative !important;
+    flex-shrink: 0;
+  }
+
+  .service-card-hover .service-icon img {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    object-fit: cover;
+  }
+
+  /* Title & description overlay on image */
+  .service-card-hover .service-content {
+    position: relative !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .service-card-hover .service-description {
+    position: absolute !important;
+    top: -180px;
+    left: 0;
+    right: 0;
+    height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 1 !important;
+    z-index: 2;
+  }
+
+  .service-card-hover .service-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .service-card-hover .service-text {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: #fff !important;
+  }
+
+  /* Pricing always visible below image - transparent background */
+  .service-card-hover .service-pricing {
+    opacity: 1 !important;
+    position: static !important;
+    width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: none !important;
+    background-color: transparent !important;
+    padding: 1rem !important;
+    border-radius: 0;
+    display: flex !important;
+    flex-direction: column;
+  }
+  
+  /* Ensure service content area is also transparent */
+  .service-card-hover .service-content {
+    background: none !important;
+    background-color: transparent !important;
+  }
+  
+  /* Force transparent on all elements */
+  .service-card-hover,
+  .service-card-hover .service-content,
+  .service-card-hover .service-pricing,
+  .service-card-hover .pricing-list,
+  .service-card-hover .price-item {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+  
+  /* Specific override for pricing list */
+  .pricing-list {
+    background: none !important;
+    background-color: transparent !important;
+  }
+  
+  .price-item {
+    background: none !important;
+    background-color: transparent !important;
+  }
+
+  .pricing-list {
+    width: 100%;
+    gap: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .price-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    color: #000;
+  }
+
+  .price-item:last-child {
+    border-bottom: none;
+  }
+
+  .price-item span {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #444;
+  }
+
+  /* Disable hover effects on mobile */
+  .service-card-hover:hover {
+    transform: none !important;
+  }
+
+  .service-card-hover:hover .service-icon {
+    filter: none !important;
+    height: 180px !important;
+  }
+
+  .service-card-hover:hover .service-description {
+    opacity: 1 !important;
+  }
+
+  /* Book Now buttons */
+  .service-pricing .btn {
+    width: 100%;
+    font-size: 0.95rem;
+    padding: 0.85rem;
+    margin-top: 1rem;
+  }
+
+  /* Testimonials / Reviews */
+  #testimonials .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  #testimonials .card {
+    padding: 1rem !important;
+  }
+
+  #testimonials .card-body p {
+    font-size: 0.9rem;
+  }
+
+  /* Section titles */
+  .section-title {
+    font-size: 1.5rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  /* Container padding */
+  .container {
+    padding: 0 1rem;
+  }
+
+  /* Booking policy card */
+  .section .card[style*="border: 2px solid #000"] {
+    padding: 1rem !important;
+  }
+
+  .section .card[style*="border: 2px solid #000"] h3 {
+    font-size: 1rem !important;
+  }
+
+  .section .card[style*="border: 2px solid #000"] p {
+    font-size: 0.85rem !important;
+  }
+
+  /* Featured gallery section */
+  .review-feed-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Hide close button on very small screens if needed */
+  .section .card[style*="position: absolute"] button {
+    padding: 0.5rem !important;
+  }
+}
+
+/* ============================================
+   Tablet / Mobile Landscape (481px - 768px)
+   ============================================ */
+
+@media (min-width: 481px) and (max-width: 768px) {
+
+  /* Allow 2 columns for services on tablets */
+  #services .grid-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .hero-buttons {
+    flex-direction: row;
+  }
+
+  .hero-buttons .btn {
+    width: auto;
+  }
+
+  /* Make pricing visible on tablet hover as well */
+  .service-pricing {
+    opacity: 1 !important;
+  }
+}

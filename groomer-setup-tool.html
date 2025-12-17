@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Groomer Setup Tool - BestBuddies</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .progress-section {
+      margin-bottom: 30px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .step {
+      margin-bottom: 25px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-left: 4px solid #667eea;
+      border-radius: 8px;
+    }
+
+    .step.completed {
+      background: #e8f5e9;
+      border-left-color: #4caf50;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+      cursor: pointer;
+    }
+
+    .step-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #667eea;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .step.completed .step-number {
+      background: #4caf50;
+    }
+
+    .step-number::after {
+      content: '';
+    }
+
+    .step.completed .step-number::after {
+      content: '✓';
+      position: absolute;
+      font-size: 1.5rem;
+    }
+
+    .step-title {
+      flex: 1;
+    }
+
+    .step-title h3 {
+      font-size: 1.1rem;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    .step-title p {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .step-checkbox {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+    }
+
+    .step-content {
+      display: none;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #ddd;
+    }
+
+    .step.expanded .step-content {
+      display: block;
+    }
+
+    .groomer-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .groomer-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .groomer-card.completed {
+      border-color: #4caf50;
+      background: #f1f8f4;
+    }
+
+    .groomer-card h4 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .groomer-info {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 8px;
+      word-break: break-all;
+    }
+
+    .groomer-info strong {
+      color: #333;
+    }
+
+    .groomer-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ff9800;
+    }
+
+    .groomer-card.completed .status-dot {
+      background: #4caf50;
+    }
+
+    .code-block {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      margin: 10px 0;
+      color: #333;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #d0d0d0;
+    }
+
+    .btn-success {
+      background: #4caf50;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #45a049;
+    }
+
+    .alert {
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .alert-info {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      color: #1565c0;
+    }
+
+    .alert-success {
+      background: #e8f5e9;
+      border-left: 4px solid #4caf50;
+      color: #2e7d32;
+    }
+
+    .alert-warning {
+      background: #fff3e0;
+      border-left: 4px solid #ff9800;
+      color: #e65100;
+    }
+
+    .summary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+
+    .summary h3 {
+      margin-bottom: 15px;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .summary-item:last-child {
+      border-bottom: none;
+    }
+
+    .credentials-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+
+    .credentials-table th,
+    .credentials-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .credentials-table th {
+      background: #f5f5f5;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .credentials-table tr:hover {
+      background: #f9f9f9;
+    }
+
+    .copy-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .copy-btn:hover {
+      background: #5568d3;
+    }
+
+    .completion-badge {
+      display: inline-block;
+      background: #4caf50;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .groomer-list {
+        grid-template-columns: 1fr;
+      }
+
+      .credentials-table {
+        font-size: 0.8rem;
+      }
+
+      .credentials-table th,
+      .credentials-table td {
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔧 Groomer Setup Tool</h1>
+      <p>Complete setup in 3 easy steps</p>
+    </div>
+
+    <div class="card">
+      <div class="progress-section">
+        <div class="progress-text">
+          <span>Overall Progress</span>
+          <span><strong id="progressPercent">0</strong>% Complete</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step expanded" id="step1">
+        <div class="step-header" onclick="toggleStep(1)">
+          <div class="step-number">1</div>
+          <div class="step-title">
+            <h3>Fix Existing Groomer Role</h3>
+            <p>Change "groomers" to "groomer" in database</p>
+          </div>
+          <input type="checkbox" class="step-checkbox" id="check1" onchange="updateProgress()">
+        </div>
+        <div class="step-content">
+          <div class="alert alert-info">
+            <span>ℹ️</span>
+            <div>
+              <strong>What to do:</strong> Go to Firebase Console → Realtime Database and find the user with ID <code>PRKFpx5wgsRK8RLhT3lK6RClqlW2</code>
+            </div>
+          </div>
+          <p style="margin-bottom: 10px;"><strong>Find this user:</strong></p>
+          <div class="code-block">users → PRKFpx5wgsRK8RLhT3lK6RClqlW2</div>
+          <p style="margin-bottom: 10px;"><strong>Change the role field:</strong></p>
+          <div class="code-block">
+            "role": "groomers"  ❌ OLD<br>
+            "role": "groomer"   ✅ NEW
+          </div>
+          <div class="button-group">
+            <button class="btn btn-primary" onclick="openFirebaseConsole()">Open Firebase Console</button>
+            <button class="btn btn-secondary" onclick="markStepDone(1)">Mark as Done</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step" id="step2">
+        <div class="step-header" onclick="toggleStep(2)">
+          <div class="step-number">2</div>
+          <div class="step-title">
+            <h3>Create Firebase Auth Accounts</h3>
+            <p>Add 5 groomer accounts to Firebase Authentication</p>
+          </div>
+          <input type="checkbox" class="step-checkbox" id="check2" onchange="updateProgress()">
+        </div>
+        <div class="step-content">
+          <div class="alert alert-info">
+            <span>ℹ️</span>
+            <div>
+              <strong>What to do:</strong> Go to Firebase Console → Authentication → Add User for each groomer below
+            </div>
+          </div>
+          <table class="credentials-table">
+            <thead>
+              <tr>
+                <th>Groomer</th>
+                <th>Email</th>
+                <th>Password</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Botchoy</td>
+                <td>botchoy@bestbuddies.com</td>
+                <td>Botchoy@123</td>
+                <td><button class="copy-btn" onclick="copyToClipboard('botchoy@bestbuddies.com')">Copy</button></td>
+              </tr>
+              <tr>
+                <td>Ejay</td>
+                <td>ejay@bestbuddies.com</td>
+                <td>Ejay@123</td>
+                <td><button class="copy-btn" onclick="copyToClipboard('ejay@bestbuddies.com')">Copy</button></td>
+              </tr>
+              <tr>
+                <td>Jinold</td>
+                <td>jinold@bestbuddies.com</td>
+                <td>Jinold@123</td>
+                <td><button class="copy-btn" onclick="copyToClipboard('jinold@bestbuddies.com')">Copy</button></td>
+              </tr>
+              <tr>
+                <td>Jom</td>
+                <td>jom@bestbuddies.com</td>
+                <td>Jom@123</td>
+                <td><button class="copy-btn" onclick="copyToClipboard('jom@bestbuddies.com')">Copy</button></td>
+              </tr>
+              <tr>
+                <td>Sam</td>
+                <td>sam.groomer@bestbuddies.com</td>
+                <td>Sam@123</td>
+                <td><button class="copy-btn" onclick="copyToClipboard('sam.groomer@bestbuddies.com')">Copy</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="alert alert-warning" style="margin-top: 15px;">
+            <span>⚠️</span>
+            <div>
+              <strong>Important:</strong> After creating each account in Firebase Auth, copy the UID (User ID) - you'll need it for Step 3
+            </div>
+          </div>
+          <div class="button-group">
+            <button class="btn btn-primary" onclick="openFirebaseAuth()">Open Firebase Auth</button>
+            <button class="btn btn-secondary" onclick="markStepDone(2)">Mark as Done</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step" id="step3">
+        <div class="step-header" onclick="toggleStep(3)">
+          <div class="step-number">3</div>
+          <div class="step-title">
+            <h3>Create User Profiles in Database</h3>
+            <p>Add groomer profiles to Realtime Database</p>
+          </div>
+          <input type="checkbox" class="step-checkbox" id="check3" onchange="updateProgress()">
+        </div>
+        <div class="step-content">
+          <div class="alert alert-info">
+            <span>ℹ️</span>
+            <div>
+              <strong>What to do:</strong> For each groomer, add a new user profile in Firebase Database using their UID from Step 2
+            </div>
+          </div>
+
+          <div class="groomer-list">
+            <div class="groomer-card">
+              <h4>👨‍💼 Botchoy</h4>
+              <div class="groomer-info">
+                <strong>Email:</strong> botchoy@bestbuddies.com
+              </div>
+              <div class="groomer-info">
+                <strong>Specialty:</strong> Creative trims & styling
+              </div>
+              <button class="btn btn-primary" onclick="showGroomerData('botchoy')">View JSON</button>
+            </div>
+
+            <div class="groomer-card">
+              <h4>👨‍💼 Ejay</h4>
+              <div class="groomer-info">
+                <strong>Email:</strong> ejay@bestbuddies.com
+              </div>
+              <div class="groomer-info">
+                <strong>Specialty:</strong> Cat whisperer
+              </div>
+              <button class="btn btn-primary" onclick="showGroomerData('ejay')">View JSON</button>
+            </div>
+
+            <div class="groomer-card">
+              <h4>👨‍💼 Jinold</h4>
+              <div class="groomer-info">
+                <strong>Email:</strong> jinold@bestbuddies.com
+              </div>
+              <div class="groomer-info">
+                <strong>Specialty:</strong> Senior pet handler
+              </div>
+              <button class="btn btn-primary" onclick="showGroomerData('jinold')">View JSON</button>
+            </div>
+
+            <div class="groomer-card">
+              <h4>👨‍💼 Jom</h4>
+              <div class="groomer-info">
+                <strong>Email:</strong> jom@bestbuddies.com
+              </div>
+              <div class="groomer-info">
+                <strong>Specialty:</strong> Double-coat care
+              </div>
+              <button class="btn btn-primary" onclick="showGroomerData('jom')">View JSON</button>
+            </div>
+
+            <div class="groomer-card">
+              <h4>👨‍💼 Sam</h4>
+              <div class="groomer-info">
+                <strong>Email:</strong> sam.groomer@bestbuddies.com
+              </div>
+              <div class="groomer-info">
+                <strong>Specialty:</strong> Small breed specialist
+              </div>
+              <button class="btn btn-primary" onclick="showGroomerData('sam')">View JSON</button>
+            </div>
+          </div>
+
+          <div id="groomerDataDisplay" style="margin-top: 20px;"></div>
+
+          <div class="alert alert-warning" style="margin-top: 15px;">
+            <span>⚠️</span>
+            <div>
+              <strong>Steps:</strong>
+              <ol style="margin-top: 8px; margin-left: 20px;">
+                <li>Go to Firebase Console → Realtime Database</li>
+                <li>Click on <code>users</code> folder</li>
+                <li>Click <strong>"+"</strong> to add new child</li>
+                <li>Paste the UID from Firebase Auth as the key</li>
+                <li>Copy the JSON data and paste it as the value</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="button-group">
+            <button class="btn btn-primary" onclick="openFirebaseDatabase()">Open Firebase Database</button>
+            <button class="btn btn-secondary" onclick="markStepDone(3)">Mark as Done</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completion Section -->
+      <div id="completionSection" style="display: none; margin-top: 30px;">
+        <div class="alert alert-success">
+          <span>✅</span>
+          <div>
+            <strong>Setup Complete!</strong> All groomer accounts are ready. Groomers can now login.
+          </div>
+        </div>
+
+        <div class="summary">
+          <h3>🎉 Setup Summary</h3>
+          <div class="summary-item">
+            <span>✅ Fixed existing groomer role</span>
+            <span>Done</span>
+          </div>
+          <div class="summary-item">
+            <span>✅ Created 5 Firebase Auth accounts</span>
+            <span>Done</span>
+          </div>
+          <div class="summary-item">
+            <span>✅ Created 5 user profiles in database</span>
+            <span>Done</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <h4 style="color: white; margin-bottom: 15px;">🧪 Test Login</h4>
+          <p style="color: rgba(255,255,255,0.9); margin-bottom: 10px;">Try logging in with any groomer account:</p>
+          <div class="code-block" style="background: rgba(0,0,0,0.2); color: white; border-color: rgba(255,255,255,0.3);">
+            Email: botchoy@bestbuddies.com<br>
+            Password: Botchoy@123
+          </div>
+          <button class="btn btn-success" onclick="testLogin()" style="margin-top: 15px;">Test Login Now</button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.1); border-radius: 6px; color: white;">
+          <strong>⚠️ Security Reminder:</strong> Change all groomer passwords after first login!
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const groomers = {
+      botchoy: {
+        name: 'Botchoy',
+        email: 'botchoy@bestbuddies.com',
+        phone: '09123456789',
+        specialty: 'Creative trims & styling'
+      },
+      ejay: {
+        name: 'Ejay',
+        email: 'ejay@bestbuddies.com',
+        phone: '09123456790',
+        specialty: 'Cat whisperer'
+      },
+      jinold: {
+        name: 'Jinold',
+        email: 'jinold@bestbuddies.com',
+        phone: '09123456791',
+        specialty: 'Senior pet handler'
+      },
+      jom: {
+        name: 'Jom',
+        email: 'jom@bestbuddies.com',
+        phone: '09123456792',
+        specialty: 'Double-coat care'
+      },
+      sam: {
+        name: 'Sam',
+        email: 'sam.groomer@bestbuddies.com',
+        phone: '09123456793',
+        specialty: 'Small breed specialist'
+      }
+    };
+
+    function toggleStep(stepNum) {
+      const step = document.getElementById(`step${stepNum}`);
+      step.classList.toggle('expanded');
+    }
+
+    function markStepDone(stepNum) {
+      document.getElementById(`check${stepNum}`).checked = true;
+      document.getElementById(`step${stepNum}`).classList.add('completed');
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const check1 = document.getElementById('check1').checked ? 1 : 0;
+      const check2 = document.getElementById('check2').checked ? 1 : 0;
+      const check3 = document.getElementById('check3').checked ? 1 : 0;
+      const total = check1 + check2 + check3;
+      const percent = Math.round((total / 3) * 100);
+
+      document.getElementById('progressPercent').textContent = percent;
+      document.getElementById('progressFill').style.width = percent + '%';
+
+      if (percent === 100) {
+        document.getElementById('completionSection').style.display = 'block';
+      } else {
+        document.getElementById('completionSection').style.display = 'none';
+      }
+    }
+
+    function showGroomerData(groomerKey) {
+      const groomer = groomers[groomerKey];
+      const json = {
+        id: "PASTE_UID_HERE",
+        email: groomer.email,
+        name: groomer.name,
+        phone: groomer.phone,
+        role: "groomer",
+        specialty: groomer.specialty,
+        maxDailyBookings: 3,
+        isBanned: false,
+        warnings: 0,
+        createdAt: Date.now()
+      };
+
+      const display = document.getElementById('groomerDataDisplay');
+      display.innerHTML = `
+        <div style="background: #f5f5f5; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+          <h4 style="margin-bottom: 10px;">📋 ${groomer.name} - User Profile JSON</h4>
+          <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">
+            <strong>⚠️ Important:</strong> Replace "PASTE_UID_HERE" with the UID from Firebase Auth
+          </p>
+          <div class="code-block" style="max-height: 300px; overflow-y: auto;">
+${JSON.stringify(json, null, 2)}
+          </div>
+          <button class="btn btn-primary" onclick="copyToClipboard('${JSON.stringify(json, null, 2).replace(/"/g, '\\"')}')">Copy JSON</button>
+        </div>
+      `;
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('✅ Copied to clipboard!');
+      });
+    }
+
+    function openFirebaseConsole() {
+      window.open('https://console.firebase.google.com/project/bestbuddiespetshop/database/data', '_blank');
+    }
+
+    function openFirebaseAuth() {
+      window.open('https://console.firebase.google.com/project/bestbuddiespetshop/authentication/users', '_blank');
+    }
+
+    function openFirebaseDatabase() {
+      window.open('https://console.firebase.google.com/project/bestbuddiespetshop/database/data/users', '_blank');
+    }
+
+    function testLogin() {
+      window.location.href = 'login.html';
+    }
+
+    // Load progress from localStorage
+    window.addEventListener('load', () => {
+      const saved1 = localStorage.getItem('groomerSetup_step1');
+      const saved2 = localStorage.getItem('groomerSetup_step2');
+      const saved3 = localStorage.getItem('groomerSetup_step3');
+
+      if (saved1) document.getElementById('check1').checked = true;
+      if (saved2) document.getElementById('check2').checked = true;
+      if (saved3) document.getElementById('check3').checked = true;
+
+      updateProgress();
+    });
+
+    // Save progress to localStorage
+    document.getElementById('check1').addEventListener('change', () => {
+      localStorage.setItem('groomerSetup_step1', true);
+      updateProgress();
+    });
+
+    document.getElementById('check2').addEventListener('change', () => {
+      localStorage.setItem('groomerSetup_step2', true);
+      updateProgress();
+    });
+
+    document.getElementById('check3').addEventListener('change', () => {
+      localStorage.setItem('groomerSetup_step3', true);
+      updateProgress();
+    });
+  </script>
+</body>
+</html>

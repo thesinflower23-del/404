@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Appointment - BestBuddies Pet Grooming</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/booking.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="logo" href="index.html">
+        <img src="assets/logo.png" alt="BestBuddies logo" class="logo-mark">
+        <div class="logo-text">
+          <span class="logo-wordmark">BestBuddies Pet Grooming</span>
+        </div>
+      </a>
+      <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+      <ul class="nav-links" id="mainNavLinks">
+        <!-- Nav links rendered by script based on auth state -->
+      </ul>
+    </nav>
+    <div class="mobile-drawer-overlay"></div>
+    <div class="mobile-drawer">
+      <div class="mobile-drawer-header">
+        <a class="logo" href="index.html" style="display: flex; align-items: center; gap: 0.85rem;">
+          <img src="assets/logo.png" alt="BestBuddies logo" class="logo-mark" style="width: 48px; height: 48px;">
+          <div class="logo-text">
+            <span class="logo-wordmark" style="font-size: 1rem;">BestBuddies Pet Grooming</span>
+          </div>
+        </a>
+        <button class="mobile-drawer-close" aria-label="Close menu">×</button>
+      </div>
+      <ul class="mobile-drawer-links" id="mobileNavLinks">
+        <!-- Mobile nav links rendered by script based on auth state -->
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <div class="container-lg" id="bookingPage">
+      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+        <button onclick="window.history.back()" class="btn btn-outline"
+          style="background: transparent; border: 2px solid #000; color: #000;">← Back</button>
+        <h1 style="margin: 0; flex: 1;">Book Your Appointment</h1>
+      </div>
+
+      <!-- Booking Steps -->
+      <div class="booking-steps">
+        <div class="step active">
+          <div class="step-number">1</div>
+          <div class="step-label">Policy</div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-label">Pet Type</div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-label">Package</div>
+        </div>
+        <div class="step">
+          <div class="step-number">4</div>
+          <div class="step-label">Schedule</div>
+        </div>
+        <div class="step">
+          <div class="step-number">5</div>
+          <div class="step-label">Details</div>
+        </div>
+      </div>
+
+      <div class="touch-container">
+        <div class="booking-layout">
+          <!-- Main Content -->
+          <div>
+            <!-- Step 0: Policy Agreement -->
+            <div class="step-content active">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">📋 Read Our Policy & Rules</h2>
+                  <p style="color: var(--gray-600); margin-top: 0.5rem;">Please scroll through and read our policy before booking. You must agree to continue.</p>
+                </div>
+                <div class="card-body">
+                  <div class="policy-scroll-container" id="policyScrollContainer">
+                    <div class="policy-content">
+                      <h3>Waiver, Agreement and Release Form</h3>
+                      
+                      <h4>a. Health</h4>
+                      <p>All pets must be in good health. By signing this form, the owner or authorized representative certifies that their pet is in good health and has been free from any condition that could jeopardize the health or well-being of other guests. During your pet's stay, if it is detected that he or she has fleas or ticks, treatment will be applied and charged to you.</p>
+                      
+                      <h4>b. Fees</h4>
+                      <p>Fees are due and payable at the end of each grooming appointment.</p>
+                      <p><strong>Important:</strong> No refunds for missed bookings. Rescheduling requires a new booking. Need to lift a ban? Visit the store with your receipt or email <strong>BestBuddies@gmail.com</strong></p>
+                      
+                      <h4>c. Appointments</h4>
+                      <p>Appointments are required. Dogs without appointments cannot be guaranteed a grooming time slot. No refund in case of failure to come on the appointment time and date.</p>
+                      
+                      <h4>d. Responsibility</h4>
+                      <p>BestBuddies Pet Shop will not be held responsible for any sickness and injury caused by the pet to itself during grooming.</p>
+                      <p>BestBuddies Pet Shop will not be held responsible for clipper burn and/or nicks resulting from grooming of matted, neglected coats or for irritation caused by removing coat from pets possessing mild to severe skin allergy, nor will we be held responsible for stressful effects grooming may have upon any dog/cat, especially those older in age.</p>
+                      <p>BestBuddies Pet Shop reserves the right to charge additional fees for services we consider over and above the norm covered by our standard rates. We also reserve the right to refuse service to customers whose pet may pose a threat to us or to the other pets left in our care, whether it is due to aggression, a health problem or a parasite problem.</p>
+                      <p>I agree to be responsible for any property damages caused by my pet.</p>
+                      <p>I understand that my pet, my guests, or I may be videotaped or photographed and that the images become the property of BestBuddies Pet Shop.</p>
+                      <p>I agree that I have read and understand the rules and conditions of BestBuddies Pet Shop's grooming services. I agree to release, hold harmless, acquit, indemnify and forever discharge the business and its proprietor and employees from all, and in all manner of action and actions, suits, damages, judgments, executions, claims, and demands whatsoever, in law or equity, which may arise from the grooming of my pet at BestBuddies Pet Shop.</p>
+                      
+                      <div class="policy-end-marker">
+                        <p>— End of Policy —</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="policy-agreement-section" id="policyAgreementSection">
+                    <div class="scroll-indicator" id="scrollIndicator">
+                      <span>⬇️ Scroll down to read the full policy</span>
+                    </div>
+                    <label class="policy-checkbox-label" id="policyCheckboxLabel">
+                      <input type="checkbox" id="agreeToPolicy" disabled>
+                      <span>I have read and agree to BestBuddies Pet Shop's rules and regulations</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 1: Pet Type -->
+            <div class="step-content">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">Select Pet Type</h2>
+                </div>
+                <div class="card-body">
+                  <div class="grid grid-2">
+                    <div class="card card-selectable pet-type-card" data-pet-type="dog">
+                      <div class="card-body" style="text-align: center; padding: 2rem;">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">🐕</div>
+                        <h3 class="card-title">Dog</h3>
+                        <p style="color: var(--gray-600);">Grooming services for dogs</p>
+                      </div>
+                    </div>
+
+                    <div class="card card-selectable pet-type-card" data-pet-type="cat">
+                      <div class="card-body" style="text-align: center; padding: 2rem;">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">🐈</div>
+                        <h3 class="card-title">Cat</h3>
+                        <p style="color: var(--gray-600);">Grooming services for cats</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: Package -->
+            <div class="step-content">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">Select Package</h2>
+                </div>
+                <div class="card-body">
+                  <div class="grid grid-2" id="packagesContainer">
+                    <!-- Packages will be loaded here -->
+                  </div>
+                  <div id="singleServiceConfigurator" class="single-service-config"
+                    style="display: none; margin-top: 1.5rem;">
+                    <div class="card" style="border: 1px solid var(--gray-200);">
+                      <div class="card-header">
+                        <h3 class="card-title">Single Service Checklist</h3>
+                        <p style="color: var(--gray-600); margin-top: 0.25rem; font-size: 0.9rem;">
+                          Tick the services the customer needs. Prices adjust automatically based on the selected
+                          weight.
+                          Single-service sessions take approximately 45 minutes.
+                        </p>
+                      </div>
+                      <div class="card-body" id="singleServiceOptions">
+                        <!-- Single service options rendered via JS -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Date, Time & Groomer -->
+            <div class="step-content">
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <h2 class="card-title">Choose Schedule</h2>
+                    <p style="color: var(--gray-600); margin-top: 0.5rem;">Select your preferred date and time slot. A
+                      groomer will be assigned automatically.</p>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="form-group">
+                    <label class="form-label">Select Date & Time</label>
+                    <div id="calendarTimePicker">
+                      <!-- Calendar with time slots will be loaded here -->
+                    </div>
+                  </div>
+                  <div id="groomerAssignmentDisplay"
+                    style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--gray-200);">
+                    <label class="form-label">Groomer Assignment</label>
+                    <div
+                      style="background: linear-gradient(135deg, rgba(255, 200, 100, 0.1), rgba(255, 180, 50, 0.1)); padding: 1rem; border-radius: var(--radius-sm); border-left: 4px solid #ff9800;">
+                      <p style="font-size: 0.95rem; color: var(--gray-900); margin: 0; font-weight: 500;">🔄 Groomer
+                        Assignment Pending</p>
+                      <p style="font-size: 0.85rem; color: var(--gray-700); margin: 0.5rem 0 0 0;">Our admin team will
+                        assign the best-matched groomer based on availability and your pet's needs after you confirm
+                        your
+                        booking.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4: Details -->
+            <div class="step-content">
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <h2 class="card-title">Pet & Contact Details</h2>
+                    <p style="color: var(--gray-600); margin-top: 0.5rem;">Save your profile once and reuse it for your
+                      next visits.</p>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <form id="bookingDetailsForm">
+                    <div class="form-actions">
+                      <button type="button" class="btn btn-outline btn-sm" id="loadProfileBtn">Load Saved
+                        Profile</button>
+                      <button type="button" class="btn btn-outline btn-sm" id="clearProfileBtn">Clear Form</button>
+                    </div>
+
+                    <div class="form-section">
+                      <h3 class="form-section-title">Owner Details</h3>
+                      <div class="grid grid-2">
+                        <div class="form-group">
+                          <label for="ownerName" class="form-label">Owner's Full Name</label>
+                          <input type="text" id="ownerName" class="form-input" placeholder="e.g. Jamie Reyes" required>
+                        </div>
+                        <div class="form-group">
+                          <label for="contactNumber" class="form-label">Contact Number (11 digits)</label>
+                          <input type="tel" id="contactNumber" class="form-input" placeholder="+63" required
+                            pattern="(\+63|0)[0-9]{10}" maxlength="13">
+                          <!-- <small class="form-hint"></small> -->
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="ownerAddress" class="form-label">Address</label>
+                        <input type="text" id="ownerAddress" class="form-input" placeholder="Street, Barangay, City">
+                      </div>
+                    </div>
+
+                    <div class="form-section">
+                      <h3 class="form-section-title">Pet Details</h3>
+                      <div class="form-group">
+                        <label for="petName" class="form-label">Pet Name</label>
+                        <input type="text" id="petName" class="form-input" placeholder="Enter your pet's name" required>
+                      </div>
+                      <div class="grid grid-2">
+                        <div class="form-group">
+                          <label for="petBreed" class="form-label">Breed (optional)</label>
+                          <input type="text" id="petBreed" class="form-input" placeholder="Siberian Husky">
+                        </div>
+                        <div class="form-group">
+                          <label for="petAge" class="form-label">Age</label>
+                          <select id="petAge" class="form-select">
+                            <option value="">Select age...</option>
+                            <option value="Less than 1 month">Less than 1 month</option>
+                            <option value="1 month">1 month</option>
+                            <option value="2 months">2 months</option>
+                            <option value="3 months">3 months</option>
+                            <option value="4 months">4 months</option>
+                            <option value="5 months">5 months</option>
+                            <option value="6 months">6 months</option>
+                            <option value="7 months">7 months</option>
+                            <option value="8 months">8 months</option>
+                            <option value="9 months">9 months</option>
+                            <option value="10 months">10 months</option>
+                            <option value="11 months">11 months</option>
+                            <option value="1 year">1 year</option>
+                            <option value="2 years">2 years</option>
+                            <option value="3 years">3 years</option>
+                            <option value="4 years">4 years</option>
+                            <option value="5 years">5 years</option>
+                            <option value="6 years">6 years</option>
+                            <option value="7 years">7 years</option>
+                            <option value="8 years">8 years</option>
+                            <option value="9 years">9 years</option>
+                            <option value="10 years">10 years</option>
+                            <option value="11 years">11 years</option>
+                            <option value="12 years">12 years</option>
+                            <option value="13 years">13 years</option>
+                            <option value="14 years">14 years</option>
+                            <option value="15 years">15 years</option>
+                            <option value="16+ years">16+ years</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Weight</label>
+                        <div class="weight-checklist" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                          <label class="addon-chip">
+                            <input type="radio" name="petWeight" value="5kg & below" id="weight1">
+                            <span>5kg & below</span>
+                          </label>
+                          <label class="addon-chip">
+                            <input type="radio" name="petWeight" value="5.1 – 8kg" id="weight2">
+                            <span>5.1 – 8kg</span>
+                          </label>
+                          <label class="addon-chip">
+                            <input type="radio" name="petWeight" value="8.1 – 15kg" id="weight3">
+                            <span>8.1 – 15kg</span>
+                          </label>
+                          <label class="addon-chip">
+                            <input type="radio" name="petWeight" value="15.1 – 30kg" id="weight4">
+                            <span>15.1 – 30kg</span>
+                          </label>
+                          <label class="addon-chip">
+                            <input type="radio" name="petWeight" value="30kg & above" id="weight5">
+                            <span>30kg & above</span>
+                          </label>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="medicalNotes" class="form-label">Medical Conditions</label>
+                        <textarea id="medicalNotes" class="form-textarea"
+                          placeholder="Allergies, meds, anxiety triggers"></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Vaccination Status ✓</label>
+                        <p style="color: var(--gray-600); font-size: 0.9rem; margin-bottom: 1rem;">If your pet is
+                          vaccinated, select the vaccines. If not vaccinated, you cannot book at this time.</p>
+                        <div style="margin-bottom: 0.75rem;">
+                          <label class="addon-chip">
+                            <input type="checkbox" id="vaccAntiRabies">
+                            <span>✓ Anti-Rabies</span>
+                          </label>
+                        </div>
+                        <div style="margin-bottom: 0.75rem;">
+                          <label class="addon-chip">
+                            <input type="checkbox" id="vaccAntiParvo">
+                            <span>✓ Anti-Parvo (DHPP)</span>
+                          </label>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                          <label class="addon-chip"
+                            style="background-color: var(--danger-light, #ffe5e5); border-color: var(--danger, #d32f2f);">
+                            <input type="checkbox" id="vaccNotVaccinated">
+                            <span>✗ Not Vaccinated</span>
+                          </label>
+                        </div>
+                        
+                        <!-- Vaccination Proof Image Upload -->
+                        <div id="vaccinationProofSection" style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; border: 1px dashed #ccc;">
+                          <label class="form-label" style="margin-bottom: 0.5rem; display: block;">📷 Upload Vaccination Proof (Optional)</label>
+                          <p style="color: var(--gray-600); font-size: 0.8rem; margin-bottom: 0.75rem;">Upload a photo of your pet's vaccination card or certificate</p>
+                          
+                          <input type="file" id="vaccinationProofInput" accept="image/*" style="display: none;" onchange="handleVaccinationImageUpload(this)">
+                          
+                          <button type="button" onclick="document.getElementById('vaccinationProofInput').click()" 
+                            style="padding: 0.6rem 1rem; background: #fff; border: 1px solid #333; border-radius: 6px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>📤</span> Choose Image
+                          </button>
+                          
+                          <!-- Image Preview -->
+                          <div id="vaccinationProofPreview" style="margin-top: 1rem; display: none;">
+                            <p style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">Preview:</p>
+                            <div style="position: relative; display: inline-block;">
+                              <img id="vaccinationProofImg" src="" alt="Vaccination Proof" 
+                                style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid #4CAF50; cursor: pointer;"
+                                onclick="openVaccinationImageLightbox()">
+                              <button type="button" onclick="removeVaccinationImage()" 
+                                style="position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; background: #e74c3c; color: white; border: none; border-radius: 50%; cursor: pointer; font-size: 14px; line-height: 1;">×</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="form-section">
+                      <h3 class="form-section-title">Notes for the Groomer</h3>
+                      <div class="form-group">
+                        <label for="bookingNotes" class="form-label">Special Requests & Preferences</label>
+                        <textarea id="bookingNotes" class="form-textarea"
+                          placeholder="Preferred cut, special reminders"></textarea>
+                      </div>
+
+                      <!-- Grooming Cuts Reference - Only shown for Face Trim single service -->
+                      <div id="referenceCutsSection" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);">
+                        <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 1rem; font-weight: 500;">💡
+                          Not sure what cut you want? Browse popular styles below:</p>
+                        <div class="cuts-carousel-wrapper">
+
+                          <div style="text-align: center; min-width: 140px; flex: 0 0 auto; scroll-snap-align: start;">
+                            <div
+                              style="width: 140px; height: 140px; background: #f5f5f5; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #e8b8a8; overflow: hidden;">
+                              <a href="assets/1.jpg" class="lightbox-link"><img src="assets/1.jpg" alt="Puppy Cut"
+                                  style="width: 100%; height: 100%; object-fit: cover;"></a>
+                            </div>
+
+                            <button type="button" class="cut-selector-btn" data-cut="Puppy Cut"
+                              onclick="selectGroomingCut('Puppy Cut', event)"
+                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Puppy
+                              Cut</button>
+                            <p style="text-align: center; font-size: 0.65rem; color: var(--gray-600); margin: 0;">Short
+                              &
+                              uniform</p>
+                          </div>
+
+
+                          <!-- Teddy Bear Cut -->
+                          <div style="text-align: center; min-width: 140px; flex: 0 0 auto; scroll-snap-align: start;">
+                            <div
+                              style="width: 140px; height: 140px; background: #f5f5f5; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #c9a68a; overflow: hidden;">
+                              <a href="assets/2.jpg" class="lightbox-link"><img src="assets/2.jpg" alt="Teddy Bear Cut"
+                                  style="width: 100%; height: 100%; object-fit: cover;"></a>
+                            </div>
+                            <button class="cut-selector-btn" data-cut="Teddy Bear Cut"
+                              onclick="selectGroomingCut('Teddy Bear Cut', event)"
+                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Teddy
+                              Bear Cut</button>
+                            <p style="font-size: 0.65rem; color: var(--gray-600); margin: 0;">Rounded & fluffy</p>
+                          </div>
+
+                          <!-- Lion Cut -->
+                          <div style="text-align: center; min-width: 140px; flex: 0 0 auto; scroll-snap-align: start;">
+                            <div
+                              style="width: 140px; height: 140px; background: #f5f5f5; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #d4a574; overflow: hidden;">
+                              <a href="assets/3.jpg" class="lightbox-link"><img src="assets/3.jpg" alt="Lion Cut"
+                                  style="width: 100%; height: 100%; object-fit: cover;"></a>
+                            </div>
+                            <button class="cut-selector-btn" data-cut="Lion Cut"
+                              onclick="selectGroomingCut('Lion Cut', event)"
+                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Lion
+                              Cut</button>
+                            <p style="font-size: 0.65rem; color: var(--gray-600); margin: 0;">Mane style</p>
+                          </div>
+
+                          <!-- Summer Cut -->
+                          <div style="text-align: center; min-width: 140px; flex: 0 0 auto; scroll-snap-align: start;">
+                            <div
+                              style="width: 140px; height: 140px; background: #f5f5f5; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #d4d4a5; overflow: hidden;">
+                              <a href="assets/4.jpg" class="lightbox-link"><img src="assets/4.jpg" alt="Summer Cut"
+                                  style="width: 100%; height: 100%; object-fit: cover;"></a>
+                            </div>
+                            <button class="cut-selector-btn" data-cut="Summer Cut"
+                              onclick="selectGroomingCut('Summer Cut', event)"
+                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Summer
+                              Cut</button>
+                            <p style="font-size: 0.65rem; color: var(--gray-600); margin: 0;">Very short</p>
+                          </div>
+
+                          <!-- Kennel Cut -->
+                          <div style="text-align: center; min-width: 140px; flex: 0 0 auto; scroll-snap-align: start;">
+                            <div
+                              style="width: 140px; height: 140px; background: #e8e8e8; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #ccc; overflow: hidden;">
+                              <a href="assets/5.jpg" class="lightbox-link"><img src="assets/5.jpg" alt="Kennel Cut"
+                                  style="width: 100%; height: 100%; object-fit: cover;"></a>
+                            </div>
+                            <button class="cut-selector-btn" data-cut="Kennel Cut"
+                              onclick="selectGroomingCut('Kennel Cut', event)"
+                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Kennel
+                              Cut</button>
+                            <p style="font-size: 0.65rem; color: var(--gray-600); margin: 0;">Short & neat</p>
+                          </div>
+
+                          <!-- Show Cut -->
+                          <div style="text-align: center; min-width: 140px; flex: 0 0 auto; scroll-snap-align: start;">
+                            <div
+                              style="width: 140px; height: 140px; background: #e8d4f1; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #d8b8e8; overflow: hidden;">
+                              <a href="assets/6.jpg" class="lightbox-link"><img src="assets/6.jpg" alt="Show Cut"
+                                  style="width: 100%; height: 100%; object-fit: cover;"></a>
+                            </div>
+                            <button class="cut-selector-btn" data-cut="Show Cut"
+                              onclick="selectGroomingCut('Show Cut', event)"
+                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Show
+                              Cut</button>
+                            <p style="font-size: 0.65rem; color: var(--gray-600); margin: 0;">Fancy & styled</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Save Profile Toggle - visible only for logged in users -->
+                    <div id="saveProfileSection" style="display: none; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--gray-200);">
+                      <label class="toggle-chip" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                        <input type="checkbox" id="saveProfileToggle" checked>
+                        <span>💾 Save these details for faster booking next time</span>
+                      </label>
+                      <p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 0.5rem;">Your profile will be saved so you can use "Load Saved Profile" on your next visit.</p>
+                    </div>
+                </div>
+
+                <!-- <section id="preferred-cut-section" class="card">
+                    <h4>Not sure what cut? Pick a style or reference</h4>
+                    <div id="preferredCuts" style="display:flex; gap:1rem; flex-wrap:wrap;"></div>
+
+                    <label style="display:flex; align-items:center; margin-top:0.75rem;">
+                      <input id="savePreferredCut" type="checkbox" style="margin-right:0.5rem;" />
+                      Save these details for faster booking next time
+                    </label>
+
+                hidden input included in booking POST -->
+                <input type="hidden" id="preferredCutInput" name="preferredCut" value="">
+                </section>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navigation Buttons -->
+
+
+          <div class="booking-nav"
+            style="display: flex !important; position: relative !important; margin-top: 10px !important; justify-content: flex-end !important; gap: 0.75rem !important; width: 100% !important;">
+            <button id="prevBtn" class="btn btn-outline" style="display: none;">
+              ← Previous
+            </button>
+            <div style="flex: 1;"></div>
+            <button id="nextBtn" class="btn btn-primary" disabled>
+              Next →
+            </button>
+            <button id="submitBooking" class="btn btn-primary" style="display: none;">
+              Submit Booking
+            </button>
+          </div>
+
+          <!-- Summary Sidebar -->
+          <div class="summary-sidebar">
+            <div id="bookingSummary">
+              <!-- Summary will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Lightbox Modal -->
+  <div id="lightbox">
+    <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img id="lightbox-image" src="" alt="Full size image">
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Submitting your booking...</p>
+      <p class="loading-subtext">Please wait while we process your appointment</p>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Yen's Pet Shop. All rights reserved.</p>
+      <p style="margin-top: 0.5rem; font-size: 0.9rem;">📞 0951 986 5882 | ✉️ yenspetshop@gmail.com</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/firebase-db.js"></script>
+  <link rel="stylesheet" href="css/custom-alert.css">
+  <script src="js/main.js"></script>
+  <script src="js/custom-alert.js"></script>
+  <script type="module" src="js/auth.js"></script>
+
+  <!-- Refactored Booking System Modules -->
+  <script src="js/booking-state.js"></script>
+  <script src="js/booking-logic.js"></script>
+  <script src="js/booking-ui.js"></script>
+  <script src="js/modal-system.js"></script>
+  <script src="js/booking-events.js"></script>
+  <script src="js/booking-integration.js"></script>
+
+  <script type="module" src="js/booking.js"></script>
+
+  <!-- Policy Agreement & Loading Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Policy scroll detection
+      const policyContainer = document.getElementById('policyScrollContainer');
+      const policyCheckbox = document.getElementById('agreeToPolicy');
+      const scrollIndicator = document.getElementById('scrollIndicator');
+      
+      if (policyContainer && policyCheckbox && scrollIndicator) {
+        // Check if already scrolled to bottom on load
+        setTimeout(function() {
+          const scrollTop = policyContainer.scrollTop;
+          const scrollHeight = policyContainer.scrollHeight;
+          const clientHeight = policyContainer.clientHeight;
+          const scrollPercentage = scrollHeight > 0 ? (scrollTop / (scrollHeight - clientHeight)) * 100 : 0;
+          
+          if (scrollPercentage >= 85 || (scrollHeight - clientHeight <= 10)) {
+            policyCheckbox.disabled = false;
+            scrollIndicator.classList.add('hidden');
+          }
+        }, 100);
+        
+        policyContainer.addEventListener('scroll', function() {
+          const scrollTop = policyContainer.scrollTop;
+          const scrollHeight = policyContainer.scrollHeight;
+          const clientHeight = policyContainer.clientHeight;
+          const scrollPercentage = scrollHeight > 0 ? (scrollTop / (scrollHeight - clientHeight)) * 100 : 0;
+          
+          // Enable checkbox when user scrolls to 85% of the content or near bottom
+          if (scrollPercentage >= 85 || (scrollHeight - scrollTop - clientHeight <= 10)) {
+            policyCheckbox.disabled = false;
+            scrollIndicator.classList.add('hidden');
+          }
+        });
+      }
+      
+      // Loading overlay functions - use custom alert system for dynamic messages
+      window.showLoadingOverlay = function(message) {
+        // Use custom alert loading if available
+        if (window.customAlert && typeof window.customAlert.showLoading === 'function') {
+          window.customAlert.showLoading(message || 'Loading...');
+        } else {
+          // Fallback to HTML overlay
+          const overlay = document.getElementById('loadingOverlay');
+          if (overlay) {
+            // Update message if provided
+            const textEl = overlay.querySelector('.loading-text');
+            if (textEl && message) {
+              textEl.textContent = message;
+            }
+            overlay.classList.add('active');
+          }
+        }
+      };
+      
+      window.hideLoadingOverlay = function() {
+        // Use custom alert loading if available
+        if (window.customAlert && typeof window.customAlert.hideLoading === 'function') {
+          window.customAlert.hideLoading();
+        } else {
+          // Fallback to HTML overlay
+          const overlay = document.getElementById('loadingOverlay');
+          if (overlay) {
+            overlay.classList.remove('active');
+          }
+        }
+      };
+      
+      // Add event listener to policy checkbox to enable Next button
+      if (policyCheckbox) {
+        policyCheckbox.addEventListener('change', function() {
+          const nextBtn = document.getElementById('nextBtn');
+          if (nextBtn) {
+            nextBtn.disabled = !this.checked;
+          }
+        });
+        
+        policyCheckbox.addEventListener('click', function() {
+          setTimeout(() => {
+            const nextBtn = document.getElementById('nextBtn');
+            if (nextBtn) {
+              nextBtn.disabled = !this.checked;
+            }
+          }, 50);
+        });
+      }
+      
+      // Call enableNextButton after a short delay to ensure DOM is ready
+      setTimeout(function() {
+        if (typeof enableNextButton === 'function') {
+          enableNextButton();
+        }
+      }, 500);
+      
+      // Hook into submit booking button
+      const submitBtn = document.getElementById('submitBooking');
+      if (submitBtn) {
+        const originalClick = submitBtn.onclick;
+        submitBtn.addEventListener('click', function(e) {
+          // Show loading overlay when submitting with proper message
+          showLoadingOverlay('Submitting your booking...');
+          
+          // Hide after 10 seconds if not redirected (fallback)
+          setTimeout(function() {
+            hideLoadingOverlay();
+          }, 10000);
+        });
+      }
+    });
+  </script>
+
+  <script>
+    // Render header nav links based on authentication state
+    document.addEventListener('DOMContentLoaded', function () {
+      async function renderNav() {
+        const user = await getCurrentUser();
+        const mainNav = document.getElementById('mainNavLinks');
+        const mobileNav = document.getElementById('mobileNavLinks');
+        if (!mainNav || !mobileNav) return;
+        
+        if (user) {
+          // Determine dashboard URL based on role
+          let dashboardUrl = 'customer-dashboard.html';
+          let dashboardLabel = 'My Dashboard';
+          const role = (user.role || '').toLowerCase();
+          if (role === 'admin') {
+            dashboardUrl = 'admin-dashboard.html';
+            dashboardLabel = 'Admin Dashboard';
+          } else if (role === 'groomer' || role === 'groomers' || role === 'staff') {
+            dashboardUrl = 'groomer-dashboard.html';
+            dashboardLabel = 'Groomer Dashboard';
+          }
+          
+          mainNav.innerHTML = '<li><a href="index.html">Home</a></li>' +
+            '<li><a href="services.html">Services</a></li>' +
+            '<li><a href="reviews.html">Reviews</a></li>' +
+            '<li><a href="' + dashboardUrl + '">' + dashboardLabel + '</a></li>' +
+            '<li><a href="#" onclick="logout(event)">Logout</a></li>';
+          mobileNav.innerHTML = '<li><a href="index.html">Home</a></li>' +
+            '<li><a href="services.html">Services</a></li>' +
+            '<li><a href="reviews.html">Reviews</a></li>' +
+            '<li><a href="' + dashboardUrl + '">' + dashboardLabel + '</a></li>' +
+            '<li><a href="#" onclick="logout(event)">Logout</a></li>';
+        } else {
+          mainNav.innerHTML = '<li><a href="index.html">Home</a></li>' +
+            '<li><a href="services.html">Services</a></li>' +
+            '<li><a href="reviews.html">Reviews</a></li>' +
+            '<li><a href="login.html">Login</a></li>';
+          mobileNav.innerHTML = '<li><a href="index.html">Home</a></li>' +
+            '<li><a href="services.html">Services</a></li>' +
+            '<li><a href="reviews.html">Reviews</a></li>' +
+            '<li><a href="login.html">Login</a></li>';
+        }
+      }
+      renderNav();
+
+      // Initialize refactored booking system
+      console.log('Initializing refactored booking system...');
+      if (typeof bookingIntegration !== 'undefined' && bookingIntegration.init) {
+        bookingIntegration.init().then(() => {
+          console.log('✓ Booking system initialized successfully');
+        }).catch(error => {
+          console.error('✗ Failed to initialize booking system:', error);
+        });
+      } else {
+        console.warn('Booking integration not available');
+      }
+    });
+  </script>
+</body>
+
+</html>

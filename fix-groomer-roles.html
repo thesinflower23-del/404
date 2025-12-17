@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fix Groomer Roles - BestBuddies</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .status {
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .status.info {
+      background: #e3f2fd;
+      color: #1976d2;
+      border-left: 4px solid #1976d2;
+    }
+    .status.success {
+      background: #e8f5e9;
+      color: #388e3c;
+      border-left: 4px solid #388e3c;
+    }
+    .status.error {
+      background: #ffebee;
+      color: #c62828;
+      border-left: 4px solid #c62828;
+    }
+    button {
+      background: #1976d2;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 0;
+    }
+    button:hover {
+      background: #1565c0;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    #output {
+      margin-top: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .item {
+      padding: 10px;
+      margin: 5px 0;
+      background: white;
+      border-left: 3px solid #ddd;
+      border-radius: 2px;
+    }
+    .item.success {
+      border-left-color: #4caf50;
+      background: #f1f8f6;
+    }
+    .item.error {
+      border-left-color: #f44336;
+      background: #fef5f5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Fix Groomer Roles</h1>
+    <p>This tool will update all groomer user records to have the correct role and groomerId.</p>
+    
+    <div class="status info">
+      <strong>ℹ️ What this does:</strong>
+      <ul>
+        <li>Updates Sam, Jinold, Jom, Botchoy, Ejay to role: "groomer"</li>
+        <li>Sets their groomerId to match their groomer record</li>
+        <li>Keeps other users unchanged</li>
+      </ul>
+    </div>
+
+    <button onclick="fixGroomerRoles()" id="fixBtn">Fix Groomer Roles</button>
+    <button onclick="clearOutput()" id="clearBtn">Clear Output</button>
+
+    <div id="output"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBFIRv4kufQt_cAJ0nLTV2No_zsSOFFq_w",
+      authDomain: "bestbuddiespetshop.firebaseapp.com",
+      projectId: "bestbuddiespetshop",
+      storageBucket: "bestbuddiespetshop.firebasestorage.app",
+      messagingSenderId: "954635072456",
+      appId: "1:954635072456:web:696796ead82c6dc04546fd",
+      measurementId: "G-GSV3XX38CG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Groomer mapping
+    const groomerMap = {
+      "sam@gmail.com": "groomer-sam",
+      "jinold@gmail.com": "groomer-jinold",
+      "jom@gmail.com": "groomer-jom",
+      "botchoy@gmail.com": "groomer-botchoy",
+      "ejay@gmail.com": "groomer-ejay"
+    };
+
+    window.fixGroomerRoles = async function() {
+      const btn = document.getElementById('fixBtn');
+      const output = document.getElementById('output');
+      
+      btn.disabled = true;
+      output.innerHTML = '<div class="status info">Starting to fix groomer roles...</div>';
+
+      try {
+        // Get all users
+        const usersRef = ref(db, 'users');
+        const snapshot = await get(usersRef);
+        
+        if (!snapshot.exists()) {
+          output.innerHTML += '<div class="item error">❌ No users found in database</div>';
+          btn.disabled = false;
+          return;
+        }
+
+        const users = snapshot.val();
+        let updated = 0;
+        let skipped = 0;
+
+        // Update each groomer
+        for (const [userId, user] of Object.entries(users)) {
+          const groomerId = groomerMap[user.email];
+          
+          if (groomerId) {
+            try {
+              // Update user record
+              const userRef = ref(db, `users/${userId}`);
+              await update(userRef, {
+                role: "groomer",
+                groomerId: groomerId
+              });
+
+              const html = `<div class="item success">
+                ✅ <strong>${user.name}</strong> (${user.email})<br>
+                &nbsp;&nbsp;→ role: "groomer", groomerId: "${groomerId}"
+              </div>`;
+              output.innerHTML += html;
+              updated++;
+            } catch (error) {
+              const html = `<div class="item error">
+                ❌ <strong>${user.name}</strong> - ${error.message}
+              </div>`;
+              output.innerHTML += html;
+            }
+          } else {
+            skipped++;
+          }
+          
+          // Small delay between requests
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+
+        const summary = `<div class="status success">
+          <strong>✅ Complete!</strong><br>
+          Updated: ${updated} groomer accounts<br>
+          Skipped: ${skipped} other accounts<br>
+          <br>
+          Now log in with sam@gmail.com and you should see the groomer dashboard!
+        </div>`;
+        output.innerHTML += summary;
+      } catch (error) {
+        output.innerHTML += `<div class="item error">❌ Error: ${error.message}</div>`;
+      }
+      
+      btn.disabled = false;
+    };
+
+    window.clearOutput = function() {
+      document.getElementById('output').innerHTML = '';
+    };
+  </script>
+</body>
+</html>

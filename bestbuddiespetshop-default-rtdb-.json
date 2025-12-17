@@ -1,0 +1,485 @@
+{
+  "groomers": {
+    "groomer-botchoy": {
+      "id": "groomer-botchoy",
+      "maxDailyBookings": 3,
+      "name": "Botchoy",
+      "reserve": false,
+      "specialty": "Creative trims & styling"
+    },
+    "groomer-ejay": {
+      "id": "groomer-ejay",
+      "maxDailyBookings": 3,
+      "name": "Ejay",
+      "reserve": false,
+      "specialty": "Cat whisperer"
+    },
+    "groomer-jinold": {
+      "id": "groomer-jinold",
+      "maxDailyBookings": 3,
+      "name": "Jinold",
+      "reserve": false,
+      "specialty": "Senior pet handler"
+    },
+    "groomer-jom": {
+      "id": "groomer-jom",
+      "maxDailyBookings": 3,
+      "name": "Jom",
+      "reserve": false,
+      "specialty": "Double-coat care"
+    },
+    "groomer-sam": {
+      "id": "groomer-sam",
+      "maxDailyBookings": 3,
+      "name": "Sam",
+      "reserve": false,
+      "specialty": "Small breed specialist"
+    }
+  },
+  "packages": {
+    "addon-1765165396890": {
+      "createdAt": 1765165396890,
+      "duration": 15,
+      "id": "addon-1765165396890",
+      "name": "Anti - Tick & Flea (FLIP 1cc)",
+      "tiers": [
+        {
+          "label": "Per Service",
+          "price": 124
+        }
+      ],
+      "type": "addon"
+    },
+    "addon-dematting": {
+      "duration": 25,
+      "id": "addon-dematting",
+      "includes": [
+        "Targeted de-matting service"
+      ],
+      "name": "Add-on · De-matting",
+      "tiers": [
+        {
+          "label": "Light tangles",
+          "price": 80
+        },
+        {
+          "label": "Heavy tangles",
+          "price": 250
+        }
+      ],
+      "type": "addon"
+    },
+    "addon-normal-cut": {
+      "duration": 30,
+      "id": "addon-normal-cut",
+      "includes": [
+        "Basic trim"
+      ],
+      "name": "Trim · Normal Cut",
+      "tiers": [
+        {
+          "label": "Small",
+          "price": 180
+        },
+        {
+          "label": "Large",
+          "price": 220
+        }
+      ],
+      "type": "addon"
+    },
+    "addon-styling": {
+      "duration": 45,
+      "id": "addon-styling",
+      "includes": [
+        "Detailed styling"
+      ],
+      "name": "Trim · Trimming & Styling",
+      "tiers": [
+        {
+          "label": "Small",
+          "price": 280
+        },
+        {
+          "label": "Large",
+          "price": 350
+        }
+      ],
+      "type": "addon"
+    },
+    "addon-tick-flea": {
+      "duration": 15,
+      "id": "addon-tick-flea",
+      "includes": [
+        "Price depends on vials used"
+      ],
+      "name": "Treatment · Tick & Flea",
+      "tiers": [
+        {
+          "label": "Base",
+          "price": 0
+        }
+      ],
+      "type": "addon"
+    },
+    "addon-toothbrush": {
+      "duration": 5,
+      "id": "addon-toothbrush",
+      "includes": [
+        "Individual toothbrush to bring home"
+      ],
+      "name": "Add-on · Toothbrush",
+      "tiers": [
+        {
+          "label": "Per item",
+          "price": 25
+        }
+      ],
+      "type": "addon"
+    },
+    "bubble-bath": {
+      "duration": 60,
+      "id": "bubble-bath",
+      "includes": [
+        "Bath & Dry",
+        "Brush / De-Shedding",
+        "Hygiene Trim",
+        "Nail Trim",
+        "Ear Clean",
+        "Foot Pad Clean",
+        "Cologne"
+      ],
+      "name": "🧴 Shampoo Bath 'n Bubble",
+      "tiers": [
+        {
+          "label": "5kg & below",
+          "price": 350
+        },
+        {
+          "label": "5.1 – 8kg",
+          "price": 450
+        },
+        {
+          "label": "8.1 – 15kg",
+          "price": 550
+        },
+        {
+          "label": "15.1 – 30kg",
+          "price": 600
+        },
+        {
+          "label": "30kg & above",
+          "price": 700
+        }
+      ],
+      "type": "any"
+    },
+    "full-basic": {
+      "duration": 75,
+      "id": "full-basic",
+      "includes": [
+        "Bath & Dry",
+        "Brush / De-Shedding",
+        "Hair Cut (Basic)",
+        "Nail Trim",
+        "Ear Clean",
+        "Foot Pad Clean",
+        "Cologne"
+      ],
+      "name": "✂️ Full Package · Basic",
+      "tiers": [
+        {
+          "label": "5kg & below",
+          "price": 530
+        },
+        {
+          "label": "5.1 – 8kg",
+          "price": 630
+        },
+        {
+          "label": "8.1 – 15kg",
+          "price": 750
+        },
+        {
+          "label": "15.1 – 30kg",
+          "price": 800
+        },
+        {
+          "label": "30kg & above",
+          "price": 920
+        }
+      ],
+      "type": "any"
+    },
+    "full-styled": {
+      "duration": 90,
+      "id": "full-styled",
+      "includes": [
+        "Bath & Dry",
+        "Brush / De-Shedding",
+        "Hair Cut (Styled)",
+        "Nail Trim",
+        "Ear Clean",
+        "Foot Pad Clean",
+        "Cologne"
+      ],
+      "name": "✂️ Full Package · Trimming & Styling",
+      "tiers": [
+        {
+          "label": "5kg & below",
+          "price": 630
+        },
+        {
+          "label": "5.1 – 8kg",
+          "price": 730
+        },
+        {
+          "label": "8.1 – 15kg",
+          "price": 880
+        },
+        {
+          "label": "15.1 – 30kg",
+          "price": 930
+        },
+        {
+          "label": "30kg & above",
+          "price": 1050
+        }
+      ],
+      "type": "any"
+    },
+    "single-service": {
+      "duration": 15,
+      "id": "single-service",
+      "includes": [
+        "Choose from Nail Trim, Ear Clean, or Hygiene Focus",
+        "Add to any package as needed"
+      ],
+      "name": "🚿 Single Service · Mix & Match",
+      "tiers": [
+        {
+          "label": "Nail Cutting (N/C)",
+          "price": 50
+        },
+        {
+          "label": "Ear Cleaning (E/C)",
+          "price": 70
+        },
+        {
+          "label": "Facial Cut & Clean 5kg & below",
+          "price": 120
+        },
+        {
+          "label": "Facial Cut & Clean 30kg & above",
+          "price": 170
+        }
+      ],
+      "type": "any"
+    }
+  },
+  "users": {
+    "2FbWyfVy5daYGnwJlSbtVAVuT5e2": {
+      "email": "botchoy@gmail.com",
+      "id": "groomer-botchoy",
+      "isBanned": false,
+      "name": "Botchoy",
+      "role": "groomers",
+      "warning": 0
+    },
+    "3xhABmMlT8Sr0fNPXdRMEqaSdrC2": {
+      "email": "jom@gmail.com",
+      "id": "groomer-jom",
+      "isBanned": false,
+      "name": "Jom",
+      "role": "groomer",
+      "warning": 0
+    },
+    "47SPJOisUMe7ODKjdvXyEX8kRpr1": {
+      "email": "jinold@gmail.com",
+      "id": "groomer-jinold",
+      "isBanned": false,
+      "name": "Jinold",
+      "role": "groomer",
+      "warning": 0
+    },
+    "CNzHbApId8P1VYDMcDfGMW5WMgF3": {
+      "createdAt": 1764835040920,
+      "email": "lawrencesereno05@gmail.com",
+      "id": "CNzHbApId8P1VYDMcDfGMW5WMgF3",
+      "isBanned": false,
+      "name": "Lawrence Sereno",
+      "phoneNumber": "09358148814",
+      "role": "customer",
+      "warnings": 0
+    },
+    "COut4svktVfNAabSlWEd3gto5VA3": {
+      "createdAt": 1765117753467,
+      "email": "qweety@gmail.com",
+      "gender": "Male",
+      "id": "COut4svktVfNAabSlWEd3gto5VA3",
+      "isBanned": false,
+      "name": "james",
+      "phone": "09451236784",
+      "role": "customer",
+      "warnings": 0
+    },
+    "F5So7qhwbBhmnXaoTGqe1jjV8az2": {
+      "email": "admin@gmail.com",
+      "id": "F5So7qhwbBhmnXaoTGqe1jjV8az2",
+      "name": "admin",
+      "role": "admin"
+    },
+    "QpXlu2QSVGbWNqcp0anwwC6k1Og2": {
+      "createdAt": 1764837408507,
+      "email": "james@gmail.com",
+      "id": "QpXlu2QSVGbWNqcp0anwwC6k1Og2",
+      "isBanned": false,
+      "name": "james",
+      "phone": "09351488148",
+      "role": "customer",
+      "warnings": 0
+    },
+    "RdK1cyznHvWW5wbYw4FOb8cYSEM2": {
+      "email": "ejay@gmail.com",
+      "id": "groomer-ejay",
+      "isBanned": false,
+      "name": "ejay",
+      "role": "groomer",
+      "warning": 0
+    },
+    "W6LfEGUXmmOJmdSw12Q2NGvRemA3": {
+      "createdAt": 1765162059553,
+      "email": "crisjhonprocurato96@gmail.com",
+      "gender": "Male",
+      "id": "W6LfEGUXmmOJmdSw12Q2NGvRemA3",
+      "isBanned": false,
+      "name": "crisreggae21",
+      "phone": "09101983739",
+      "role": "customer",
+      "warnings": 0
+    },
+    "WCxGGcEZ9Xa5uDoooouPjexNQv22": {
+      "createdAt": 1764891031678,
+      "email": "qwerty@gmail.com",
+      "gender": "Male",
+      "id": "WCxGGcEZ9Xa5uDoooouPjexNQv22",
+      "isBanned": false,
+      "name": "Lawrence",
+      "phone": "09645218774",
+      "role": "customer",
+      "warnings": 0
+    },
+    "YuJEqSsOgZSJ2A83FrIFfFoSnA52": {
+      "createdAt": 1765355521615,
+      "email": "sam@gmail.com",
+      "id": "groomer-sam",
+      "isBanned": false,
+      "name": "sam",
+      "role": "groomer",
+      "warnings": 0
+    },
+    "cNfReQzdGvXfJiRNdpbTHwIaE2i1": {
+      "address": "luna street",
+      "createdAt": 1764924975187,
+      "email": "thesinflower23@gmail.com",
+      "id": "cNfReQzdGvXfJiRNdpbTHwIaE2i1",
+      "isBanned": false,
+      "name": "Lawrence",
+      "phone": "09662233605",
+      "role": "customer",
+      "warnings": 0
+    },
+    "groomer-user-botchoy": {
+      "createdAt": 1765351537045,
+      "email": "botchoy@gmail.com",
+      "id": "groomer-botchoy",
+      "isBanned": false,
+      "name": "Botchoy",
+      "password": "qwerty",
+      "role": "groomers",
+      "warnings": 0
+    },
+    "groomer-user-ejay": {
+      "createdAt": 1765351537045,
+      "email": "ejay@gmail.com",
+      "id": "groomer-ejay",
+      "isBanned": false,
+      "name": "Ejay",
+      "password": "qwerty",
+      "role": "groomers",
+      "warnings": 0
+    },
+    "groomer-user-jinold": {
+      "createdAt": 1765351537045,
+      "email": "jinold@gmail.com",
+      "id": "groomer-jinold",
+      "isBanned": false,
+      "name": "Jinold",
+      "password": "qwerty",
+      "role": "groomers",
+      "warnings": 0
+    },
+    "groomer-user-jom": {
+      "createdAt": 1765351537045,
+      "email": "jom@gmail.com",
+      "id": "groomer-jom",
+      "isBanned": false,
+      "name": "Jom",
+      "password": "qwerty",
+      "role": "groomers",
+      "warnings": 0
+    },
+    "groomer-user-sam": {
+      "createdAt": 1765351537045,
+      "email": "sam@gmail.com",
+      "id": "groomer-sam",
+      "isBanned": false,
+      "name": "Sam",
+      "password": "qwerty",
+      "role": "groomers",
+      "warnings": 0
+    },
+    "h53wEfqfc1O8XKJUmjuAFSfVzur2": {
+      "createdAt": 1764926134097,
+      "email": "client@gmail.com",
+      "gender": "Male",
+      "id": "h53wEfqfc1O8XKJUmjuAFSfVzur2",
+      "isBanned": false,
+      "name": "client",
+      "phone": "09358144814",
+      "role": "customer",
+      "warnings": 0
+    },
+    "hTCuyXZma6f1Co5oYfKrYAyD32Z2": {
+      "createdAt": 1764828063249,
+      "email": "lawernce@gmail.com",
+      "id": "hTCuyXZma6f1Co5oYfKrYAyD32Z2",
+      "isBanned": false,
+      "name": "lawrence",
+      "role": "customer",
+      "warnings": 0
+    },
+    "sKskhVEOY7MfoldYENYsB1E9hBn1": {
+      "createdAt": 1765262395087,
+      "email": "among@gmail.com",
+      "gender": "Female",
+      "id": "sKskhVEOY7MfoldYENYsB1E9hBn1",
+      "isBanned": false,
+      "name": "among",
+      "phone": "09235123124",
+      "role": "customer",
+      "warnings": 0
+    },
+    "sxo5vBYFW1YMUg8w73MZCw2QkK23": {
+      "createdAt": 1765189056029,
+      "email": "qweet@gmal.com",
+      "gender": "Male",
+      "id": "sxo5vBYFW1YMUg8w73MZCw2QkK23",
+      "isBanned": false,
+      "name": "kiel",
+      "phone": "09623412372",
+      "role": "customer",
+      "warnings": 0
+    }
+  }
+}

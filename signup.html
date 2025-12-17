@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - BestBuddies Pet Grooming</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/signup.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a class="logo" href="index.html">
+        <img src="assets/logo.png" alt="BestBuddies logo" class="logo-mark">
+        <div class="logo-text">
+          <span class="logo-wordmark">BestBuddies Pet Grooming</span>
+        </div>
+      </a>
+      <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="login.html">Login</a></li>
+      </ul>
+    </nav>
+    <div class="mobile-drawer-overlay"></div>
+    <div class="mobile-drawer">
+      <div class="mobile-drawer-header">
+        <a class="logo" href="index.html" style="display: flex; align-items: center; gap: 0.85rem;">
+          <img src="assets/logo.png" alt="BestBuddies logo" class="logo-mark" style="width: 48px; height: 48px;">
+          <div class="logo-text">
+            <span class="logo-wordmark" style="font-size: 1rem;">BestBuddies Pet Grooming</span>
+          </div>
+        </a>
+        <button class="mobile-drawer-close" aria-label="Close menu">×</button>
+      </div>
+      <ul class="mobile-drawer-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="login.html">Login</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <div class="container-sm">
+      <div class="card" style="max-width: 500px; margin: 3rem auto;">
+        <div class="card-header">
+          <h2 class="card-title text-center">Create Your Account</h2>
+        </div>
+        <div class="card-body">
+          <form id="signupForm">
+            <div class="form-group">
+              <label for="name" class="form-label">Full Name</label>
+              <input type="text" id="name" class="form-input" placeholder="Enter your full name" required>
+            </div>
+
+            <div class="form-group">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" id="email" class="form-input" placeholder="Enter your email" required>
+              <small style="color: #666; margin-top: 0.25rem; display: block;">A verification link will be sent to this email</small>
+            </div>
+
+            <div class="form-group">
+              <label for="phone" class="form-label">Phone Number (11 digits)</label>
+              <input type="text" id="phone" class="form-input" placeholder="e.g. 09123456789" required inputmode="numeric" pattern="[0-9]{11}" maxlength="11" oninput="validatePhoneInput(this)">
+              <small id="phoneError" style="color: #e74c3c; display: none; margin-top: 0.25rem;">Phone number must be exactly 11 digits (numbers only)</small>
+            </div>
+
+            <div class="form-group">
+              <label for="gender" class="form-label">Gender (Optional)</label>
+              <select id="gender" class="form-input">
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" id="password" class="form-input"
+                placeholder="Enter your password (min. 6 characters)" required minlength="6">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+              Sign Up
+            </button>
+          </form>
+
+          <div style="text-align: center; margin-top: 1.5rem;">
+            <p>Already have an account? <a href="login.html">Login here</a></p>
+            <p style="margin-top: 0.5rem;">
+              <a href="index.html">← Back to Home</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Yen's Pet Shop. All rights reserved.</p>
+      <p style="margin-top: 0.5rem; font-size: 0.9rem;">📞 0951 986 5882 | ✉️ yenspetshop@gmail.com</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/firebase-db.js"></script>
+  <link rel="stylesheet" href="css/custom-alert.css">
+  <script src="js/main.js"></script>
+  <script src="js/custom-alert.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script>
+    // Phone number validation - only allow numbers, exactly 11 digits
+    function validatePhoneInput(input) {
+      const phoneError = document.getElementById('phoneError');
+      // Remove any non-digit characters
+      input.value = input.value.replace(/[^\d]/g, '');
+      
+      // Show error if letters were typed or length is wrong
+      if (input.value.length > 0 && input.value.length !== 11) {
+        phoneError.style.display = 'block';
+        phoneError.textContent = 'Phone number must be exactly 11 digits';
+        input.style.borderColor = '#e74c3c';
+      } else if (input.value.length === 11) {
+        phoneError.style.display = 'none';
+        input.style.borderColor = '#2e7d32';
+      } else {
+        phoneError.style.display = 'none';
+        input.style.borderColor = '';
+      }
+    }
+    
+    // Preserve return= parameter when switching between signup/login during booking flow
+    document.addEventListener('DOMContentLoaded', function () {
+      const params = new URLSearchParams(window.location.search);
+      const returnPage = params.get('return');
+      if (returnPage) {
+        const loginLinks = document.querySelectorAll('a[href="login.html"]');
+        loginLinks.forEach(a => {
+          a.href = `login.html?return=${encodeURIComponent(returnPage)}`;
+        });
+      }
+      
+      // Add keypress listener to prevent non-numeric input for phone
+      const phoneInput = document.getElementById('phone');
+      if (phoneInput) {
+        phoneInput.addEventListener('keypress', function(e) {
+          if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
+            e.preventDefault();
+            const phoneError = document.getElementById('phoneError');
+            phoneError.style.display = 'block';
+            phoneError.textContent = 'Only numbers are allowed!';
+            setTimeout(() => { phoneError.style.display = 'none'; }, 2000);
+          }
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

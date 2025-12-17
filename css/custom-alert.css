@@ -1,0 +1,264 @@
+/* Custom Alert System Styles */
+
+.custom-alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(4px);
+}
+
+.custom-alert-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.custom-alert-box {
+    background: white;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    transform: scale(0.8);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-align: center;
+    position: relative;
+}
+
+.custom-alert-overlay.active .custom-alert-box {
+    transform: scale(1);
+}
+
+/* Header Sections with Icons */
+.custom-alert-header {
+    padding: 2rem 1rem 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.custom-alert-icon-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 2;
+}
+
+/* Background Patterns */
+.custom-alert-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    /* Dot pattern overlay */
+    background-image: radial-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px);
+    background-size: 10px 10px;
+}
+
+/* Content Section */
+.custom-alert-content {
+    padding: 0 2rem 2rem;
+}
+
+.custom-alert-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.custom-alert-message {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+/* Buttons */
+.custom-alert-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.custom-alert-btn {
+    padding: 0.75rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+    border: 2px solid transparent;
+    min-width: 100px;
+}
+
+.custom-alert-btn:hover {
+    transform: translateY(-2px);
+}
+
+.custom-alert-btn:active {
+    transform: translateY(0);
+}
+
+/* --- Variants --- */
+
+/* Success */
+.alert-success .custom-alert-header {
+    background-color: #00d284;
+    /* Green */
+}
+
+.alert-success .custom-alert-icon-circle {
+    color: #00d284;
+}
+
+.alert-success .custom-alert-btn-primary {
+    background: white;
+    color: #00d284;
+    border-color: #00d284;
+}
+
+.alert-success .custom-alert-btn-primary:hover {
+    background: #00d284;
+    color: white;
+}
+
+/* Failed */
+.alert-failed .custom-alert-header {
+    background-color: #ff3b5c;
+    /* Red */
+}
+
+.alert-failed .custom-alert-icon-circle {
+    color: #ff3b5c;
+}
+
+.alert-failed .custom-alert-btn-primary {
+    background: white;
+    color: #ff3b5c;
+    border-color: #ff3b5c;
+}
+
+.alert-failed .custom-alert-btn-primary:hover {
+    background: #ff3b5c;
+    color: white;
+}
+
+/* Warning */
+.alert-warning .custom-alert-header {
+    background-color: #ffc107;
+    /* Yellow */
+}
+
+.alert-warning .custom-alert-icon-circle {
+    color: #ffc107;
+}
+
+.alert-warning .custom-alert-btn-primary {
+    background: white;
+    color: #ffc107;
+    border-color: #ffc107;
+}
+
+.alert-warning .custom-alert-btn-primary:hover {
+    background: #ffc107;
+    color: white;
+}
+
+/* Confirmation */
+.alert-confirmation .custom-alert-header {
+    background-color: #2196f3;
+    /* Blue */
+}
+
+.alert-confirmation .custom-alert-icon-circle {
+    color: #2196f3;
+}
+
+.alert-confirmation .custom-alert-btn-primary {
+    background: #2196f3;
+    color: white;
+}
+
+.alert-confirmation .custom-alert-btn-secondary {
+    background: white;
+    color: #2196f3;
+    border: 2px solid #2196f3;
+}
+
+/* Loading */
+.alert-loading .custom-alert-header {
+    background-color: #6c757d;
+    /* Gray */
+}
+
+.alert-loading .custom-alert-title {
+    color: #333;
+    font-weight: 600;
+}
+
+.alert-loading .custom-alert-message {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #6c757d;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .custom-alert-box {
+        width: 95%;
+    }
+
+    .custom-alert-header {
+        padding: 1.5rem 1rem 1rem;
+    }
+
+    .custom-alert-icon-circle {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border-width: 3px;
+    }
+}

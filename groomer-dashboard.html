@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Groomer Dashboard - BestBuddies Pet Grooming</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/groomer-dashboard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <nav>
+      <a class="logo" href="index.html">
+        <img src="assets/logo.png" alt="BestBuddies logo" class="logo-mark">
+        <div class="logo-text">
+          <span class="logo-wordmark">BestBuddies Pet Grooming</span>
+        </div>
+      </a>
+      <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="#" onclick="logout(event)">Logout</a></li>
+      </ul>
+    </nav>
+    <div class="mobile-drawer-overlay"></div>
+    <div class="mobile-drawer">
+      <div class="mobile-drawer-header">
+        <a class="logo" href="index.html" style="display: flex; align-items: center; gap: 0.85rem;">
+          <img src="assets/logo.png" alt="BestBuddies logo" class="logo-mark" style="width: 48px; height: 48px;">
+          <div class="logo-text">
+            <span class="logo-wordmark" style="font-size: 1rem;">BestBuddies Pet Grooming</span>
+          </div>
+        </a>
+        <button class="mobile-drawer-close" aria-label="Close menu">×</button>
+      </div>
+      <ul class="mobile-drawer-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="#" onclick="logout(event)">Logout</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <div class="container-lg" id="groomerDashboard">
+      <div class="dashboard-header" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(222, 222, 222, 0.7)); border: none;">
+        <div>
+          <h1 class="dashboard-title" style="margin-bottom: 0.5rem;">
+            🧑‍⚕️ Hello, <span id="groomerWelcomeName">Groomer</span>
+          </h1>
+          <p style="color: var(--gray-600); font-size: 1.125rem;">
+            Submit absence requests and stay updated with the team's schedule.
+          </p>
+        </div>
+        <div class="badge badge-info" id="nextDayOffBadge">No upcoming day-off</div>
+      </div>
+
+      <div class="stats-grid" id="groomerStats" style="margin-top: 2rem;"></div>
+
+      <div class="grid grid-2" style="margin-top: 2rem; gap: 1.5rem;">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">👤 Profile & Skills</h2>
+          </div>
+          <div class="card-body">
+            <form id="groomerProfileForm">
+              <div class="form-group">
+                <label for="groomerName" class="form-label">Name</label>
+                <input type="text" id="groomerName" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label for="groomerSpecialty" class="form-label">Specialty / Skills</label>
+                <textarea id="groomerSpecialty" class="form-textarea" rows="3" placeholder="e.g., Creative trims, Double-coat care, Cat whisperer, Senior pets"></textarea>
+                <small class="form-hint">Describe your grooming skills and specialties</small>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%;">Update Profile</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">🔐 Change Password</h2>
+          </div>
+          <div class="card-body">
+            <form id="groomerPasswordForm">
+              <div class="form-group">
+                <label for="groomerCurrentPassword" class="form-label">Current Password</label>
+                <input type="password" id="groomerCurrentPassword" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label for="groomerNewPassword" class="form-label">New Password</label>
+                <input type="password" id="groomerNewPassword" class="form-input" minlength="6" required>
+              </div>
+              <div class="form-group">
+                <label for="groomerConfirmPassword" class="form-label">Confirm New Password</label>
+                <input type="password" id="groomerConfirmPassword" class="form-input" minlength="6" required>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%;">Update Password</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="margin-top: 2rem;">
+        <div>
+          <section class="card">
+            <div class="card-header">
+              <h2 class="card-title">📄 Request Time Off</h2>
+            </div>
+            <div class="card-body">
+              <form id="absenceForm">
+                <div class="form-group">
+                  <label class="form-label">Date of absence</label>
+                  <div id="absenceCalendarPicker"></div>
+                  <input type="hidden" id="absenceDate" required>
+                </div>
+                <div class="form-group">
+                  <label for="absenceReason" class="form-label">Reason</label>
+                  <textarea id="absenceReason" class="form-input" placeholder="Tell us why you need to be absent" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Proof (image or PDF)</label>
+                  <input type="file" id="absenceProof" class="form-input" accept="image/*,.pdf">
+                  <small class="text-muted">Optional but recommended for approvals.</small>
+                </div>
+                <button class="btn btn-primary" type="submit" style="width: 100%;">Submit Request</button>
+              </form>
+            </div>
+          </section>
+        </div>
+        <div>
+          <section class="card">
+            <div class="card-header">
+              <h2 class="card-title">🗓️ Calendar</h2>
+            </div>
+            <div class="card-body">
+              <div id="groomerCalendar"></div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <section class="section" style="margin-top: 2rem;">
+        <h2 class="section-title">📋 Absence History</h2>
+        <div id="absenceHistory"></div>
+      </section>
+
+      <section class="section" style="margin-top: 2rem;">
+        <h2 class="section-title">🧾 Booking Groom History</h2>
+        <p style="color: var(--gray-600); margin-bottom: 1rem; text-align: center;">See each customer's selected package, weight tier, add-ons, and estimated price.</p>
+        <div id="groomerBookingsContainer"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Yen's Pet Shop. All rights reserved.</p>
+      <p style="margin-top: 0.5rem; font-size: 0.9rem;">📞 0951 986 5882 | ✉️ yenspetshop@gmail.com</p>
+    </div>
+  </footer>
+
+  <div id="modalRoot"></div>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/firebase-db.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/custom-alert.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script src="js/groomer.js"></script>
+</body>
+</html>
+
