@@ -1848,7 +1848,7 @@ async function openBookingDetailModal(bookingId) {
       ` : ''}
       
       <div class="summary-item" style="background: #e8f5e9; padding: 0.75rem; border-radius: 0.25rem; margin-top: 0.5rem; border-left: 4px solid #2e7d32;">
-        <span class="summary-label" style="color: #2e7d32; font-weight: 700; font-size: 1.1rem;">💰 Total Amount:</span>
+        <span class="summary-label" style="color: #2e7d32; font-weight: 700; font-size: 1.1rem;">💰 Balance:</span>
         <span class="summary-value" style="color: #2e7d32; font-weight: 700; font-size: 1.2rem;">${formatCurrency(totalAmount)}</span>
       </div>
     </div>
@@ -4150,7 +4150,7 @@ async function openCustomerPricingBreakdownModal(bookingId) {
         ` : ''}
 
         <div style="display: flex; justify-content: space-between; background: #e8f5e9; padding: 0.75rem; border-radius: 4px; border-left: 3px solid #2e7d32;">
-          <span style="color: #2e7d32; font-weight: 700;">💰 Total Amount:</span>
+          <span style="color: #2e7d32; font-weight: 700;">💰 Balance:</span>
           <span style="font-weight: 700; color: #2e7d32; font-size: 1.1rem;">${formatCurrency(totalAmount)}</span>
         </div>
       </div>
