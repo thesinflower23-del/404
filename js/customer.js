@@ -172,6 +172,9 @@ async function loadCustomerDashboard() {
       // Update the cache BEFORE rendering
       customerBookingsCache = userBookings;
       
+      // Clear stats cache to force recalculation
+      localStorage.removeItem('quickStats_cache');
+      
       // Update quick stats
       await loadQuickStats();
       
