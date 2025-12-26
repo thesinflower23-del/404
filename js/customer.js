@@ -246,11 +246,16 @@ async function loadQuickStatsWithAnimation() {
   const totalBookings = bookings.length;
   const cancelledStatuses = ['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'];
   
-  // Filter pending bookings - exclude expired ones
+  // Filter pending bookings - Pay Now never expires, Pay Later expires after appointment time
   const pendingBookings = bookings.filter(b => {
     if (normalizeStatus(b.status) !== 'pending') return false;
     
-    // Check if booking is expired (past appointment time)
+    // Pay Now bookings: Never expire, always count as pending
+    if (b.paymentChoice === 'payNow') {
+      return true;
+    }
+    
+    // Pay Later or no choice: Check if booking is expired (past appointment time)
     if (b.date && b.time) {
       const bookingDate = new Date(b.date);
       const now = new Date();
@@ -631,11 +636,16 @@ async function loadQuickStats() {
   // Slots removed
   const cancelledStatuses = ['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'];
   
-  // Filter pending bookings - exclude expired ones
+  // Filter pending bookings - Pay Now never expires, Pay Later expires after appointment time
   const pendingBookings = bookings.filter(b => {
     if (normalizeStatus(b.status) !== 'pending') return false;
     
-    // Check if booking is expired (past appointment time)
+    // Pay Now bookings: Never expire, always count as pending
+    if (b.paymentChoice === 'payNow') {
+      return true;
+    }
+    
+    // Pay Later or no choice: Check if booking is expired (past appointment time)
     if (b.date && b.time) {
       const bookingDate = new Date(b.date);
       const now = new Date();
@@ -1045,9 +1055,17 @@ function showLiveCountdownNow() {
     return;
   }
   
-  // Sort by date and time to get the soonest appointment
+  // Sort by: 1) Pay Later first (needs auto-cancel), 2) then by soonest appointment time
   const pendingBooking = pendingBookings.sort((a, b) => {
-    // Parse dates properly
+    // Prioritize Pay Later bookings (they have auto-cancel)
+    const aIsPayLater = a.paymentChoice === 'payLater' ? 0 : 1;
+    const bIsPayLater = b.paymentChoice === 'payLater' ? 0 : 1;
+    
+    if (aIsPayLater !== bIsPayLater) {
+      return aIsPayLater - bIsPayLater;
+    }
+    
+    // If same payment choice, sort by soonest appointment time
     const dateA = new Date(a.date);
     const dateB = new Date(b.date);
     
@@ -1073,10 +1091,20 @@ function showLiveCountdownNow() {
     return;
   }
   
-  // Calculate expiration time
+  // Calculate expiration time based on payment choice
   const { hour, minute } = parseBookingTime(pendingBooking.time);
   const expiresAt = new Date(pendingBooking.date);
-  expiresAt.setHours(hour, minute, 0, 0);
+  
+  // Different cutoff times based on payment choice:
+  // - Pay Now: 30 minutes after start (shown in booking card)
+  // - Pay Later: 1 hour BEFORE start (auto-cancel time)
+  if (pendingBooking.paymentChoice === 'payLater') {
+    // Pay Later: 1 hour before appointment start
+    expiresAt.setHours(hour - 1, minute, 0, 0);
+  } else {
+    // Pay Now or no choice: 30 minutes after start
+    expiresAt.setHours(hour, minute + 30, 0, 0);
+  }
   
   // Update pet info with formatted time
   const petEmoji = pendingBooking.petType === 'dog' ? '🐕' : '🐈';
@@ -1087,7 +1115,8 @@ function showLiveCountdownNow() {
   const formattedTime = formatTimeDisplay(pendingBooking.time);
   
   petEl.innerHTML = `${petEmoji} ${pendingBooking.petName} · ${dateStr} @ ${formattedTime}`;
-  expiresEl.innerHTML = `Expires at ${formatTimeDisplay(expiresAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }))} on ${expiresAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+  const countdownLabel = pendingBooking.paymentChoice === 'payLater' ? 'Auto-cancel at' : 'Cutoff at';
+  expiresEl.innerHTML = `${countdownLabel} ${expiresAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} on ${expiresAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
   
   // Show container
   container.style.display = 'block';
@@ -1107,6 +1136,8 @@ function showLiveCountdownNow() {
       hoursEl.textContent = '00';
       minutesEl.textContent = '00';
       secondsEl.textContent = '00';
+      // Hide the countdown container when expired
+      container.style.display = 'none';
       if (sidebarCountdownInterval) {
         clearInterval(sidebarCountdownInterval);
         sidebarCountdownInterval = null;
@@ -1321,35 +1352,51 @@ function getBookingExpirationInfo(booking) {
     return { expired: false, expiresAt: null, timeRemaining: null, html: '' };
   }
   
-  // Parse time (handles "9:30 AM", "2:00 PM", "9am-12pm", "09:00 - 12:00")
-  let bookingHour = 0;
-  let bookingMinute = 0;
+  // Check if payment proof has been sent
+  const hasPaymentProof = booking.paymentProofUrl || booking.paymentProof;
   
-  // For time ranges like "09:00 - 12:00", extract just the start time
-  let startTime = bookingTime;
+  let expiresAt;
+  
+  // For all bookings: countdown until CUTOFF time (30 minutes after appointment start)
+  let startHour = 0;
+  let startMinute = 0;
+  
+  // For time ranges like "12pm-3pm", extract the START time
   if (bookingTime.includes('-')) {
-    startTime = bookingTime.split('-')[0].trim();
-  }
-  
-  const timeMatch = startTime.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/i);
-  if (timeMatch) {
-    bookingHour = parseInt(timeMatch[1], 10);
-    bookingMinute = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
-    const isPM = timeMatch[3] && /pm/i.test(timeMatch[3]);
-    const isAM = timeMatch[3] && /am/i.test(timeMatch[3]);
-    
-    // Convert to 24-hour format
-    if (isPM && bookingHour !== 12) {
-      bookingHour += 12;
-    } else if (isAM && bookingHour === 12) {
-      bookingHour = 0;
+    const startTime = bookingTime.split('-')[0].trim();
+    const timeMatch = startTime.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/i);
+    if (timeMatch) {
+      startHour = parseInt(timeMatch[1], 10);
+      startMinute = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+      const isPM = timeMatch[3] && /pm/i.test(timeMatch[3]);
+      const isAM = timeMatch[3] && /am/i.test(timeMatch[3]);
+      
+      if (isPM && startHour !== 12) {
+        startHour += 12;
+      } else if (isAM && startHour === 12) {
+        startHour = 0;
+      }
     }
-    // If no AM/PM specified, assume it's already in 24-hour format or morning time
+  } else {
+    // Single time format - use as-is
+    const timeMatch = bookingTime.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/i);
+    if (timeMatch) {
+      startHour = parseInt(timeMatch[1], 10);
+      startMinute = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+      const isPM = timeMatch[3] && /pm/i.test(timeMatch[3]);
+      const isAM = timeMatch[3] && /am/i.test(timeMatch[3]);
+      
+      if (isPM && startHour !== 12) {
+        startHour += 12;
+      } else if (isAM && startHour === 12) {
+        startHour = 0;
+      }
+    }
   }
   
-  // Create expiration date (appointment time)
-  const expiresAt = new Date(bookingDate);
-  expiresAt.setHours(bookingHour, bookingMinute, 0, 0);
+  // Add 30 minutes for cutoff time
+  expiresAt = new Date(bookingDate);
+  expiresAt.setHours(startHour, startMinute + 30, 0, 0);
   
   const now = new Date();
   const timeRemaining = expiresAt.getTime() - now.getTime();
@@ -1412,7 +1459,7 @@ function getBookingExpirationInfo(booking) {
       <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
           <span style="font-size: 1.1rem;">⏳</span>
-          <span style="font-weight: 600;">Pay to confirm</span>
+          <span style="font-weight: 600;">Cutoff in</span>
         </div>
         <div class="live-countdown-timer" style="display: flex; align-items: center; gap: 0.15rem; font-family: 'Inter', monospace; font-weight: 700; font-size: 1.1rem;">
           <span class="countdown-hrs" style="background: rgba(255,255,255,0.8); padding: 0.25rem 0.4rem; border-radius: 4px; min-width: 28px; text-align: center;">${formatTimeUnit(hoursRemaining)}</span>
@@ -1423,7 +1470,7 @@ function getBookingExpirationInfo(booking) {
         </div>
       </div>
       <div style="font-size: 0.7rem; margin-top: 0.4rem; opacity: 0.8;">
-        Expires at ${expiresAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} on ${expiresAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+        Cutoff at ${expiresAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} on ${expiresAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
       </div>
     </div>`
   };
