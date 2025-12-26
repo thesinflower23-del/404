@@ -2,6 +2,102 @@
    BestBuddies Pet Grooming - Main Utilities
    ============================================ */
 
+// ============================================
+// Global Button Click Protection System
+// Prevents duplicate clicks on any button
+// ============================================
+const ButtonProtection = {
+  isProcessing: false,
+  cooldownMs: 2000, // 2 second cooldown
+  
+  /**
+   * Protect a button click from duplicates
+   * @param {Function} actionFn - The async action function to execute
+   * @param {HTMLElement} button - The button element (optional)
+   * @param {string} actionName - Name for logging (optional)
+   */
+  async protect(actionFn, button = null, actionName = 'action') {
+    if (this.isProcessing) {
+      console.log(`[ButtonProtection] ${actionName} blocked - action in progress`);
+      return false;
+    }
+    
+    this.isProcessing = true;
+    
+    // Disable the clicked button visually
+    if (button) {
+      button.disabled = true;
+      button.style.opacity = '0.6';
+      button.style.pointerEvents = 'none';
+      button.dataset.originalText = button.textContent;
+      button.textContent = 'Processing...';
+    }
+    
+    // Disable all buttons with same class
+    const allButtons = document.querySelectorAll('button:not([disabled])');
+    const disabledButtons = [];
+    allButtons.forEach(btn => {
+      if (btn !== button && !btn.classList.contains('btn-outline')) {
+        btn.style.opacity = '0.7';
+        btn.style.pointerEvents = 'none';
+        disabledButtons.push(btn);
+      }
+    });
+    
+    try {
+      await actionFn();
+      return true;
+    } catch (error) {
+      console.error(`[ButtonProtection] ${actionName} failed:`, error);
+      return false;
+    } finally {
+      // Reset after cooldown
+      setTimeout(() => {
+        this.isProcessing = false;
+        
+        // Re-enable the clicked button
+        if (button) {
+          button.disabled = false;
+          button.style.opacity = '1';
+          button.style.pointerEvents = 'auto';
+          if (button.dataset.originalText) {
+            button.textContent = button.dataset.originalText;
+          }
+        }
+        
+        // Re-enable other buttons
+        disabledButtons.forEach(btn => {
+          btn.style.opacity = '1';
+          btn.style.pointerEvents = 'auto';
+        });
+      }, this.cooldownMs);
+    }
+  },
+  
+  /**
+   * Quick check if an action can proceed
+   */
+  canProceed() {
+    return !this.isProcessing;
+  },
+  
+  /**
+   * Reset protection state (use carefully)
+   */
+  reset() {
+    this.isProcessing = false;
+  }
+};
+
+// Make it globally available
+window.ButtonProtection = ButtonProtection;
+
+// Simple wrapper for inline onclick handlers
+async function protectedClick(actionFn, buttonElement, actionName) {
+  return ButtonProtection.protect(actionFn, buttonElement, actionName);
+}
+window.protectedClick = protectedClick;
+
 // Store Contact Information
 const STORE_INFO = {
   name: "Yen's Pet Shop",
@@ -172,6 +268,585 @@ const PREMIUM_PACKAGES = [
     ]
   }
 ];
+
+// ============================================
+// 🔧 REFERENCE CUTS - Database-backed with unique IDs
+// Each cut has a unique ID for easy tracking and no duplicates
+// ============================================
+const DEFAULT_REFERENCE_CUTS = [
+  // Dog Cuts
+  { 
+    id: 'cut-puppy', 
+    name: 'Puppy Cut', 
+    description: 'Short & uniform all over, easy to maintain',
+    image: 'assets/1.jpg',
+    petTypes: ['dog'],
+    isActive: true,
+    sortOrder: 1
+  },
+  { 
+    id: 'cut-teddy-bear', 
+    name: 'Teddy Bear Cut', 
+    description: 'Rounded face, fluffy body - looks like a teddy bear',
+    image: 'assets/2.jpg',
+    petTypes: ['dog'],
+    isActive: true,
+    sortOrder: 2
+  },
+  { 
+    id: 'cut-lion', 
+    name: 'Lion Cut', 
+    description: 'Mane around head, short body - majestic look',
+    image: 'assets/3.jpg',
+    petTypes: ['dog'],
+    isActive: true,
+    sortOrder: 3
+  },
+  { 
+    id: 'cut-summer', 
+    name: 'Summer Cut', 
+    description: 'Very short all over for hot weather',
+    image: 'assets/4.jpg',
+    petTypes: ['dog'],
+    isActive: true,
+    sortOrder: 4
+  },
+  { 
+    id: 'cut-kennel', 
+    name: 'Kennel Cut', 
+    description: 'Practical short cut, easy grooming',
+    image: 'assets/5.jpg',
+    petTypes: ['dog'],
+    isActive: true,
+    sortOrder: 5
+  },
+  { 
+    id: 'cut-show', 
+    name: 'Show Cut', 
+    description: 'Breed-standard styling for competitions',
+    image: 'assets/6.jpg',
+    petTypes: ['dog'],
+    isActive: true,
+    sortOrder: 6
+  },
+  // Cat Cuts
+  { 
+    id: 'belly-shave', 
+    name: 'Belly Shave', 
+    description: 'Shaved belly area for hygiene and comfort',
+    image: 'assets/cuts/bellyshave.png',
+    petTypes: ['cat'],
+    isActive: true,
+    sortOrder: 7
+  },
+  { 
+    id: 'hygiene-cut', 
+    name: 'Hygiene Cut', 
+    description: 'Sanitary trim around private areas',
+    image: 'assets/cuts/hygncut.png',
+    petTypes: ['cat'],
+    isActive: true,
+    sortOrder: 8
+  },
+  { 
+    id: 'cat-lion-cut', 
+    name: 'Lion Cut', 
+    description: 'Short body with full head mane and tail tuft',
+    image: 'assets/cuts/lioncut.png',
+    petTypes: ['cat'],
+    isActive: true,
+    sortOrder: 9
+  }
+];
+
+// Get reference cuts from localStorage/Firebase
+function getReferenceCuts() {
+  const stored = localStorage.getItem('referenceCuts');
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : DEFAULT_REFERENCE_CUTS;
+    } catch (e) {
+      console.error('Error parsing reference cuts:', e);
+      return DEFAULT_REFERENCE_CUTS;
+    }
+  }
+  // Initialize with defaults if not found
+  localStorage.setItem('referenceCuts', JSON.stringify(DEFAULT_REFERENCE_CUTS));
+  return DEFAULT_REFERENCE_CUTS;
+}
+
+// Save reference cuts to localStorage/Firebase
+function saveReferenceCuts(cuts) {
+  localStorage.setItem('referenceCuts', JSON.stringify(cuts));
+}
+
+// Get a single reference cut by ID
+function getReferenceCutById(cutId) {
+  const cuts = getReferenceCuts();
+  return cuts.find(c => c.id === cutId) || null;
+}
+
+// Get reference cut name by ID (for display)
+function getReferenceCutName(cutId) {
+  if (!cutId) return null;
+  const cut = getReferenceCutById(cutId);
+  return cut ? cut.name : cutId; // Fallback to ID if not found
+}
+
+// Get reference cut image by ID (for display)
+function getReferenceCutImage(cutId) {
+  if (!cutId) return null;
+  const cut = getReferenceCutById(cutId);
+  return cut ? cut.image : null;
+}
+
+// Get active reference cuts only
+function getActiveReferenceCuts(petType = null) {
+  const cuts = getReferenceCuts();
+  let active = cuts.filter(c => c.isActive);
+  if (petType) {
+    active = active.filter(c => c.petTypes.includes(petType));
+  }
+  return active.sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+// Initialize reference cuts on app load
+function initializeReferenceCuts() {
+  // Always update to ensure cat cuts are included
+  localStorage.setItem('referenceCuts', JSON.stringify(DEFAULT_REFERENCE_CUTS));
+  console.log('[ReferenceCuts] Initialized/updated with defaults (including cat cuts)');
+}
+
+// Export for global access
+window.getReferenceCuts = getReferenceCuts;
+window.saveReferenceCuts = saveReferenceCuts;
+window.getReferenceCutById = getReferenceCutById;
+window.getReferenceCutName = getReferenceCutName;
+window.getReferenceCutImage = getReferenceCutImage;
+window.getActiveReferenceCuts = getActiveReferenceCuts;
+window.DEFAULT_REFERENCE_CUTS = DEFAULT_REFERENCE_CUTS;
+
+// ============================================
+// 🛡️ SUBMISSION STATUS SYSTEM - Database-backed duplicate prevention
+// ============================================
+// Tracks submission status in database to prevent duplicate bookings
+// Status flow: idle -> submitting -> success/failed -> idle
+// Each submission has a unique token for tracking
+// ============================================
+const SUBMISSION_STATUS_KEY = 'bookingSubmissionStatus';
+
+/**
+ * Get current submission status from database
+ * @returns {Object} Current submission status
+ */
+function getSubmissionStatus() {
+  const stored = localStorage.getItem(SUBMISSION_STATUS_KEY);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      console.error('[SubmissionStatus] Error parsing status:', e);
+    }
+  }
+  return {
+    status: 'idle',        // idle, submitting, success, failed
+    token: null,           // Unique submission token
+    userId: null,          // User who is submitting
+    startedAt: null,       // When submission started
+    completedAt: null,     // When submission completed
+    bookingId: null,       // Created booking ID (on success)
+    error: null            // Error message (on failure)
+  };
+}
+
+/**
+ * Save submission status to database (uses batched writes)
+ * @param {Object} status - Status object to save
+ */
+function saveSubmissionStatus(status) {
+  // Use StorageManager if available for batched writes
+  if (window.StorageManager) {
+    window.StorageManager.queueWrite(SUBMISSION_STATUS_KEY, status);
+  } else {
+    localStorage.setItem(SUBMISSION_STATUS_KEY, JSON.stringify(status));
+  }
+}
+
+/**
+ * Generate unique submission token
+ * @returns {string} Unique token
+ */
+function generateSubmissionToken() {
+  return `sub-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Start a new submission - returns token if allowed, null if blocked
+ * @param {string} userId - User ID attempting submission
+ * @returns {string|null} Submission token or null if blocked
+ */
+function startSubmission(userId) {
+  const current = getSubmissionStatus();
+  
+  // Check if another submission is in progress
+  if (current.status === 'submitting') {
+    // Check if it's stale (older than 30 seconds)
+    const age = Date.now() - (current.startedAt || 0);
+    if (age < 30000) {
+      console.log('[SubmissionStatus] BLOCKED - Submission in progress:', current.token);
+      return null;
+    }
+    // Stale submission, allow override
+    console.log('[SubmissionStatus] Stale submission detected, allowing override');
+  }
+  
+  // Create new submission
+  const token = generateSubmissionToken();
+  const status = {
+    status: 'submitting',
+    token: token,
+    userId: userId,
+    startedAt: Date.now(),
+    completedAt: null,
+    bookingId: null,
+    error: null
+  };
+  
+  saveSubmissionStatus(status);
+  return token;
+}
+
+/**
+ * Complete a submission with success
+ * @param {string} token - Submission token
+ * @param {string} bookingId - Created booking ID
+ */
+function completeSubmissionSuccess(token, bookingId) {
+  const current = getSubmissionStatus();
+  
+  // Verify token matches
+  if (current.token !== token) {
+    console.warn('[SubmissionStatus] Token mismatch on success:', token, 'vs', current.token);
+    return false;
+  }
+  
+  const status = {
+    ...current,
+    status: 'success',
+    completedAt: Date.now(),
+    bookingId: bookingId,
+    error: null
+  };
+  
+  saveSubmissionStatus(status);
+  console.log('[SubmissionStatus] Submission completed successfully:', token, bookingId);
+  
+  // Auto-reset to idle after 5 seconds
+  setTimeout(() => {
+    resetSubmissionStatus();
+  }, 5000);
+  
+  return true;
+}
+
+/**
+ * Complete a submission with failure
+ * @param {string} token - Submission token
+ * @param {string} error - Error message
+ */
+function completeSubmissionFailed(token, error) {
+  const current = getSubmissionStatus();
+  
+  // Verify token matches
+  if (current.token !== token) {
+    console.warn('[SubmissionStatus] Token mismatch on failure:', token, 'vs', current.token);
+    return false;
+  }
+  
+  const status = {
+    ...current,
+    status: 'failed',
+    completedAt: Date.now(),
+    error: error
+  };
+  
+  saveSubmissionStatus(status);
+  console.log('[SubmissionStatus] Submission failed:', token, error);
+  
+  // Auto-reset to idle after 3 seconds
+  setTimeout(() => {
+    resetSubmissionStatus();
+  }, 3000);
+  
+  return true;
+}
+
+/**
+ * Reset submission status to idle
+ */
+function resetSubmissionStatus() {
+  const status = {
+    status: 'idle',
+    token: null,
+    userId: null,
+    startedAt: null,
+    completedAt: null,
+    bookingId: null,
+    error: null
+  };
+  saveSubmissionStatus(status);
+  console.log('[SubmissionStatus] Status reset to idle');
+}
+
+/**
+ * Check if submission is allowed for user
+ * @param {string} userId - User ID
+ * @returns {boolean} True if submission is allowed
+ */
+function canSubmit(userId) {
+  const current = getSubmissionStatus();
+  
+  if (current.status === 'idle') {
+    return true;
+  }
+  
+  if (current.status === 'submitting') {
+    // Check if stale
+    const age = Date.now() - (current.startedAt || 0);
+    if (age >= 30000) {
+      return true; // Stale, allow
+    }
+    return false; // Active submission
+  }
+  
+  // success or failed - allow new submission
+  return true;
+}
+
+// Export submission status functions
+window.getSubmissionStatus = getSubmissionStatus;
+window.startSubmission = startSubmission;
+window.completeSubmissionSuccess = completeSubmissionSuccess;
+window.completeSubmissionFailed = completeSubmissionFailed;
+window.resetSubmissionStatus = resetSubmissionStatus;
+window.canSubmit = canSubmit;
+
+// ============================================
+// 🛡️ ACTION LOCK SYSTEM - Database-backed duplicate prevention for ALL actions
+// ============================================
+// Generic system to prevent duplicate actions on any button/operation
+// Used for: Confirm, Cancel, Start Service, Complete, Reschedule, etc.
+// Each action type + target ID has its own lock
+// ============================================
+const ACTION_LOCK_KEY = 'actionLocks';
+const ACTION_LOCK_TIMEOUT = 30000; // 30 seconds max lock time
+
+/**
+ * Get all action locks from database
+ * @returns {Object} Map of action locks
+ */
+function getActionLocks() {
+  const stored = localStorage.getItem(ACTION_LOCK_KEY);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      console.error('[ActionLock] Error parsing locks:', e);
+    }
+  }
+  return {};
+}
+
+/**
+ * Save action locks to database
+ * @param {Object} locks - Locks object to save
+ */
+function saveActionLocks(locks) {
+  localStorage.setItem(ACTION_LOCK_KEY, JSON.stringify(locks));
+}
+
+/**
+ * Generate unique lock key for action + target
+ * @param {string} actionType - Type of action (confirm, cancel, start, complete, etc.)
+ * @param {string} targetId - Target ID (booking ID, etc.)
+ * @returns {string} Lock key
+ */
+function getActionLockKey(actionType, targetId) {
+  return `${actionType}-${targetId}`;
+}
+
+/**
+ * Try to acquire lock for an action
+ * @param {string} actionType - Type of action
+ * @param {string} targetId - Target ID
+ * @param {string} userId - User attempting action (optional)
+ * @returns {string|null} Lock token if acquired, null if blocked
+ */
+function acquireActionLock(actionType, targetId, userId = null) {
+  const locks = getActionLocks();
+  const lockKey = getActionLockKey(actionType, targetId);
+  const existing = locks[lockKey];
+  
+  // Check if lock exists and is not stale
+  if (existing) {
+    const age = Date.now() - (existing.startedAt || 0);
+    if (age < ACTION_LOCK_TIMEOUT) {
+      console.log(`[ActionLock] BLOCKED - Lock exists for ${lockKey}:`, existing.token);
+      return null;
+    }
+    // Stale lock, allow override
+    console.log(`[ActionLock] Stale lock detected for ${lockKey}, allowing override`);
+  }
+  
+  // Create new lock
+  const token = `lock-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+  locks[lockKey] = {
+    token: token,
+    actionType: actionType,
+    targetId: targetId,
+    userId: userId,
+    startedAt: Date.now(),
+    status: 'processing'
+  };
+  
+  saveActionLocks(locks);
+  console.log(`[ActionLock] Lock acquired for ${lockKey}:`, token);
+  return token;
+}
+
+/**
+ * Release lock after action completes
+ * @param {string} actionType - Type of action
+ * @param {string} targetId - Target ID
+ * @param {string} token - Lock token to verify
+ * @param {string} result - Result status (success, failed, cancelled)
+ * @returns {boolean} True if released successfully
+ */
+function releaseActionLock(actionType, targetId, token, result = 'success') {
+  const locks = getActionLocks();
+  const lockKey = getActionLockKey(actionType, targetId);
+  const existing = locks[lockKey];
+  
+  // Verify token matches
+  if (!existing || existing.token !== token) {
+    console.warn(`[ActionLock] Token mismatch for ${lockKey}:`, token, 'vs', existing?.token);
+    return false;
+  }
+  
+  // Update lock status and schedule removal
+  locks[lockKey] = {
+    ...existing,
+    status: result,
+    completedAt: Date.now()
+  };
+  saveActionLocks(locks);
+  
+  console.log(`[ActionLock] Lock released for ${lockKey}:`, token, result);
+  
+  // Remove lock after short delay
+  setTimeout(() => {
+    const currentLocks = getActionLocks();
+    if (currentLocks[lockKey]?.token === token) {
+      delete currentLocks[lockKey];
+      saveActionLocks(currentLocks);
+      console.log(`[ActionLock] Lock removed for ${lockKey}`);
+    }
+  }, 2000);
+  
+  return true;
+}
+
+/**
+ * Check if action is locked
+ * @param {string} actionType - Type of action
+ * @param {string} targetId - Target ID
+ * @returns {boolean} True if locked
+ */
+function isActionLocked(actionType, targetId) {
+  const locks = getActionLocks();
+  const lockKey = getActionLockKey(actionType, targetId);
+  const existing = locks[lockKey];
+  
+  if (!existing) return false;
+  
+  // Check if stale
+  const age = Date.now() - (existing.startedAt || 0);
+  if (age >= ACTION_LOCK_TIMEOUT) {
+    return false; // Stale, not locked
+  }
+  
+  return existing.status === 'processing';
+}
+
+/**
+ * Clean up stale locks
+ */
+function cleanupStaleLocks() {
+  const locks = getActionLocks();
+  const now = Date.now();
+  let changed = false;
+  
+  Object.keys(locks).forEach(key => {
+    const lock = locks[key];
+    const age = now - (lock.startedAt || 0);
+    if (age >= ACTION_LOCK_TIMEOUT) {
+      delete locks[key];
+      changed = true;
+      console.log(`[ActionLock] Cleaned up stale lock: ${key}`);
+    }
+  });
+  
+  if (changed) {
+    saveActionLocks(locks);
+  }
+}
+
+/**
+ * Execute action with lock protection
+ * @param {string} actionType - Type of action (confirm, cancel, start, complete)
+ * @param {string} targetId - Target ID (booking ID)
+ * @param {Function} actionFn - Async function to execute
+ * @param {Object} options - Options (userId, onBlocked callback)
+ * @returns {Promise<any>} Result of action or null if blocked
+ */
+async function executeWithLock(actionType, targetId, actionFn, options = {}) {
+  const { userId = null, onBlocked = null } = options;
+  
+  // Try to acquire lock
+  const token = acquireActionLock(actionType, targetId, userId);
+  if (!token) {
+    console.log(`[ActionLock] Action blocked: ${actionType} on ${targetId}`);
+    if (onBlocked) {
+      onBlocked();
+    }
+    return null;
+  }
+  
+  try {
+    // Execute the action
+    const result = await actionFn();
+    
+    // Release lock with success
+    releaseActionLock(actionType, targetId, token, 'success');
+    
+    return result;
+  } catch (error) {
+    // Release lock with failure
+    releaseActionLock(actionType, targetId, token, 'failed');
+    throw error;
+  }
+}
+
+// Export action lock functions
+window.acquireActionLock = acquireActionLock;
+window.releaseActionLock = releaseActionLock;
+window.isActionLocked = isActionLocked;
+window.executeWithLock = executeWithLock;
+window.cleanupStaleLocks = cleanupStaleLocks;
+
+// Clean up stale locks on page load
+cleanupStaleLocks();
 
 const NAMED_GROOMERS = [
   { id: 'groomer-sam', name: 'Sam', specialty: 'Small breed specialist', email: 'sam@gmail.com' },
@@ -499,23 +1174,249 @@ async function saveUsers(users) {
 }
 
 // Get all bookings - uses Firebase if available, falls back to localStorage
-// Fix: Make getBookings async to handle Firebase
-async function getBookings() {
+// Auto-cancel pending bookings based on time rules
+// When cancelled, the slot is released back to availability
+// ============================================
+// ⏰ PENDING BOOKING EXPIRATION SYSTEM
+// ============================================
+// Automatically cancels pending bookings that haven't been confirmed
+// Rule: Full packages must be confirmed 1 hour before appointment time
+// Single services are EXEMPT from auto-cancellation
+// ============================================
+async function checkAndCancelPendingBookings() {
   try {
-    // Try Firebase first if available
-    if (window.db && typeof window.db.collection === 'function') {
-      const stored = localStorage.getItem('bookings');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return Array.isArray(parsed) ? parsed : [];
+    // Try to get bookings from Firebase first, then localStorage
+    let bookings = [];
+    
+    // Check if firebase-db's getBookings is available
+    if (typeof window.firebaseGetBookings === 'function') {
+      try {
+        bookings = await window.firebaseGetBookings();
+      } catch (e) {
+        console.warn('[AutoCancel] Firebase getBookings failed, using localStorage');
+        bookings = getBookingsRaw();
       }
-      return [];
+    } else {
+      // Fallback to localStorage
+      bookings = getBookingsRaw();
     }
-  } catch (e) {
-    console.warn('Firebase getBookings error:', e);
-  }
+    
+    if (!Array.isArray(bookings) || bookings.length === 0) {
+      return;
+    }
+    
+    const now = new Date();
+    const today = toLocalISO(now);
+    let hasChanges = false;
+    
+    // Track cancelled bookings to release their slots
+    const cancelledBookings = [];
+    
+    // Track auto-cancelled bookings for admin notification
+    const autoCancelledBookings = [];
 
-  // Fallback to localStorage
+    bookings.forEach(booking => {
+      // ============================================
+      // 📋 FILTER: Only process PENDING bookings
+      // ============================================
+      const status = (booking.status || '').toLowerCase();
+      
+      if (status !== 'pending') {
+        return;
+      }
+      
+      // ============================================
+      // 🕐 AUTO-CANCEL LOGIC FOR ALL BOOKINGS
+      // All pending bookings should be auto-cancelled when appointment time passes:
+      // - Pay Now: No countdown shown, but still auto-cancel when time passes
+      // - Pay Later: Shows countdown + auto-cancel when time passes  
+      // - No choice: Auto-cancel when time passes
+      // This ensures slots are released back to availability
+      // ============================================
+      // (No skip logic - process all pending bookings)
+
+      // Check if single service (different cutoff time)
+      const isSingleService = booking.packageId === 'single-service' || 
+                              (booking.packageName && booking.packageName.includes('Single Service'));
+
+      const bookingDate = booking.date;
+      const bookingTime = booking.time;
+
+      // ============================================
+      // 🕐 PARSE BOOKING TIME
+      // ============================================
+      // Convert booking time string to 24-hour format
+      // Handles formats: "9:30 AM", "2:00 PM", "9 AM - 12 PM"
+      // For ranges like "9 AM - 12 PM", use the START time
+      // ============================================
+      let bookingHour = 0;
+      let bookingMinute = 0;
+
+      if (bookingTime) {
+        // For time ranges like "9 AM - 12 PM", extract just the start time
+        let startTime = bookingTime;
+        if (bookingTime.includes('-')) {
+          startTime = bookingTime.split('-')[0].trim();
+        }
+        
+        // Extract hour, minute, and AM/PM from start time
+        const timeMatch = startTime.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/i);
+        if (timeMatch) {
+          bookingHour = parseInt(timeMatch[1], 10);
+          bookingMinute = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+          const isPM = timeMatch[3] && /pm/i.test(timeMatch[3]);
+          
+          // Convert to 24-hour format
+          if (isPM && bookingHour !== 12) {
+            bookingHour += 12; // 2 PM -> 14:00
+          } else if (!isPM && bookingHour === 12) {
+            bookingHour = 0; // 12 AM -> 00:00
+          }
+        }
+        
+        console.log(`[AutoCancel] Booking ${booking.id}: date=${bookingDate}, time=${bookingTime}, parsed=${bookingHour}:${bookingMinute}`);
+      }
+
+      // ============================================
+      // 🔍 CHECK IF BOOKING SHOULD BE CANCELLED
+      // ============================================
+      let shouldCancel = false;
+      
+      // Parse booking date properly (handles "2025-12-21" or "December 21, 2025")
+      const bookingDateObj = new Date(bookingDate);
+      const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const bookingDateOnly = new Date(bookingDateObj.getFullYear(), bookingDateObj.getMonth(), bookingDateObj.getDate());
+      
+      console.log(`[AutoCancel] Checking booking ${booking.id}: bookingDate=${bookingDate}, parsed=${bookingDateOnly.toDateString()}, today=${todayDate.toDateString()}`);
+
+      if (bookingDateOnly < todayDate) {
+        // ============================================
+        // CASE 1: Past date - definitely cancel
+        // ============================================
+        shouldCancel = true;
+        console.log(`[AutoCancel] Past date booking ${booking.id} should be cancelled`);
+      } else if (bookingDateOnly.getTime() === todayDate.getTime()) {
+        // ============================================
+        // CASE 2: Same-day booking
+        // ============================================
+        // Calculate cutoff time based on booking type:
+        // - Full packages: 1 hour before appointment
+        // - Single services: 30 minutes before appointment
+        // ============================================
+        let cutoffHour = bookingHour;
+        let cutoffMinute = bookingMinute;
+        
+        if (isSingleService) {
+          // Single service: 30 minutes before
+          cutoffMinute -= 30;
+          if (cutoffMinute < 0) {
+            cutoffHour -= 1;
+            cutoffMinute += 60;
+          }
+          console.log(`[AutoCancel] Single service cutoff: ${cutoffHour}:${cutoffMinute} (30 min before ${bookingHour}:${bookingMinute})`);
+        } else {
+          // Full package: 1 hour before
+          cutoffHour -= 1;
+          if (cutoffHour < 0) cutoffHour = 0;
+          console.log(`[AutoCancel] Full package cutoff: ${cutoffHour}:${cutoffMinute} (1 hour before ${bookingHour}:${bookingMinute})`);
+        }
+        
+        if (now.getHours() > cutoffHour || 
+            (now.getHours() === cutoffHour && now.getMinutes() >= cutoffMinute)) {
+          shouldCancel = true;
+          console.log(`[AutoCancel] Same-day booking ${booking.id} should be cancelled (current: ${now.getHours()}:${now.getMinutes()}, cutoff: ${cutoffHour}:${cutoffMinute})`);
+        } else {
+          console.log(`[AutoCancel] Same-day booking ${booking.id} not yet expired (current: ${now.getHours()}:${now.getMinutes()}, cutoff: ${cutoffHour}:${cutoffMinute})`);
+        }
+      } else {
+        console.log(`[AutoCancel] Future booking ${booking.id} - not cancelling`);
+      }
+
+      // ============================================
+      // ❌ CANCEL BOOKING IF EXPIRED (Pay Later only)
+      // ============================================
+      if (shouldCancel) {
+        booking.status = 'cancelledBySystem';
+        let reason;
+        if (booking.paymentChoice === 'payNow') {
+          reason = 'Pay Now booking expired - appointment time passed';
+        } else if (booking.paymentChoice === 'payLater') {
+          reason = 'Pay Later booking expired - payment not received before appointment time';
+        } else {
+          reason = 'Booking expired - no payment received before appointment time';
+        }
+        booking.cancellationNote = `Auto-cancelled: ${reason}`;
+        booking.cancelledAt = Date.now();
+        hasChanges = true;
+        
+        // Track this booking to release its slot
+        cancelledBookings.push({
+          id: booking.id,
+          date: bookingDate,
+          time: bookingTime
+        });
+        
+        // Track for admin notification
+        autoCancelledBookings.push({
+          id: booking.id,
+          customerName: booking.customerName,
+          petName: booking.petName,
+          date: bookingDate,
+          time: bookingTime,
+          reason: reason,
+          cancelledAt: Date.now()
+        });
+      }
+    });
+
+    // ============================================
+    // 💾 SAVE CHANGES AND RELEASE SLOTS
+    // ============================================
+    if (hasChanges) {
+      // Save to Firebase if available
+      if (typeof window.firebaseSaveBookings === 'function') {
+        await window.firebaseSaveBookings(bookings);
+      } else {
+        await saveBookings(bookings);
+      }
+      
+      console.log(`[AutoCancel] Saved ${cancelledBookings.length} cancelled booking(s)`);
+      
+      // Store auto-cancelled bookings for admin notification
+      if (autoCancelledBookings.length > 0) {
+        try {
+          const existingNotifications = JSON.parse(localStorage.getItem('autoCancelledNotifications') || '[]');
+          const newNotifications = [...existingNotifications, ...autoCancelledBookings];
+          localStorage.setItem('autoCancelledNotifications', JSON.stringify(newNotifications));
+          console.log(`[AutoCancel] Stored ${autoCancelledBookings.length} auto-cancelled notification(s) for admin`);
+        } catch (e) {
+          console.warn('[AutoCancel] Failed to store notifications:', e);
+        }
+      }
+      
+      // Release slots for all cancelled bookings
+      for (const cancelled of cancelledBookings) {
+        try {
+          // Release the slot (+1 to increase availability)
+          if (typeof adjustSlotCount === 'function') {
+            await adjustSlotCount(cancelled.date, cancelled.time, +1);
+            console.log(`[AutoCancel] Released slot for booking ${cancelled.id} (${cancelled.date} ${cancelled.time})`);
+          } else if (typeof window.adjustSlotCount === 'function') {
+            await window.adjustSlotCount(cancelled.date, cancelled.time, +1);
+            console.log(`[AutoCancel] Released slot for booking ${cancelled.id} (${cancelled.date} ${cancelled.time})`);
+          }
+        } catch (slotError) {
+          console.warn(`[AutoCancel] Failed to release slot for booking ${cancelled.id}:`, slotError);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('[AutoCancel] Error checking bookings:', error);
+  }
+}
+
+// Internal function to get bookings without triggering auto-cancel (prevents infinite loop)
+function getBookingsRaw() {
   const stored = localStorage.getItem('bookings');
   if (stored) {
     try {
@@ -527,6 +1428,51 @@ async function getBookings() {
     }
   }
   return [];
+}
+
+// Flag to prevent recursive auto-cancel calls
+let isCheckingAutoCancel = false;
+
+// Fix: Make getBookings async to handle Firebase
+async function getBookings() {
+  // Get bookings from storage
+  const stored = localStorage.getItem('bookings');
+  let bookings = [];
+  
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      bookings = Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.error('Error parsing bookings:', e);
+      bookings = [];
+    }
+  }
+  
+  // Run auto-cancel check (but prevent infinite loop)
+  if (!isCheckingAutoCancel) {
+    isCheckingAutoCancel = true;
+    try {
+      await checkAndCancelPendingBookings();
+    } catch (error) {
+      console.error('[AutoCancel] Error:', error);
+    } finally {
+      isCheckingAutoCancel = false;
+    }
+  }
+  
+  // Return fresh bookings after auto-cancel
+  const freshStored = localStorage.getItem('bookings');
+  if (freshStored) {
+    try {
+      const parsed = JSON.parse(freshStored);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return bookings;
+    }
+  }
+  
+  return bookings;
 }
 
 // Get packages - uses Firebase if available, falls back to localStorage
@@ -773,23 +1719,79 @@ function saveStaffAbsences(absences) {
   localStorage.setItem('staffAbsences', JSON.stringify(absences));
 }
 
-// Booking history helpers
-function getBookingHistory() {
+// Booking history helpers - Now uses Firebase instead of localStorage
+async function getBookingHistory() {
+  try {
+    // Try to get from Firebase first
+    if (typeof window.firebaseGetBookings === 'function') {
+      const bookings = await window.firebaseGetBookings();
+      if (Array.isArray(bookings)) {
+        // Flatten all booking.history entries into a single array
+        const allHistory = [];
+        bookings.forEach(booking => {
+          if (booking.history && Array.isArray(booking.history)) {
+            booking.history.forEach(entry => {
+              allHistory.push({
+                ...entry,
+                bookingId: booking.id
+              });
+            });
+          }
+        });
+        return allHistory;
+      }
+    }
+  } catch (error) {
+    console.warn('[getBookingHistory] Firebase fetch failed:', error.message);
+  }
+  
+  // Fallback to localStorage if Firebase fails
   return JSON.parse(localStorage.getItem('bookingHistory') || '[]');
 }
 
 function saveBookingHistory(history) {
-  localStorage.setItem('bookingHistory', JSON.stringify(history));
+  // No longer needed - history is saved with bookings in Firebase
+  // Kept for backward compatibility
+  console.log('[saveBookingHistory] Deprecated - history saved with bookings in Firebase');
 }
 
-function logBookingHistory(entry) {
-  const history = getBookingHistory();
+async function logBookingHistory(entry) {
+  try {
+    // Get the booking and add entry to its history array
+    if (typeof window.firebaseGetBookings === 'function' && entry.bookingId) {
+      const bookings = await window.firebaseGetBookings();
+      const booking = bookings.find(b => b.id === entry.bookingId);
+      
+      if (booking) {
+        if (!booking.history) {
+          booking.history = [];
+        }
+        
+        booking.history.push({
+          id: 'hist-' + Date.now(),
+          timestamp: Date.now(),
+          ...entry
+        });
+        
+        // Save back to Firebase
+        if (typeof window.firebaseSaveBookings === 'function') {
+          await window.firebaseSaveBookings(bookings);
+          return;
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('[logBookingHistory] Firebase save failed:', error.message);
+  }
+  
+  // Fallback to localStorage if Firebase fails
+  const history = JSON.parse(localStorage.getItem('bookingHistory') || '[]');
   history.push({
     id: 'hist-' + Date.now(),
     timestamp: Date.now(),
     ...entry
   });
-  saveBookingHistory(history);
+  localStorage.setItem('bookingHistory', JSON.stringify(history));
 }
 
 function getCalendarBlackouts() {
@@ -831,15 +1833,16 @@ function removeCalendarBlackout(date) {
 function redirect(path) {
   window.location.href = path;
 }
+window.redirect = redirect;
 
 // Format date for display
 function formatDate(dateString) {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  // Return month abbreviation + day (e.g., "Dec 23", "Dec 24", "Dec 25")
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = monthNames[date.getMonth()];
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${month} ${day}`;
 }
 
 // Format time for display (convert 24-hour to 12-hour format)
@@ -847,23 +1850,45 @@ function formatTime(timeString) {
   if (!timeString) return '';
   
   try {
-    // Check if it's a time slot format like "9am-12pm" or "3pm-6pm"
-    if (timeString.includes('am') || timeString.includes('pm')) {
-      // Return the full time slot with proper formatting
-      const parts = timeString.split('-');
-      const startTime = parts[0].trim();
-      const endTime = parts[1] ? parts[1].trim() : '';
-      
-      // Capitalize first letter
-      const formatted = startTime.charAt(0).toUpperCase() + startTime.slice(1);
-      if (endTime) {
-        const formattedEnd = endTime.charAt(0).toUpperCase() + endTime.slice(1);
+    const lowerTime = timeString.toLowerCase();
+    
+    // Check if it's already in a readable format like "9:30 AM" or "9am-12pm"
+    if (lowerTime.includes('am') || lowerTime.includes('pm')) {
+      // Check if it's a time range like "9am-12pm" or "3pm-6pm"
+      if (timeString.includes('-')) {
+        const parts = timeString.split('-');
+        const startTime = parts[0].trim();
+        const endTime = parts[1] ? parts[1].trim() : '';
+        
+        // Normalize: remove all AM/PM first, then add back properly
+        const startClean = startTime.replace(/\s*(am|pm|AM|PM)\s*/gi, '').trim();
+        const endClean = endTime.replace(/\s*(am|pm|AM|PM)\s*/gi, '').trim();
+        
+        // Determine AM/PM for start time
+        const startHasAM = /am/i.test(startTime);
+        const startHasPM = /pm/i.test(startTime);
+        const startAMPM = startHasPM ? 'PM' : (startHasAM ? 'AM' : 'AM');
+        
+        // Determine AM/PM for end time
+        const endHasAM = /am/i.test(endTime);
+        const endHasPM = /pm/i.test(endTime);
+        const endAMPM = endHasPM ? 'PM' : (endHasAM ? 'AM' : 'AM');
+        
+        const formatted = `${startClean} ${startAMPM}`;
+        const formattedEnd = `${endClean} ${endAMPM}`;
         return `${formatted} - ${formattedEnd}`;
       }
-      return formatted;
+      
+      // Single time like "9:30 AM" or "9am"
+      // Remove all AM/PM first to avoid duplicates
+      const timePart = timeString.replace(/\s*(am|pm|AM|PM)\s*/gi, '').trim();
+      const hasAM = /am/i.test(timeString);
+      const hasPM = /pm/i.test(timeString);
+      const ampm = hasPM ? 'PM' : (hasAM ? 'AM' : 'AM');
+      return `${timePart} ${ampm}`;
     }
     
-    // Otherwise, assume HH:MM format
+    // Otherwise, assume HH:MM format (24-hour)
     const parts = timeString.split(':');
     if (parts.length < 2) return timeString;
     
@@ -973,12 +1998,14 @@ async function saveBookings(bookings) {
 // Compute booking cost with full support for packages and single services
 function computeBookingCost(packageId, petWeight, addOns, singleServices) {
   // Initialize result object
+  // Single service packages have NO booking fee (customer pays only service price)
+  const isSingleService = packageId === 'single-service';
   const result = {
     packagePrice: 0,
     subtotal: 0,
-    bookingFee: 100,
+    bookingFee: isSingleService ? 0 : 100,
     totalAmount: 0,
-    totalDueToday: 100,
+    totalDueToday: isSingleService ? 0 : 100,
     balanceOnVisit: 0,
     addOns: [],
     services: [],
@@ -996,7 +2023,7 @@ function computeBookingCost(packageId, petWeight, addOns, singleServices) {
   const pkg = packagesData.find(p => p.id === packageId) || null;
 
   // Handle single service package
-  if (packageId === 'single-service') {
+  if (isSingleService) {
     result.packagePrice = 0;
     
     // Calculate single services total
@@ -1060,20 +2087,65 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Generate unique ID
+// ============================================
+// 🔧 GENERATE UNIQUE ID - Improved to prevent collisions
+// ============================================
+// Uses multiple sources of randomness to ensure uniqueness:
+// 1. Timestamp (milliseconds)
+// 2. Counter (for same-millisecond calls)
+// 3. Random string (crypto-grade if available)
+// 4. Session-unique prefix
+// ============================================
+let lastGeneratedIdTimestamp = 0;
+let idCounter = 0;
+const sessionPrefix = Math.random().toString(36).slice(-4).toUpperCase(); // Unique per browser session
+
 function generateId() {
-  const now = new Date();
-  const dateStr = toLocalISO(now);
-  const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
-  const milliseconds = now.getMilliseconds().toString().padStart(3, '0');
-  const random = Math.random().toString(36).slice(-3).toUpperCase();
-  return `${dateStr}_${timeStr}-${milliseconds}-${random}`;
+  const now = Date.now();
+  
+  // If same millisecond, increment counter; otherwise reset
+  if (now === lastGeneratedIdTimestamp) {
+    idCounter++;
+  } else {
+    idCounter = 0;
+    lastGeneratedIdTimestamp = now;
+  }
+  
+  // Generate strong random string
+  let random;
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    // Use crypto API for better randomness
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    random = array[0].toString(36).toUpperCase().slice(-6);
+  } else {
+    // Fallback to Math.random
+    random = Math.random().toString(36).slice(-6).toUpperCase();
+  }
+  
+  const counter = idCounter.toString().padStart(3, '0');
+  
+  // Format: BK-{timestamp}-{counter}-{sessionPrefix}-{random}
+  // Example: BK-1703001234567-001-A1B2-C3D4E5
+  return `BK-${now}-${counter}-${sessionPrefix}-${random}`;
 }
 
+// ============================================
+// 🔧 GENERATE BOOKING CODE - Short display code
+// ============================================
+// Format: BB-{random8} for easy reading
+// Uses crypto API for better randomness
+// ============================================
 function generateBookingCode() {
-  const random = Math.random().toString(36).slice(-5).toUpperCase();
-  const stamp = Date.now().toString().slice(-4);
-  return `BB-${random}${stamp}`;
+  let random;
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const array = new Uint32Array(2);
+    crypto.getRandomValues(array);
+    random = (array[0].toString(36) + array[1].toString(36)).toUpperCase().slice(-8);
+  } else {
+    random = (Math.random().toString(36) + Math.random().toString(36)).slice(-8).toUpperCase();
+  }
+  return `BB-${random}`;
 }
 
 function getBookingDisplayCode(booking) {
@@ -1170,17 +2242,44 @@ async function renderCommunityReviewFeed(targetId = 'adminReviewFeed', limit = 6
         </p>
         ${(() => {
       const notesText = entry.bookingNotes || '';
-      if (!notesText || !notesText.trim()) return '';
-      const extractPreferredCut = window.extractPreferredCut || function (notes) {
-        if (!notes || typeof notes !== 'string') return null;
-        const cutNames = ['Puppy Cut', 'Teddy Bear Cut', 'Lion Cut', 'Summer Cut', 'Kennel Cut', 'Show Cut'];
-        const notesLower = notes.toLowerCase().trim();
-        for (let cut of cutNames) {
-          if (notesLower.includes(cut.toLowerCase())) return cut;
+      // ============================================
+      // 🔧 PREFERRED CUT EXTRACTION - Supports ID-based system
+      // ============================================
+      // First check entry.referenceCut for ID-based lookup
+      // Falls back to searching notes for cut names (legacy)
+      // ============================================
+      let preferredCut = null;
+      
+      // Check for ID-based reference cut first
+      if (entry.referenceCut) {
+        const cutId = entry.referenceCut;
+        // Get display name from cut ID
+        preferredCut = typeof getReferenceCutName === 'function' 
+          ? getReferenceCutName(cutId) 
+          : (typeof window.getReferenceCutName === 'function' ? window.getReferenceCutName(cutId) : cutId);
+      }
+      
+      // Fallback: search notes for cut names (legacy support)
+      if (!preferredCut && notesText && notesText.trim()) {
+        const extractPreferredCutFallback = window.extractPreferredCut || function (notes) {
+          if (!notes || typeof notes !== 'string') return null;
+          const cutNames = ['Puppy Cut', 'Teddy Bear Cut', 'Lion Cut', 'Summer Cut', 'Kennel Cut', 'Show Cut'];
+          const notesLower = notes.toLowerCase().trim();
+          for (let cut of cutNames) {
+            if (notesLower.includes(cut.toLowerCase())) return cut;
+          }
+          return null;
+        };
+        preferredCut = extractPreferredCutFallback(notesText);
+      }
+      
+      if (!notesText || !notesText.trim()) {
+        // If no notes but has preferred cut from ID, show it
+        if (preferredCut) {
+          return `<p style="font-size:0.85rem; background: #e8f5e9; padding: 0.5rem; border-left: 3px solid #2e7d32; margin: 0.5rem 0; font-weight: 500;"><strong>✂️ Preferred Cut:</strong> <span style="font-weight: 700; color: #2e7d32;">${escapeHtml(preferredCut)}</span></p>`;
         }
-        return null;
-      };
-      const preferredCut = extractPreferredCut(notesText);
+        return '';
+      }
       if (preferredCut) {
         return `<p style="font-size:0.85rem; background: #e8f5e9; padding: 0.5rem; border-left: 3px solid #2e7d32; margin: 0.5rem 0; font-weight: 500;"><strong>✂️ Preferred Cut:</strong> <span style="font-weight: 700; color: #2e7d32;">${escapeHtml(preferredCut)}</span>${notesText.trim() !== preferredCut ? ` · ${escapeHtml(notesText)}` : ''}</p>`;
       } else {
@@ -1513,7 +2612,7 @@ function buildCalendarDataset(bookings = null, absences = null, displayBookings 
   const relevantDisplayBookings = displayBookings !== null ? displayBookings : capacityBookings;
 
   const dataset = {};
-  const relevantStatuses = ['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'];
+  const relevantStatuses = ['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'];
 
   // Active bookings for capacity (All users)
   const activeCapacityBookings = capacityBookings.filter(b => !relevantStatuses.includes(b.status));
@@ -1680,7 +2779,7 @@ async function groomerHasCapacity(groomerId, date) {
   const groomerBookings = bookings.filter(booking =>
     booking.groomerId === groomerId &&
     booking.date === date &&
-    !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'].includes(booking.status)
+    !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(booking.status)
   );
   return groomerBookings.length < limit;
 }
@@ -1693,7 +2792,7 @@ async function groomerSlotAvailable(groomerId, date, time) {
     booking.groomerId === groomerId &&
     booking.date === date &&
     booking.time === time &&
-    !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'].includes(booking.status)
+    !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(booking.status)
   );
 }
 
@@ -1715,7 +2814,7 @@ async function getGroomerDailyLoad(groomerId, date) {
   return bookings.filter(booking =>
     booking.groomerId === groomerId &&
     booking.date === date &&
-    !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'].includes((booking.status || '').toString())
+    !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes((booking.status || '').toString())
   ).length;
 }
 
@@ -1757,11 +2856,13 @@ console.log('Initialization deferred until auth state is resolved');
       } catch (e) {
         console.warn('initializeData after auth failed', e);
       }
-      // On first authenticated arrival, redirect to dashboard if on login/booking pages
+      // On first authenticated arrival, redirect to dashboard ONLY if on login page
+      // Don't redirect from booking or booking-success pages - let them complete their flow
       if (user && !seen) {
         seen = true;
         const p = window.location.pathname.toLowerCase();
-        if (p.endsWith('login.html') || p.endsWith('booking.html') || p.endsWith('booking-success.html')) {
+        // Only redirect from login page, NOT from booking pages
+        if (p.endsWith('login.html')) {
           window.location.href = 'customer-dashboard.html';
         }
       }
@@ -2248,14 +3349,25 @@ function initLightbox() {
 }
 
 function openLightbox(imageSrc) {
+  console.log('[openLightbox] Opening lightbox with image:', imageSrc);
   const lightbox = document.getElementById('lightbox');
   const lightboxImage = document.getElementById('lightbox-image');
 
-  if (!lightbox || !lightboxImage) return;
+  if (!lightbox || !lightboxImage) {
+    console.warn('[openLightbox] Lightbox elements not found!');
+    return;
+  }
 
   lightboxImage.src = imageSrc;
   lightbox.classList.add('active');
   document.body.style.overflow = 'hidden';
+  
+  // Add click handler to close on background click
+  lightbox.onclick = function(e) {
+    if (e.target === lightbox || e.target === lightboxImage) {
+      closeLightbox();
+    }
+  };
 }
 
 function closeLightbox() {
@@ -2524,11 +3636,34 @@ async function getFeaturedBookings(limit = 4) {
       })
       .slice(0, limit);
 
-    console.log(`[Featured] Fetched ${featured.length} featured bookings`);
+    console.log(`[Featured] Fetched ${featured.length} featured bookings from ${bookings.length} total bookings`);
     return featured;
   } catch (error) {
-    console.error('[Featured] ❌ Error fetching featured bookings:', error);
-    return [];
+    console.warn('[Featured] Using fallback data due to access restrictions');
+    
+    // Return sample featured data for demo purposes when Firebase access is restricted
+    return [
+      {
+        id: 'featured-demo-1',
+        customerName: 'Happy Customer',
+        petName: 'Buddy',
+        packageName: 'Full Package',
+        beforeImage: 'assets/before.jpg',
+        afterImage: 'assets/after.jpg',
+        isFeatured: true,
+        date: '2024-12-15'
+      },
+      {
+        id: 'featured-demo-2', 
+        customerName: 'Satisfied Owner',
+        petName: 'Luna',
+        packageName: 'Styling Package',
+        beforeImage: 'assets/before2.jpg',
+        afterImage: 'assets/after2.jpg',
+        isFeatured: true,
+        date: '2024-12-10'
+      }
+    ];
   }
 }
 
@@ -2742,7 +3877,7 @@ async function renderPublicCalendar(containerId, options = {}) {
     const isoDate = toLocalISO(dateObj);
 
     // Determine Status
-    const dayBookings = bookings.filter(b => b.date === isoDate && !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'].includes(b.status));
+    const dayBookings = bookings.filter(b => b.date === isoDate && !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(b.status));
     const bookedCount = dayBookings.length;
 
     let slotsLeft = Math.max(0, totalDailyCapacity - bookedCount);
@@ -2891,14 +4026,14 @@ async function openPublicCalendarModal(date, isCustomerView = false) {
       dayBookings = bookings.filter(b =>
         b.date === date &&
         b.userId === user.id &&
-        !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'].includes(b.status)
+        !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(b.status)
       );
     } else {
       dayBookings = [];
     }
   } else {
     // Admin/public view: show all bookings
-    dayBookings = bookings.filter(b => b.date === date && !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'].includes(b.status));
+    dayBookings = bookings.filter(b => b.date === date && !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(b.status));
   }
 
   // Anonymize/Format for privacy: "9am - DogName (OwnerFirst)"

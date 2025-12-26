@@ -11,13 +11,14 @@ import { getDatabase } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-
 
 // User-provided Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBFIRv4kufQt_cAJ0nLTV2No_zsSOFFq_w",
-  authDomain: "bestbuddiespetshop.firebaseapp.com",
-  projectId: "bestbuddiespetshop",
-  storageBucket: "bestbuddiespetshop.firebasestorage.app",
-  messagingSenderId: "954635072456",
-  appId: "1:954635072456:web:696796ead82c6dc04546fd",
-  measurementId: "G-GSV3XX38CG"
+  apiKey: "AIzaSyC61GEWq7wYpJ7nu6Fod_3bOBRtM4UpwTA",
+  authDomain: "bestbuddiespetshop-93c00.firebaseapp.com",
+  databaseURL: "https://bestbuddiespetshop-93c00-default-rtdb.firebaseio.com",
+  projectId: "bestbuddiespetshop-93c00",
+  storageBucket: "bestbuddiespetshop-93c00.firebasestorage.app",
+  messagingSenderId: "723356352172",
+  appId: "1:723356352172:web:33e087a9b9e59714576909",
+  measurementId: "G-52Z5H37LC0"
 };
 
 // Initialize Firebase

@@ -490,12 +490,11 @@ function formatDate(dateStr) {
   
   try {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-PH', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    // Return month abbreviation + day (e.g., "Dec 23", "Dec 24", "Dec 25")
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = monthNames[date.getMonth()];
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${month} ${day}`;
   } catch (e) {
     return escapeHtml(dateStr);
   }

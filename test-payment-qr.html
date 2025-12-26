@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test - Payment QR Code Feature</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    body { padding: 2rem; background: #f5f5f5; }
+    .test-container { max-width: 800px; margin: 0 auto; }
+    .test-section { background: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { color: #333; margin-bottom: 1rem; }
+    h2 { color: #555; margin-bottom: 1rem; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: #333; }
+    .form-input { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+    .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; }
+    .btn-primary { background: #333; color: white; }
+    .btn-primary:hover { background: #555; }
+    .preview-box { margin-top: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 8px; text-align: center; }
+    .preview-box img { max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #2196F3; }
+    .customer-view { background: #e3f2fd; padding: 1.5rem; border-radius: 12px; border: 2px solid #2196F3; }
+    .success-msg { background: #e8f5e9; color: #2e7d32; padding: 1rem; border-radius: 8px; margin-top: 1rem; display: none; }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>🧪 Test: Payment QR Code Feature</h1>
+    <p style="color: #666; margin-bottom: 2rem;">This page lets you test the admin QR code upload and see how it appears to customers.</p>
+
+    <!-- Admin Section -->
+    <div class="test-section">
+      <h2>👨‍💼 Admin View - Payment Settings</h2>
+      <p style="color: #666; margin-bottom: 1.5rem;">Upload a QR code image and set payment details. This simulates the admin dashboard.</p>
+      
+      <form id="testPaymentForm" onsubmit="saveTestSettings(event)">
+        <div class="form-group">
+          <label class="form-label">GCash Number</label>
+          <input type="text" id="gcashNumber" class="form-input" placeholder="0951 986 5882" value="0951 986 5882">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Account Name</label>
+          <input type="text" id="accountName" class="form-input" placeholder="Yen's Pet Shop" value="Yen's Pet Shop">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">QR Code Image</label>
+          <input type="file" id="qrCodeInput" accept="image/*" onchange="previewQR(this)" style="margin-bottom: 0.5rem;">
+          
+          <div id="qrPreview" class="preview-box" style="display: none;">
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">Preview:</p>
+            <img id="qrPreviewImg" src="" alt="QR Preview">
+          </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" style="width: 100%;">💾 Save Settings</button>
+        
+        <div id="successMsg" class="success-msg">
+          ✅ Settings saved! Check the customer view below.
+        </div>
+      </form>
+    </div>
+
+    <!-- Customer Section -->
+    <div class="test-section">
+      <h2>👤 Customer View - Booking Success Page</h2>
+      <p style="color: #666; margin-bottom: 1.5rem;">This is how customers will see the payment info after booking.</p>
+      
+      <div class="customer-view">
+        <p style="font-weight: 600; margin-bottom: 0.5rem;">📱 GCash Number:</p>
+        <p id="customerGcash" style="font-size: 1.5rem; font-weight: 700; color: #1565c0; margin: 0;">0951 986 5882</p>
+        <p id="customerAccount" style="font-size: 0.85rem; color: #666; margin-top: 0.5rem;">Account Name: Yen's Pet Shop</p>
+        
+        <!-- QR Code Section -->
+        <div id="customerQRSection" style="margin-top: 1rem; text-align: center; display: none;">
+          <p style="font-size: 0.9rem; color: #555; margin-bottom: 0.5rem;">📷 Scan QR Code to Pay:</p>
+          <img id="customerQRImg" src="" alt="Payment QR Code" 
+            style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #2196F3; cursor: pointer;"
+            onclick="openLightbox()">
+          <p style="font-size: 0.75rem; color: #888; margin-top: 0.5rem;">Tap image to enlarge</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="test-section" style="background: #fff3e0;">
+      <h2>📋 How to Test</h2>
+      <ol style="color: #555; line-height: 1.8;">
+        <li>In the <strong>Admin View</strong> above, enter a GCash number and account name</li>
+        <li>Click "Choose File" and select any QR code image from your computer</li>
+        <li>Click "Save Settings"</li>
+        <li>Check the <strong>Customer View</strong> - it should update with your QR code</li>
+        <li>Click the QR code image to see the lightbox (enlarged view)</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; align-items: center; justify-content: center; cursor: pointer;" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" style="max-width: 90%; max-height: 90%; border-radius: 12px;">
+    <button style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">×</button>
+  </div>
+
+  <script>
+    // Preview QR code
+    function previewQR(input) {
+      const file = input.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('qrPreviewImg').src = e.target.result;
+        document.getElementById('qrPreview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Save settings (simulated)
+    function saveTestSettings(event) {
+      event.preventDefault();
+      
+      const gcash = document.getElementById('gcashNumber').value;
+      const account = document.getElementById('accountName').value;
+      const qrImg = document.getElementById('qrPreviewImg').src;
+      
+      // Update customer view
+      document.getElementById('customerGcash').textContent = gcash;
+      document.getElementById('customerAccount').textContent = 'Account Name: ' + account;
+      
+      // Show QR code if uploaded
+      if (qrImg && qrImg !== '' && !qrImg.includes('undefined')) {
+        document.getElementById('customerQRImg').src = qrImg;
+        document.getElementById('customerQRSection').style.display = 'block';
+      }
+      
+      // Show success message
+      document.getElementById('successMsg').style.display = 'block';
+      setTimeout(() => {
+        document.getElementById('successMsg').style.display = 'none';
+      }, 3000);
+      
+      // Save to localStorage (same key used by the real app)
+      const settings = {
+        gcashNumber: gcash,
+        accountName: account,
+        qrCodeImage: (qrImg && !qrImg.includes('undefined')) ? qrImg : null,
+        updatedAt: Date.now()
+      };
+      
+      localStorage.setItem('paymentSettings', JSON.stringify(settings));
+      localStorage.setItem('testPaymentSettings', JSON.stringify(settings));
+      
+      console.log('Settings saved to localStorage:', settings);
+      alert('✅ Settings saved! Now go to booking.html, complete a booking, and check booking-success.html - the QR code should appear there.');
+    }
+
+    // Lightbox functions
+    function openLightbox() {
+      const qrImg = document.getElementById('customerQRImg').src;
+      if (qrImg) {
+        document.getElementById('lightboxImg').src = qrImg;
+        document.getElementById('lightbox').style.display = 'flex';
+      }
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').style.display = 'none';
+    }
+
+    // Load saved settings on page load
+    window.onload = function() {
+      const saved = localStorage.getItem('testPaymentSettings');
+      if (saved) {
+        const settings = JSON.parse(saved);
+        document.getElementById('gcashNumber').value = settings.gcashNumber || '';
+        document.getElementById('accountName').value = settings.accountName || '';
+        document.getElementById('customerGcash').textContent = settings.gcashNumber || '0951 986 5882';
+        document.getElementById('customerAccount').textContent = 'Account Name: ' + (settings.accountName || "Yen's Pet Shop");
+        
+        if (settings.qrCodeImage) {
+          document.getElementById('qrPreviewImg').src = settings.qrCodeImage;
+          document.getElementById('qrPreview').style.display = 'block';
+          document.getElementById('customerQRImg').src = settings.qrCodeImage;
+          document.getElementById('customerQRSection').style.display = 'block';
+        }
+      }
+    };
+  </script>
+</body>
+</html>

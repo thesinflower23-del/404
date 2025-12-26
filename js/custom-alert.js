@@ -11,11 +11,17 @@ class CustomAlert {
     }
 
     init() {
-        // Create DOM structure
-        if (document.getElementById('customAlertOverlay')) {
-            return; // Already initialized
+        // Check if already exists and reuse
+        const existingOverlay = document.getElementById('customAlertOverlay');
+        const existingBox = document.getElementById('customAlertBox');
+        
+        if (existingOverlay && existingBox) {
+            this.overlay = existingOverlay;
+            this.box = existingBox;
+            return; // Already initialized, reuse existing elements
         }
 
+        // Create DOM structure
         const overlay = document.createElement('div');
         overlay.id = 'customAlertOverlay';
         overlay.className = 'custom-alert-overlay';
@@ -47,8 +53,9 @@ class CustomAlert {
      */
     show(title, message, type = 'success', icon = '✓', btnText = 'Okay') {
         return new Promise((resolve) => {
-            // Reset classes
+            // Reset classes and clear any previous content
             this.box.className = `custom-alert-box alert-${type}`;
+            this.box.innerHTML = ''; // Clear first to prevent duplicates
 
             // Build HTML
             this.box.innerHTML = `
@@ -191,13 +198,79 @@ class CustomAlert {
 // Initialize global instance
 window.customAlert = new CustomAlert();
 
+// Convenience function for backward compatibility
+window.showCustomAlert = function(message, type = 'info') {
+    const title = type === 'success' ? 'Success' : 
+                  type === 'error' ? 'Error' : 
+                  type === 'warning' ? 'Warning' : 'Information';
+    
+    switch(type) {
+        case 'success':
+            return window.customAlert.success(title, message);
+        case 'error':
+            return window.customAlert.error(title, message);
+        case 'warning':
+            return window.customAlert.warning(title, message);
+        case 'info':
+        default:
+            return window.customAlert.info(title, message);
+    }
+};
+
 // Make loading functions globally available
+let loadingTimeout = null;
+
 window.showLoadingOverlay = function(message) {
+    // Clear any existing timeout
+    if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+    }
+    
     window.customAlert.showLoading(message);
+    
+    // Auto-hide after 15 seconds to prevent stuck loading screens
+    loadingTimeout = setTimeout(() => {
+        console.warn('Loading overlay auto-hidden after timeout');
+        window.customAlert.hideLoading();
+    }, 15000);
 };
 
 window.hideLoadingOverlay = function() {
+    // Clear the timeout
+    if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+        loadingTimeout = null;
+    }
+    
     window.customAlert.hideLoading();
+};
+
+// Force clear all overlays (emergency function)
+window.clearAllOverlays = function() {
+    // Clear loading timeout
+    if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+        loadingTimeout = null;
+    }
+    
+    // Hide custom alert overlay
+    if (window.customAlert) {
+        window.customAlert.hideLoading();
+    }
+    
+    // Remove any loading-overlay elements
+    document.querySelectorAll('.loading-overlay, .custom-alert-overlay').forEach(el => {
+        el.classList.remove('active');
+        el.style.display = 'none';
+    });
+    
+    // Remove global loader if exists
+    const globalLoader = document.getElementById('global-loader');
+    if (globalLoader) {
+        globalLoader.remove();
+    }
+    
+    console.log('All overlays cleared');
 };
 
 // Optional: Override window.alert (Note: this makes it async-ish, but window.alert is sync.

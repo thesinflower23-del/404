@@ -930,3 +930,50 @@ div.service-card-hover div.price-item,
     opacity: 1 !important;
   }
 }
+
+
+/* ============================================
+   Contact Section - Mobile Centering
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Center all contact section content on mobile */
+  #contact .grid,
+  #contact .grid > div,
+  section[style*="grid-template-columns"] > div {
+    text-align: center !important;
+  }
+  
+  /* Contact info - center text */
+  #contact div[style*="text-align: left"],
+  section div[style*="text-align: left"] {
+    text-align: center !important;
+  }
+  
+  /* Hours - center text */
+  #contact div[style*="text-align: right"],
+  section div[style*="text-align: right"] {
+    text-align: center !important;
+  }
+  
+  /* Social icons - center */
+  .social-icons-container {
+    justify-content: center !important;
+  }
+  
+  /* Force center all h4 and p in contact area */
+  section:last-of-type h4,
+  section:last-of-type p {
+    text-align: center !important;
+  }
+  
+  /* Book Online button - center */
+  section:last-of-type a[onclick*="handleBookNow"],
+  section:last-of-type a[style*="inline-block"] {
+    display: block !important;
+    width: fit-content !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    margin-top: 0.75rem !important;
+  }
+}

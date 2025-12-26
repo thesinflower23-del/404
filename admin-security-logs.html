@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Logs - Admin Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/admin-dashboard.css">
+  <style>
+    .security-dashboard {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .logs-container {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .logs-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    
+    .logs-filters {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .filter-btn:hover {
+      background: #f5f5f5;
+    }
+    
+    .filter-btn.active {
+      background: #1976d2;
+      color: white;
+      border-color: #1976d2;
+    }
+    
+    .logs-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .logs-table th {
+      background: #f5f5f5;
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .logs-table td {
+      padding: 1rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .logs-table tr:hover {
+      background: #f9f9f9;
+    }
+    
+    .log-level {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    .log-level.info {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+    
+    .log-level.warning {
+      background: #fff3e0;
+      color: #e65100;
+    }
+    
+    .log-level.error {
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    .log-level.security {
+      background: #fce4ec;
+      color: #c2185b;
+    }
+    
+    .alert-box {
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+    
+    .alert-box.security {
+      background: #ffebee;
+      border-left: 4px solid #f44336;
+    }
+    
+    .alert-box.warning {
+      background: #fff3e0;
+      border-left: 4px solid #ff9800;
+    }
+  </style>
+</head>
+<body>
+  <div class="security-dashboard">
+    <h1>🔒 Security Logs & Monitoring</h1>
+    <p style="color: #666; margin-bottom: 2rem;">
+      Monitor booking submission attempts, detect abuse patterns, and prevent duplicates.
+    </p>
+    
+    <!-- Statistics -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-value" id="totalAttempts">0</div>
+        <div class="stat-label">Total Attempts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="successfulSubmissions" style="color: #4caf50;">0</div>
+        <div class="stat-label">Successful</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="blockedAttempts" style="color: #ff9800;">0</div>
+        <div class="stat-label">Blocked</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="duplicatesPrevented" style="color: #f44336;">0</div>
+        <div class="stat-label">Duplicates Prevented</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="securityAlerts" style="color: #e91e63;">0</div>
+        <div class="stat-label">Security Alerts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="uniqueSessions">0</div>
+        <div class="stat-label">Unique Sessions</div>
+      </div>
+    </div>
+    
+    <!-- Security Alerts -->
+    <div id="securityAlerts"></div>
+    
+    <!-- Logs Container -->
+    <div class="logs-container">
+      <div class="logs-header">
+        <h2 style="margin: 0;">📋 Activity Logs</h2>
+        <div class="logs-filters">
+          <button class="filter-btn active" onclick="filterLogs('all')">All</button>
+          <button class="filter-btn" onclick="filterLogs('info')">Info</button>
+          <button class="filter-btn" onclick="filterLogs('warning')">Warnings</button>
+          <button class="filter-btn" onclick="filterLogs('error')">Errors</button>
+          <button class="filter-btn" onclick="filterLogs('security')">Security</button>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-outline" onclick="exportLogs('json')">Export JSON</button>
+          <button class="btn btn-outline" onclick="exportLogs('csv')">Export CSV</button>
+          <button class="btn btn-danger" onclick="clearLogs()">Clear Logs</button>
+        </div>
+      </div>
+      
+      <div style="overflow-x: auto;">
+        <table class="logs-table" id="logsTable">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Level</th>
+              <th>Action</th>
+              <th>User ID</th>
+              <th>Session ID</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="logsTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 3rem; color: #999;">
+                No logs yet. Logs will appear here when users submit bookings.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <script src="js/booking-security-logger.js"></script>
+  <script>
+    let currentFilter = 'all';
+    
+    // Load and display logs
+    function loadLogs() {
+      const stats = BookingSecurityLogger.getStats(3600000); // Last 1 hour
+      
+      // Update statistics
+      document.getElementById('totalAttempts').textContent = stats.totalAttempts;
+      document.getElementById('successfulSubmissions').textContent = stats.successfulSubmissions;
+      document.getElementById('blockedAttempts').textContent = stats.blockedAttempts;
+      document.getElementById('duplicatesPrevented').textContent = stats.duplicatesPrevented;
+      document.getElementById('securityAlerts').textContent = stats.securityAlerts;
+      document.getElementById('uniqueSessions').textContent = stats.uniqueSessions;
+      
+      // Display security alerts
+      displaySecurityAlerts();
+      
+      // Display logs table
+      displayLogsTable();
+    }
+    
+    // Display security alerts
+    function displaySecurityAlerts() {
+      const securityLogs = BookingSecurityLogger.getLogsByLevel('security');
+      const container = document.getElementById('securityAlerts');
+      
+      if (securityLogs.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      
+      const recentAlerts = securityLogs.slice(-5).reverse(); // Last 5 alerts
+      
+      container.innerHTML = recentAlerts.map(log => `
+        <div class="alert-box security">
+          <strong>🚨 Security Alert:</strong> ${log.action.replace(/_/g, ' ').toUpperCase()}
+          <br>
+          <small>${new Date(log.timestamp).toLocaleString()}</small>
+          ${log.pattern ? `<br><small>Pattern: ${log.pattern}</small>` : ''}
+          ${log.recommendation ? `<br><small>Recommendation: ${log.recommendation}</small>` : ''}
+        </div>
+      `).join('');
+    }
+    
+    // Display logs table
+    function displayLogsTable() {
+      let logs = BookingSecurityLogger.getLogs();
+      
+      // Apply filter
+      if (currentFilter !== 'all') {
+        logs = logs.filter(log => log.level === currentFilter);
+      }
+      
+      // Sort by timestamp (newest first)
+      logs.sort((a, b) => b.timestamp - a.timestamp);
+      
+      // Limit to last 100 logs
+      logs = logs.slice(0, 100);
+      
+      const tbody = document.getElementById('logsTableBody');
+      
+      if (logs.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 3rem; color: #999;">
+              No logs found for filter: ${currentFilter}
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = logs.map(log => `
+        <tr>
+          <td style="white-space: nowrap;">${new Date(log.timestamp).toLocaleString()}</td>
+          <td><span class="log-level ${log.level}">${log.level}</span></td>
+          <td>${log.action.replace(/_/g, ' ')}</td>
+          <td>${log.userId}</td>
+          <td style="font-family: monospace; font-size: 0.85rem;">${log.sessionId.substr(0, 12)}...</td>
+          <td>
+            <details>
+              <summary style="cursor: pointer;">View Details</summary>
+              <pre style="margin-top: 0.5rem; padding: 0.5rem; background: #f5f5f5; border-radius: 4px; font-size: 0.85rem; overflow-x: auto;">${JSON.stringify(log, null, 2)}</pre>
+            </details>
+          </td>
+        </tr>
+      `).join('');
+    }
+    
+    // Filter logs
+    function filterLogs(level) {
+      currentFilter = level;
+      
+      // Update active button
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      displayLogsTable();
+    }
+    
+    // Export logs
+    function exportLogs(format) {
+      const data = BookingSecurityLogger.exportLogs(format);
+      const blob = new Blob([data], { type: format === 'json' ? 'application/json' : 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `security-logs-${Date.now()}.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    // Clear logs
+    function clearLogs() {
+      if (confirm('Are you sure you want to clear all security logs? This cannot be undone.')) {
+        BookingSecurityLogger.clearLogs();
+        loadLogs();
+      }
+    }
+    
+    // Auto-refresh every 5 seconds
+    setInterval(loadLogs, 5000);
+    
+    // Initial load
+    loadLogs();
+  </script>
+</body>
+</html>

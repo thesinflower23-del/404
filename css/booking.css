@@ -919,17 +919,24 @@
     padding-bottom: 0.75rem !important;
   }
 
-  /* Hide native scrollbars */
+  /* Show horizontal scrollbar */
   .cuts-carousel {
-    -ms-overflow-style: none;
-    /* IE/Edge */
-    scrollbar-width: none;
-    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: #ccc #f5f5f5;
   }
 
   .cuts-carousel::-webkit-scrollbar {
-    display: none;
-    /* Chrome/Safari */
+    height: 6px;
+  }
+
+  .cuts-carousel::-webkit-scrollbar-track {
+    background: #f5f5f5;
+    border-radius: 3px;
+  }
+
+  .cuts-carousel::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
   }
 
   .cuts-carousel>div {
@@ -1241,14 +1248,28 @@
   scroll-snap-align: start;
 }
 
-/* Hide scrollbar */
+/* Show horizontal scrollbar for better UX */
 .cuts-carousel-wrapper {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc #f5f5f5;
 }
 
 .cuts-carousel-wrapper::-webkit-scrollbar {
-  display: none;
+  height: 8px;
+}
+
+.cuts-carousel-wrapper::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.cuts-carousel-wrapper::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.cuts-carousel-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
 }
 
 /* ============================================
@@ -1314,25 +1335,6 @@
     font-size: 0.85rem !important;
     font-weight: 600 !important;
     text-align: right !important;
-  }
-
-  /* Grooming Cuts - 2x2 Grid on Mobile */
-  .cuts-carousel-wrapper {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 1rem !important;
-    overflow-x: visible !important;
-  }
-
-  .cuts-carousel-wrapper>div {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-  }
-
-  /* Hide carousel nav buttons */
-  .cuts-carousel-btn {
-    display: none !important;
   }
 }
 
@@ -1679,5 +1681,398 @@
   
   .policy-checkbox-label span {
     font-size: 0.85rem;
+  }
+}
+
+/* ============================================
+   Grooming Cuts Reference System Styles
+   ============================================ */
+
+/* Grooming Cuts Container */
+#groomingCutsCarousel {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 16px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Cuts Header */
+.cuts-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.cuts-header h3 {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.cuts-header h3 i {
+  color: #e74c3c;
+  font-size: 1.3rem;
+}
+
+.cuts-header p {
+  color: #6c757d;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Cuts Carousel */
+.cuts-carousel {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 1rem 0;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cuts-carousel::-webkit-scrollbar {
+  height: 8px;
+}
+
+.cuts-carousel::-webkit-scrollbar-track {
+  background: #f1f3f4;
+  border-radius: 4px;
+}
+
+.cuts-carousel::-webkit-scrollbar-thumb {
+  background: #c1c8cd;
+  border-radius: 4px;
+}
+
+.cuts-carousel::-webkit-scrollbar-thumb:hover {
+  background: #a8b2ba;
+}
+
+/* Grooming Cut Card */
+.grooming-cut-card {
+  flex: 0 0 280px;
+  background: var(--bg-color, #ffffff);
+  border: 2px solid var(--border-color, #e0e0e0);
+  border-radius: 16px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.grooming-cut-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  border-color: var(--border-color, #e0e0e0);
+}
+
+.grooming-cut-card.selected {
+  border-color: var(--border-color, #4CAF50);
+  background: var(--bg-color, #f8fff8);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+.grooming-cut-card.selected::before {
+  content: '✓';
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: var(--border-color, #4CAF50);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  z-index: 2;
+}
+
+/* Cut Image Container */
+.cut-image-container {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 1rem auto;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f8f9fa;
+  border: 3px solid var(--border-color, #e0e0e0);
+}
+
+.cut-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.cut-image:hover {
+  transform: scale(1.05);
+}
+
+.cut-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.cut-image-container:hover .cut-overlay {
+  opacity: 1;
+}
+
+.cut-overlay i {
+  color: white;
+  font-size: 1.5rem;
+}
+
+/* Cut Info */
+.cut-info {
+  text-align: center;
+}
+
+.cut-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 0.5rem 0;
+}
+
+.cut-description {
+  font-size: 0.9rem;
+  color: #6c757d;
+  line-height: 1.4;
+  margin: 0 0 1rem 0;
+  min-height: 2.8rem;
+}
+
+/* Cut Select Button */
+.cut-select-btn {
+  background: var(--border-color, #007bff);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.cut-select-btn:hover {
+  background: var(--border-color, #0056b3);
+  transform: translateY(-1px);
+}
+
+.cut-select-btn i {
+  font-size: 0.8rem;
+}
+
+.grooming-cut-card.selected .cut-select-btn {
+  background: #28a745;
+  color: white;
+}
+
+.grooming-cut-card.selected .cut-select-btn:hover {
+  background: #1e7e34;
+}
+
+/* Selected Cut Indicator */
+.selected-cut-indicator {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: #28a745;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(40, 167, 69, 0.3);
+  z-index: 1000;
+  display: none;
+  animation: slideInUp 0.3s ease;
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.selection-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.selection-content i {
+  font-size: 1.2rem;
+}
+
+.clear-selection {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.clear-selection:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+/* Placeholder State */
+.cuts-placeholder {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6c757d;
+}
+
+.cuts-placeholder i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #dee2e6;
+}
+
+.cuts-placeholder p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* No Cuts Message */
+.no-cuts-message {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+}
+
+.no-cuts-message p {
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* ============================================
+   Responsive Design for Grooming Cuts
+   ============================================ */
+
+/* Tablet */
+@media (max-width: 968px) {
+  #groomingCutsCarousel {
+    margin: 1.5rem 0;
+    padding: 1rem;
+  }
+  
+  .grooming-cut-card {
+    flex: 0 0 240px;
+  }
+  
+  .cut-image-container {
+    width: 140px;
+    height: 140px;
+  }
+  
+  .selected-cut-indicator {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  #groomingCutsCarousel {
+    margin: 1rem 0;
+    padding: 0.75rem;
+  }
+  
+  .cuts-header h3 {
+    font-size: 1.3rem;
+  }
+  
+  .cuts-header p {
+    font-size: 0.9rem;
+  }
+  
+  .grooming-cut-card {
+    flex: 0 0 200px;
+    padding: 0.75rem;
+  }
+  
+  .cut-image-container {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .cut-name {
+    font-size: 1rem;
+  }
+  
+  .cut-description {
+    font-size: 0.85rem;
+    min-height: 2.4rem;
+  }
+  
+  .cut-select-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  
+  .selected-cut-indicator {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 0;
+    padding: 1rem;
+  }
+  
+  .cuts-placeholder {
+    padding: 2rem 1rem;
+  }
+  
+  .cuts-placeholder i {
+    font-size: 2.5rem;
+  }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 400px) {
+  .grooming-cut-card {
+    flex: 0 0 180px;
+  }
+  
+  .cut-image-container {
+    width: 100px;
+    height: 100px;
   }
 }

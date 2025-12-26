@@ -2,6 +2,100 @@
    BestBuddies Pet Grooming - Admin Dashboard Styles
    ============================================ */
 
+/* ============================================
+   Skeleton Loading Styles (Lazy Loading)
+   ============================================ */
+
+/* Base Skeleton Animation */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Skeleton Stat Card */
+.skeleton-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+}
+
+.skeleton-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-stat-number {
+  height: 36px;
+  width: 60px;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-stat-label {
+  height: 14px;
+  width: 80px;
+}
+
+/* Skeleton Booking Card */
+.skeleton-booking {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.skeleton-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-booking-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeleton-text {
+  height: 16px;
+}
+
+.skeleton-text.short { width: 40%; }
+.skeleton-text.medium { width: 60%; }
+.skeleton-text.long { width: 90%; }
+
+/* Fade in animation for loaded content */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   Admin Dashboard Layout
+   ============================================ */
+
 /* Full-width dashboard container override */
 #adminDashboard.container-lg {
   max-width: 100% !important;
@@ -289,13 +383,28 @@
 /* Mobile Responsive */
 @media (max-width: 992px) {
   .admin-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
 
+  /* HIDE SIDEBAR ON MOBILE - Use bottom nav instead */
   .sidebar {
-    position: relative !important;
-    top: auto !important;
-    margin-bottom: 1.5rem;
+    display: none !important;
+  }
+  
+  /* Show sidebar only when toggled */
+  .sidebar.mobile-open {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 280px !important;
+    height: 100vh !important;
+    z-index: 999 !important;
+    background: white !important;
+    padding-top: 60px !important;
+    overflow-y: auto !important;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15) !important;
+    animation: slideInLeft 0.3s ease;
   }
 
   .walk-in-booking-layout {
@@ -349,31 +458,19 @@
 
 @media (max-width: 480px) {
   .admin-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
     gap: 1rem;
   }
 
+  /* HIDE SIDEBAR ON MOBILE */
   .sidebar {
-    position: relative !important;
-    top: auto !important;
-    margin-bottom: 1rem;
-    padding: 1rem !important;
+    display: none !important;
   }
-
-  .sidebar h2 {
-    font-size: 1.1rem !important;
-    margin-bottom: 1rem !important;
-  }
-
-  .sidebar-menu {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.5rem !important;
-  }
-
-  .sidebar-menu a {
-    font-size: 0.9rem !important;
-    padding: 0.75rem !important;
+  
+  /* Show only when toggled */
+  .sidebar.mobile-open {
+    display: block !important;
+    width: 260px !important;
   }
 
   .panel-header {
@@ -731,5 +828,537 @@
   
   .sidebar {
     padding: 1rem !important;
+  }
+}
+
+
+/* ============================================
+   NOTIFICATION BELL STYLES
+   ============================================ */
+@keyframes bellShake {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(15deg); }
+  40% { transform: rotate(-15deg); }
+  60% { transform: rotate(10deg); }
+  80% { transform: rotate(-10deg); }
+}
+
+@keyframes highlightRow {
+  0% { background-color: #fff3e0; }
+  100% { background-color: transparent; }
+}
+
+#adminNotificationBell {
+  transition: transform 0.2s ease;
+}
+
+#adminNotificationBell:hover {
+  transform: scale(1.1);
+}
+
+#adminNotificationBell:hover i {
+  color: var(--primary) !important;
+}
+
+#notificationBadge {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Notification Panel Styles */
+#notificationPanel {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   MOBILE RESPONSIVE ADMIN DASHBOARD
+   ============================================ */
+
+/* Mobile Menu Toggle Button */
+.admin-mobile-menu-toggle {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4CAF50, #2e7d32);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 1000;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.admin-mobile-menu-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+}
+
+.admin-mobile-menu-toggle.active {
+  background: linear-gradient(135deg, #f44336, #c62828);
+  box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+}
+
+/* Mobile Sidebar Overlay */
+.admin-sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.admin-sidebar-overlay.active {
+  opacity: 1;
+}
+
+/* Mobile Sidebar Drawer */
+@media (max-width: 992px) {
+  .admin-mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .admin-sidebar-overlay {
+    display: block;
+    pointer-events: none;
+  }
+  
+  .admin-sidebar-overlay.active {
+    pointer-events: auto;
+  }
+  
+  .admin-layout {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* HIDE SIDEBAR COMPLETELY ON MOBILE BY DEFAULT */
+  .admin-layout > .sidebar {
+    display: none !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 280px !important;
+    height: 100vh !important;
+    z-index: 999;
+    overflow-y: auto;
+    border-radius: 0 !important;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15) !important;
+    padding-top: 70px !important;
+    background: white !important;
+  }
+  
+  /* Show sidebar only when mobile-open class is added */
+  .admin-layout > .sidebar.mobile-open {
+    display: block !important;
+    left: 0 !important;
+    animation: slideInLeft 0.3s ease;
+  }
+  
+  @keyframes slideInLeft {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  
+  /* Dashboard header adjustments */
+  .dashboard-header-fixed {
+    padding: 0.75rem 1rem !important;
+  }
+  
+  .dashboard-header-fixed h1 {
+    font-size: 1.2rem !important;
+  }
+  
+  .dashboard-header-fixed p {
+    font-size: 0.85rem !important;
+  }
+  
+  /* Notification panel mobile */
+  #notificationPanel {
+    width: calc(100% - 40px) !important;
+    right: 20px !important;
+    left: 20px !important;
+    max-width: 400px !important;
+  }
+}
+
+/* Small Mobile (max 576px) */
+@media (max-width: 576px) {
+  .admin-layout > .sidebar {
+    width: 260px !important;
+    left: -260px;
+  }
+  
+  .admin-mobile-menu-toggle {
+    width: 50px;
+    height: 50px;
+    font-size: 1.3rem;
+    bottom: 15px;
+    right: 15px;
+  }
+  
+  /* Stats grid - 2 columns on mobile */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+  
+  .stat-card {
+    padding: 1rem !important;
+  }
+  
+  .stat-card .stat-number {
+    font-size: 1.5rem !important;
+  }
+  
+  .stat-card .stat-label {
+    font-size: 0.75rem !important;
+  }
+  
+  /* Panel headers */
+  .panel-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+  
+  .panel-header h2 {
+    font-size: 1.1rem !important;
+  }
+  
+  /* Booking cards mobile */
+  .booking-card {
+    padding: 1rem !important;
+  }
+  
+  .booking-card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+  
+  /* Action buttons */
+  .action-dropdown {
+    width: 100% !important;
+  }
+  
+  .action-dropdown-content {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+  }
+  
+  /* Tables responsive */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  table {
+    min-width: 600px;
+  }
+}
+
+/* Extra small mobile (max 400px) */
+@media (max-width: 400px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .dashboard-header-fixed {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+  
+  #adminNotificationBell {
+    position: absolute !important;
+    top: 0.75rem !important;
+    right: 1rem !important;
+  }
+}
+
+/* Sidebar menu items mobile styling */
+@media (max-width: 992px) {
+  .sidebar-menu a {
+    padding: 1rem 1.25rem !important;
+    font-size: 0.95rem !important;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  
+  .sidebar-menu a:active,
+  .sidebar-menu a.active {
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9) !important;
+  }
+  
+  .sidebar-section {
+    padding: 1rem 1.25rem !important;
+    font-size: 0.95rem !important;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  
+  .sidebar-submenu a {
+    padding: 0.875rem 1.25rem 0.875rem 2.5rem !important;
+    font-size: 0.9rem !important;
+  }
+  
+  /* Close button for mobile sidebar */
+  .sidebar-close-btn {
+    display: block !important;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    z-index: 10;
+  }
+}
+
+/* Hide close button on desktop */
+.sidebar-close-btn {
+  display: none;
+}
+
+/* Smooth transitions for all interactive elements */
+.sidebar-menu a,
+.sidebar-section,
+.stat-card,
+.booking-card,
+.btn {
+  transition: all 0.2s ease;
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 992px) {
+  .sidebar-menu a,
+  .sidebar-section,
+  .btn {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* ============================================
+   📱 MOBILE BOTTOM NAVIGATION BAR
+   ============================================ */
+
+.admin-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  padding: 0.5rem 0;
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)); /* iOS safe area */
+}
+
+.admin-bottom-nav-items {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.admin-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  color: var(--gray-500);
+  text-decoration: none;
+  font-size: 0.7rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  min-width: 60px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.admin-bottom-nav-item:hover,
+.admin-bottom-nav-item:active {
+  color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.admin-bottom-nav-item.active {
+  color: #4CAF50;
+}
+
+.admin-bottom-nav-item .nav-icon {
+  font-size: 1.4rem;
+  margin-bottom: 0.25rem;
+  line-height: 1;
+}
+
+.admin-bottom-nav-item .nav-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70px;
+}
+
+/* Badge for notifications */
+.admin-bottom-nav-item .nav-badge {
+  position: absolute;
+  top: 0;
+  right: 5px;
+  background: #dc3545;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+}
+
+.admin-bottom-nav-item {
+  position: relative;
+}
+
+/* More menu popup */
+.admin-more-menu {
+  display: none;
+  position: fixed;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem;
+  z-index: 1001;
+  min-width: 200px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.admin-more-menu.active {
+  display: block;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.admin-more-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  color: var(--gray-700);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.admin-more-menu-item:hover,
+.admin-more-menu-item:active {
+  background: var(--gray-100);
+}
+
+.admin-more-menu-item .menu-icon {
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+}
+
+/* Show bottom nav on mobile */
+@media (max-width: 992px) {
+  .admin-bottom-nav {
+    display: block;
+  }
+  
+  /* Add padding to main content to prevent overlap with bottom nav */
+  #adminDashboard {
+    padding-bottom: 80px !important;
+  }
+  
+  /* Hide the floating menu button when bottom nav is shown */
+  .admin-mobile-menu-toggle {
+    display: none !important;
+  }
+}
+
+/* Adjust for very small screens */
+@media (max-width: 400px) {
+  .admin-bottom-nav-item {
+    padding: 0.4rem 0.5rem;
+    min-width: 50px;
+  }
+  
+  .admin-bottom-nav-item .nav-icon {
+    font-size: 1.2rem;
+  }
+  
+  .admin-bottom-nav-item .nav-label {
+    font-size: 0.65rem;
+    max-width: 55px;
   }
 }

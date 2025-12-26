@@ -53,6 +53,16 @@ function setupPetTypeSelection(stateManager, onStateChange) {
 function handlePetTypeClick(petType, stateManager, onStateChange) {
   if (!petType) return;
   
+  // Update visual selection
+  document.querySelectorAll('.pet-type-card').forEach(card => {
+    card.classList.remove('selected');
+  });
+  
+  const selectedCard = document.querySelector(`[data-pet-type="${petType}"]`);
+  if (selectedCard) {
+    selectedCard.classList.add('selected');
+  }
+  
   // Update state
   stateManager.setState({
     petType,
@@ -66,6 +76,16 @@ function handlePetTypeClick(petType, stateManager, onStateChange) {
   if (typeof renderSingleServiceConfigurator === 'function') {
     renderSingleServiceConfigurator();
   }
+  
+  // Update grooming cuts for selected pet type
+  if (typeof updateGroomingCutsForPetType === 'function') {
+    updateGroomingCutsForPetType(petType);
+  }
+  
+  // Dispatch custom event for grooming cuts system
+  window.dispatchEvent(new CustomEvent('petTypeSelected', {
+    detail: { petType }
+  }));
   
   // Notify callback
   if (onStateChange) {

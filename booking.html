@@ -4,15 +4,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="assets/logo.png">
   <title>Book Appointment - BestBuddies Pet Grooming</title>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/loading-screens.css">
   <link rel="stylesheet" href="css/booking.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
     rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 
 <body>
@@ -157,6 +161,8 @@
                   </div>
                 </div>
               </div>
+
+
             </div>
 
             <!-- Step 2: Package -->
@@ -397,95 +403,85 @@
                       </div>
 
                       <!-- Grooming Cuts Reference - Only shown for Face Trim single service -->
+                      <!-- ============================================
+                           🔧 REFERENCE CUTS - Database-backed with unique IDs
+                           Each cut has a unique ID (e.g., 'cut-puppy') stored in booking
+                           Display name is looked up via getReferenceCutName()
+                           ============================================ -->
                       <div id="referenceCutsSection" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--gray-200);">
                         <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 1rem; font-weight: 500;">💡
                           Not sure what cut you want? Browse popular styles below:</p>
                         <div class="cuts-carousel-wrapper">
 
+                          <!-- Puppy Cut - ID: cut-puppy -->
                           <div style="text-align: center; min-width: 140px; flex: 0 0 auto; scroll-snap-align: start;">
-                            <div
-                              style="width: 140px; height: 140px; background: #f5f5f5; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #e8b8a8; overflow: hidden;">
-                              <a href="assets/1.jpg" class="lightbox-link"><img src="assets/1.jpg" alt="Puppy Cut"
-                                  style="width: 100%; height: 100%; object-fit: cover;"></a>
+                            <div onclick="openLightbox('assets/1.jpg')"
+                              style="width: 140px; height: 140px; background: #f5f5f5; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #e8b8a8; overflow: hidden; cursor: pointer;">
+                              <img src="assets/1.jpg" alt="Puppy Cut" style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
-
-                            <button type="button" class="cut-selector-btn" data-cut="Puppy Cut"
-                              onclick="selectGroomingCut('Puppy Cut', event)"
-                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Puppy
-                              Cut</button>
-                            <p style="text-align: center; font-size: 0.65rem; color: var(--gray-600); margin: 0;">Short
-                              &
-                              uniform</p>
+                            <button type="button" class="cut-selector-btn" data-cut="cut-puppy"
+                              onclick="selectGroomingCut('cut-puppy', event)"
+                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Puppy Cut</button>
+                            <p style="text-align: center; font-size: 0.65rem; color: var(--gray-600); margin: 0;">Short & uniform</p>
                           </div>
 
-
-                          <!-- Teddy Bear Cut -->
+                          <!-- Teddy Bear Cut - ID: cut-teddy-bear -->
                           <div style="text-align: center; min-width: 140px; flex: 0 0 auto; scroll-snap-align: start;">
-                            <div
-                              style="width: 140px; height: 140px; background: #f5f5f5; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #c9a68a; overflow: hidden;">
-                              <a href="assets/2.jpg" class="lightbox-link"><img src="assets/2.jpg" alt="Teddy Bear Cut"
-                                  style="width: 100%; height: 100%; object-fit: cover;"></a>
+                            <div onclick="openLightbox('assets/2.jpg')"
+                              style="width: 140px; height: 140px; background: #f5f5f5; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #c9a68a; overflow: hidden; cursor: pointer;">
+                              <img src="assets/2.jpg" alt="Teddy Bear Cut" style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
-                            <button class="cut-selector-btn" data-cut="Teddy Bear Cut"
-                              onclick="selectGroomingCut('Teddy Bear Cut', event)"
-                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Teddy
-                              Bear Cut</button>
+                            <button class="cut-selector-btn" data-cut="cut-teddy-bear"
+                              onclick="selectGroomingCut('cut-teddy-bear', event)"
+                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Teddy Bear Cut</button>
                             <p style="font-size: 0.65rem; color: var(--gray-600); margin: 0;">Rounded & fluffy</p>
                           </div>
 
-                          <!-- Lion Cut -->
+                          <!-- Lion Cut - ID: cut-lion -->
                           <div style="text-align: center; min-width: 140px; flex: 0 0 auto; scroll-snap-align: start;">
-                            <div
-                              style="width: 140px; height: 140px; background: #f5f5f5; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #d4a574; overflow: hidden;">
-                              <a href="assets/3.jpg" class="lightbox-link"><img src="assets/3.jpg" alt="Lion Cut"
-                                  style="width: 100%; height: 100%; object-fit: cover;"></a>
+                            <div onclick="openLightbox('assets/3.jpg')"
+                              style="width: 140px; height: 140px; background: #f5f5f5; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #d4a574; overflow: hidden; cursor: pointer;">
+                              <img src="assets/3.jpg" alt="Lion Cut" style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
-                            <button class="cut-selector-btn" data-cut="Lion Cut"
-                              onclick="selectGroomingCut('Lion Cut', event)"
-                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Lion
-                              Cut</button>
+                            <button class="cut-selector-btn" data-cut="cut-lion"
+                              onclick="selectGroomingCut('cut-lion', event)"
+                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Lion Cut</button>
                             <p style="font-size: 0.65rem; color: var(--gray-600); margin: 0;">Mane style</p>
                           </div>
 
-                          <!-- Summer Cut -->
+                          <!-- Summer Cut - ID: cut-summer -->
                           <div style="text-align: center; min-width: 140px; flex: 0 0 auto; scroll-snap-align: start;">
-                            <div
-                              style="width: 140px; height: 140px; background: #f5f5f5; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #d4d4a5; overflow: hidden;">
-                              <a href="assets/4.jpg" class="lightbox-link"><img src="assets/4.jpg" alt="Summer Cut"
-                                  style="width: 100%; height: 100%; object-fit: cover;"></a>
+                            <div onclick="openLightbox('assets/4.jpg')"
+                              style="width: 140px; height: 140px; background: #f5f5f5; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #d4d4a5; overflow: hidden; cursor: pointer;">
+                              <img src="assets/4.jpg" alt="Summer Cut" style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
-                            <button class="cut-selector-btn" data-cut="Summer Cut"
-                              onclick="selectGroomingCut('Summer Cut', event)"
-                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Summer
-                              Cut</button>
+                            <button class="cut-selector-btn" data-cut="cut-summer"
+                              onclick="selectGroomingCut('cut-summer', event)"
+                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Summer Cut</button>
                             <p style="font-size: 0.65rem; color: var(--gray-600); margin: 0;">Very short</p>
                           </div>
 
-                          <!-- Kennel Cut -->
+                          <!-- Kennel Cut - ID: cut-kennel -->
                           <div style="text-align: center; min-width: 140px; flex: 0 0 auto; scroll-snap-align: start;">
-                            <div
-                              style="width: 140px; height: 140px; background: #e8e8e8; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #ccc; overflow: hidden;">
-                              <a href="assets/5.jpg" class="lightbox-link"><img src="assets/5.jpg" alt="Kennel Cut"
-                                  style="width: 100%; height: 100%; object-fit: cover;"></a>
+                            <div onclick="openLightbox('assets/5.jpg')"
+                              style="width: 140px; height: 140px; background: #e8e8e8; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #ccc; overflow: hidden; cursor: pointer;">
+                              <img src="assets/5.jpg" alt="Kennel Cut" style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
-                            <button class="cut-selector-btn" data-cut="Kennel Cut"
-                              onclick="selectGroomingCut('Kennel Cut', event)"
-                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Kennel
-                              Cut</button>
+                            <button class="cut-selector-btn" data-cut="cut-kennel"
+                              onclick="selectGroomingCut('cut-kennel', event)"
+                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Kennel Cut</button>
                             <p style="font-size: 0.65rem; color: var(--gray-600); margin: 0;">Short & neat</p>
                           </div>
 
-                          <!-- Show Cut -->
+                          <!-- Show Cut - ID: cut-show -->
                           <div style="text-align: center; min-width: 140px; flex: 0 0 auto; scroll-snap-align: start;">
-                            <div
-                              style="width: 140px; height: 140px; background: #e8d4f1; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #d8b8e8; overflow: hidden;">
-                              <a href="assets/6.jpg" class="lightbox-link"><img src="assets/6.jpg" alt="Show Cut"
-                                  style="width: 100%; height: 100%; object-fit: cover;"></a>
+                            <div onclick="openLightbox('assets/6.jpg')"
+                              style="width: 140px; height: 140px; background: #e8d4f1; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid #d8b8e8; overflow: hidden; cursor: pointer;">
+                              <img src="assets/6.jpg" alt="Show Cut" style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
-                            <button class="cut-selector-btn" data-cut="Show Cut"
-                              onclick="selectGroomingCut('Show Cut', event)"
-                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Show
-                              Cut</button>
+                            <button class="cut-selector-btn" data-cut="cut-show"
+                              onclick="selectGroomingCut('cut-show', event)"
+                              style="width: 100%; padding: 0.5rem; background: #e8e8e8; border: 1px solid #ccc; border-radius: 0.4rem; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem;">Show Cut</button>
                             <p style="font-size: 0.65rem; color: var(--gray-600); margin: 0;">Fancy & styled</p>
                           </div>
                         </div>
@@ -500,17 +496,6 @@
                       <p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 0.5rem;">Your profile will be saved so you can use "Load Saved Profile" on your next visit.</p>
                     </div>
                 </div>
-
-                <!-- <section id="preferred-cut-section" class="card">
-                    <h4>Not sure what cut? Pick a style or reference</h4>
-                    <div id="preferredCuts" style="display:flex; gap:1rem; flex-wrap:wrap;"></div>
-
-                    <label style="display:flex; align-items:center; margin-top:0.75rem;">
-                      <input id="savePreferredCut" type="checkbox" style="margin-right:0.5rem;" />
-                      Save these details for faster booking next time
-                    </label>
-
-                hidden input included in booking POST -->
                 <input type="hidden" id="preferredCutInput" name="preferredCut" value="">
                 </section>
                 </form>
@@ -548,7 +533,7 @@
 
   <!-- Lightbox Modal -->
   <div id="lightbox">
-    <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+    <button id="lightbox-close" onclick="closeLightbox()" style="position: absolute; top: 20px; right: 20px; font-size: 2.5rem; color: white; background: rgba(0,0,0,0.5); border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; z-index: 10001; display: flex; align-items: center; justify-content: center;">✕</button>
     <img id="lightbox-image" src="" alt="Full size image">
   </div>
 
@@ -570,7 +555,11 @@
 
   <script type="module" src="js/firebase-config.js"></script>
   <script type="module" src="js/firebase-db.js"></script>
+  <script type="module" src="js/booking-server.js"></script>
   <link rel="stylesheet" href="css/custom-alert.css">
+  <script src="js/console-manager.js"></script>
+  <script src="js/storage-manager.js"></script>
+  <script src="js/loading-manager.js"></script>
   <script src="js/main.js"></script>
   <script src="js/custom-alert.js"></script>
   <script type="module" src="js/auth.js"></script>
@@ -581,6 +570,8 @@
   <script src="js/booking-ui.js"></script>
   <script src="js/modal-system.js"></script>
   <script src="js/booking-events.js"></script>
+  <script src="js/grooming-cuts.js"></script>
+  <script src="js/cloudinary-helper.js"></script>
   <script src="js/booking-integration.js"></script>
 
   <script type="module" src="js/booking.js"></script>

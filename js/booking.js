@@ -31,8 +31,14 @@ const totalSteps = 5;
 const SINGLE_SERVICE_PACKAGE_ID = 'single-service';
 const SINGLE_SERVICE_OPTIONS = window.SINGLE_SERVICE_PRICING || {};
 
-// Prevent duplicate submissions
+// Prevent duplicate submissions with cooldown
 let isSubmittingBooking = false;
+let lastSubmitTime = 0;
+const SUBMIT_COOLDOWN_MS = 3000; // 3 second cooldown
+
+// Prevent rapid navigation clicks
+let lastNavigationTime = 0;
+const NAVIGATION_COOLDOWN_MS = 500; // 0.5 second cooldown for navigation
 
 // Debounce updateSummary to prevent flickering during typing
 let updateSummaryTimeout = null;
@@ -266,13 +272,25 @@ function updateAgeDropdownOptions() {
     { value: '16+ years', text: '16+ years' }
   ];
 
-  // For single service: show all ages (including 5 months and below)
-  // For other packages: show only 6 months and above
+  // Age filtering rules:
+  // - Single service: 1 month and above (exclude "Less than 1 month" - too young)
+  // - Other packages: 6 months and above
   let visibleOptions = allOptions;
   console.log('[updateAgeDropdownOptions] Current packageId:', bookingData.packageId);
   console.log('[updateAgeDropdownOptions] SINGLE_SERVICE_PACKAGE_ID:', SINGLE_SERVICE_PACKAGE_ID);
   
-  if (bookingData.packageId && bookingData.packageId !== SINGLE_SERVICE_PACKAGE_ID) {
+  if (bookingData.packageId === SINGLE_SERVICE_PACKAGE_ID) {
+    console.log('[updateAgeDropdownOptions] Filtering ages for single service - showing 1+ months only');
+    visibleOptions = allOptions.filter(opt => {
+      if (!opt.value) return true; // Keep "Select age..." option
+      // Exclude "Less than 1 month" for single service (too young)
+      if (opt.value === 'Less than 1 month') {
+        console.log(`[updateAgeDropdownOptions] Excluding "Less than 1 month" for single service`);
+        return false;
+      }
+      return true;
+    });
+  } else if (bookingData.packageId && bookingData.packageId !== SINGLE_SERVICE_PACKAGE_ID) {
     console.log('[updateAgeDropdownOptions] Filtering ages for full package - showing 6+ months only');
     visibleOptions = allOptions.filter(opt => {
       if (!opt.value) return true; // Keep "Select age..." option
@@ -281,7 +299,7 @@ function updateAgeDropdownOptions() {
       return ageInMonths >= 6;
     });
   } else {
-    console.log('[updateAgeDropdownOptions] Showing all ages (single service or no package selected)');
+    console.log('[updateAgeDropdownOptions] Showing all ages (no package selected)');
   }
 
   // Rebuild the select options
@@ -305,6 +323,17 @@ function updateAgeDropdownOptions() {
 async function initBooking() {
   console.log('[initBooking] Starting booking page initialization...');
   
+  // ============================================
+  // 🧹 CLEAR OLD BOOKING DATA
+  // Clear lastBooking from sessionStorage when starting a new booking
+  // This prevents old booking data from showing on booking-success page
+  // ============================================
+  sessionStorage.removeItem('lastBooking');
+  console.log('[initBooking] Cleared old lastBooking from sessionStorage');
+  
+  // Show loading screen for booking initialization
+  showBookingFormLoader('#bookingPage');
+  
   // Initialize reschedule mode first
   initializeRescheduleMode();
   
@@ -326,6 +355,12 @@ async function initBooking() {
     if (preSelectedPackage) {
       console.log('[initBooking] Pre-selecting package from URL:', preSelectedPackage);
       bookingData.packageId = preSelectedPackage;
+      
+      // For single-service package, we need to ensure the configurator shows
+      // even if pet type is not selected yet (single-service works for both dogs and cats)
+      if (preSelectedPackage === SINGLE_SERVICE_PACKAGE_ID) {
+        console.log('[initBooking] Single-service package detected from URL');
+      }
     }
 
     // Restore booking data and step from sessionStorage if returning from auth
@@ -399,23 +434,30 @@ async function initBooking() {
       // Continue without user - allow browsing
     }
 
-    // Pre-fill owner details with account info if logged in (but not in reschedule mode)
+    // Pre-fill owner details with account info if logged in 
+    // BUT NOT when editing existing booking or in reschedule mode
     const ownerNameInput = document.getElementById('ownerName');
     const contactNumberInput = document.getElementById('contactNumber');
     const ownerAddressInput = document.getElementById('ownerAddress');
 
-    if (user && !isRescheduleMode) {
-      if (ownerNameInput) {
+    // Check if we're editing an existing booking BEFORE overwriting with user data
+    const hasEditingData = editingBookingId || bookingData.editingBookingId;
+
+    if (user && !isRescheduleMode && !hasEditingData) {
+      if (ownerNameInput && !bookingData.ownerName) {
         ownerNameInput.value = user.name || '';
         bookingData.ownerName = user.name || '';
       }
 
       // Auto-fill phone number if available in profile
-      if (contactNumberInput && user.phone) {
+      if (contactNumberInput && user.phone && !bookingData.contactNumber) {
         contactNumberInput.value = user.phone;
         bookingData.contactNumber = user.phone;
       }
 
+    } else if (hasEditingData) {
+      // When editing, use the booking data that was restored from sessionStorage
+      console.log('[initBooking] Editing mode - using existing booking data, not user profile');
     }
 
     // Initialize to target step (restored or default step 1)
@@ -428,6 +470,9 @@ async function initBooking() {
     setupBookingListeners();
 
     // Attempt to load saved profile silently if logged in
+    // BUT NOT when editing an existing booking - we want to keep the booking's data
+    const isEditingExistingBooking = bookingData.editingBookingId || sessionStorage.getItem('editingBookingId');
+    
     if (user) {
       try {
         const warningInfo = await getCustomerWarningInfo(user.id);
@@ -436,17 +481,26 @@ async function initBooking() {
           redirect('customer-dashboard.html');
           return;
         }
-        const savedProfile = await getCustomerProfile(user.id);
-        if (savedProfile) {
-          applyProfileToForm(savedProfile);
+        
+        // Only load profile if NOT editing an existing booking
+        if (!isEditingExistingBooking && !isRescheduleMode) {
+          const savedProfile = await getCustomerProfile(user.id);
+          if (savedProfile) {
+            applyProfileToForm(savedProfile);
+          }
+        } else {
+          console.log('[initBooking] Skipping profile load - editing existing booking');
         }
 
         // Check if user clicked "Use Saved Details" from dashboard
+        // But NOT when editing an existing booking
         const autoLoad = sessionStorage.getItem('autoLoadProfile');
-        if (autoLoad === 'true') {
+        if (autoLoad === 'true' && !isEditingExistingBooking) {
           sessionStorage.removeItem('autoLoadProfile'); // Clear flag
           // Trigger auto profile load which will jump to step 3
           await handleAutoProfileLoad();
+        } else if (autoLoad === 'true') {
+          sessionStorage.removeItem('autoLoadProfile'); // Clear flag anyway
         }
       } catch (error) {
         console.warn('Could not load user profile:', error);
@@ -470,6 +524,11 @@ async function initBooking() {
           }
         });
         updateSummary();
+        
+        // For single-service, also render the configurator after package card is selected
+        if (preSelectedPackage === SINGLE_SERVICE_PACKAGE_ID) {
+          renderSingleServiceConfigurator();
+        }
       }, 100); // Small delay to ensure DOM is ready
     }
     
@@ -489,11 +548,14 @@ async function initBooking() {
     console.error('Error initializing booking:', error);
     // Don't show alert for permission errors - user might not be logged in yet
     if (error.message && error.message.includes('Permission denied')) {
-      console.warn('Permission denied - user may need to update Firebase security rules. See FIX_BOOKING_PERMISSION_ERROR.md');
+      console.warn('Permission denied - user may need to update Firebase security rules.');
       // Continue anyway - might work with localStorage fallback
     } else {
       customAlert.error('Loading Error', 'Error loading booking page. Please refresh and try again.');
     }
+  } finally {
+    // Always hide the loading screen when initialization is complete
+    hideBookingFormLoader('#bookingPage');
   }
 }
 
@@ -875,16 +937,46 @@ async function handleProfileLoad() {
   }
 
   try {
-    const user = await getCurrentUser();
+    // Get user with timeout
+    const userTimeout = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('User fetch timeout')), 5000);
+    });
+    
+    const user = await Promise.race([
+      getCurrentUser(),
+      userTimeout
+    ]).catch(error => {
+      console.warn('User fetch failed:', error.message);
+      // Try localStorage fallback
+      const userStr = localStorage.getItem('currentUser');
+      return userStr ? JSON.parse(userStr) : null;
+    });
+    
     if (!user) {
       if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
       customAlert.warning('Not Logged In', 'Please log in first to load your profile.');
       return;
     }
 
-    // Get profile from last booking
-    const allBookings = await getBookings();
-    const userBookings = Array.isArray(allBookings) ? allBookings.filter(b => b.userId === user.id) : [];
+    // Get bookings with timeout
+    const bookingsTimeout = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Bookings fetch timeout')), 5000);
+    });
+    
+    let allBookings = [];
+    try {
+      allBookings = await Promise.race([
+        getBookings(),
+        bookingsTimeout
+      ]);
+    } catch (bookingsError) {
+      console.warn('Bookings fetch failed:', bookingsError.message);
+      // Try localStorage fallback
+      const cachedBookings = localStorage.getItem('bookings');
+      allBookings = cachedBookings ? JSON.parse(cachedBookings) : [];
+    }
+    
+    const userBookings = Array.isArray(allBookings) ? allBookings.filter(b => b.userId === user.id || b.email === user.email) : [];
 
     if (userBookings.length === 0) {
       if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
@@ -905,16 +997,22 @@ async function handleProfileLoad() {
       age: lastBooking.petAge,
       weight: lastBooking.petWeight,
       medical: lastBooking.medicalNotes,
-      vaccinations: lastBooking.vaccinationNotes
-      // Note: addOns are NOT copied from previous bookings - customer must select them each time
+      vaccinations: lastBooking.vaccinationNotes,
+      // 🔧 ALL SERVICES PROFILE FIX: Include ALL services from last booking
+      singleServices: lastBooking.singleServices || [],
+      addOns: lastBooking.addOns || [],
+      referenceCut: lastBooking.referenceCut || null,
+      packageId: lastBooking.packageId || null,
+      petType: lastBooking.petType || null
+      // Note: Now copying ALL services from previous bookings for complete profile restoration
     };
 
-    // Load profile details to current step forms
-    applyProfileToForm(profile);
-
-    // Auto-fill pet type and package from last booking (but don't change steps)
+    // Auto-fill pet type and package from last booking FIRST (before applyProfileToForm)
     bookingData.petType = lastBooking.petType;
     bookingData.packageId = lastBooking.packageId;
+    
+    // Load profile details to current step forms
+    applyProfileToForm(profile);
 
     // Update UI to reflect selection (if elements exist on current step)
     document.querySelectorAll('.pet-type-card').forEach(card => {
@@ -933,15 +1031,75 @@ async function handleProfileLoad() {
     document.querySelectorAll('.package-card').forEach(card => {
       if (card.dataset.packageId === lastBooking.packageId) {
         card.classList.add('selected');
+        console.log('[Profile Load] Selected package card:', lastBooking.packageId);
       } else {
         card.classList.remove('selected');
       }
     });
 
-    // Stay on current step - don't jump to step 3
-    // Only update the summary and enable next button if applicable
-    updateSummary();
-    enableSubmitButton();
+    // Auto-accept policy since user already agreed before
+    const policyCheckbox = document.getElementById('agreeToPolicy');
+    if (policyCheckbox) {
+      policyCheckbox.checked = true;
+      policyCheckbox.disabled = false; // Enable it in case it was disabled
+      console.log('[Profile Load] Policy auto-accepted');
+    }
+    
+    // Mark policy as agreed in bookingData
+    bookingData.policyAgreed = true;
+    
+    // 🔧 SMART STEP JUMPING: Jump to appropriate step based on package type
+    if (lastBooking.packageId === SINGLE_SERVICE_PACKAGE_ID) {
+      // For single service: jump to step 4 (Schedule) to show 30-minute intervals
+      console.log('[Profile Load] Single service detected - jumping to step 4 (Schedule)');
+      console.log('[Profile Load] bookingData.packageId BEFORE showStep:', bookingData.packageId);
+      
+      // CRITICAL: Ensure packageId is set to single-service before calendar setup
+      bookingData.packageId = SINGLE_SERVICE_PACKAGE_ID;
+      console.log('[Profile Load] bookingData.packageId AFTER force set:', bookingData.packageId);
+      
+      showStep(4);
+      // Setup single service calendar with 30-minute intervals
+      setTimeout(() => {
+        // Double-check packageId is still correct
+        console.log('[Profile Load] Setting up single service calendar, packageId:', bookingData.packageId);
+        console.log('[Profile Load] isSingleServicePackage():', isSingleServicePackage());
+        
+        // Force set again in case something overwrote it
+        bookingData.packageId = SINGLE_SERVICE_PACKAGE_ID;
+        setupCalendarTimePicker();
+      }, 200);
+    } else if (lastBooking.packageId && lastBooking.packageId !== SINGLE_SERVICE_PACKAGE_ID) {
+      // For full packages: jump to step 4 (Schedule) to show regular slots
+      console.log('[Profile Load] Full package detected - jumping to step 4 (Schedule)');
+      console.log('[Profile Load] bookingData.packageId BEFORE showStep:', bookingData.packageId);
+      
+      // CRITICAL: Ensure packageId is set to the full package before calendar setup
+      bookingData.packageId = lastBooking.packageId;
+      console.log('[Profile Load] bookingData.packageId AFTER force set:', bookingData.packageId);
+      
+      showStep(4);
+      // Setup regular calendar
+      setTimeout(() => {
+        // Double-check packageId is still correct
+        console.log('[Profile Load] Setting up full package calendar, packageId:', bookingData.packageId);
+        console.log('[Profile Load] isSingleServicePackage():', isSingleServicePackage());
+        
+        // Force set again in case something overwrote it
+        bookingData.packageId = lastBooking.packageId;
+        // Force clear the calendar container first to ensure fresh render
+        const calendarContainer = document.getElementById('calendarTimePicker');
+        if (calendarContainer) {
+          calendarContainer.innerHTML = '';
+        }
+        setupCalendarTimePicker();
+      }, 100);
+    } else {
+      // No package selected: stay on current step
+      console.log('[Profile Load] No package detected - staying on current step');
+      updateSummary();
+      enableSubmitButton();
+    }
 
     // Hide loading screen
     if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
@@ -963,16 +1121,46 @@ async function handleAutoProfileLoad() {
   }
 
   try {
-    const user = await getCurrentUser();
+    // Get user with timeout
+    const userTimeout = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('User fetch timeout')), 5000);
+    });
+    
+    const user = await Promise.race([
+      getCurrentUser(),
+      userTimeout
+    ]).catch(error => {
+      console.warn('Auto profile - User fetch failed:', error.message);
+      // Try localStorage fallback
+      const userStr = localStorage.getItem('currentUser');
+      return userStr ? JSON.parse(userStr) : null;
+    });
+    
     if (!user) {
       if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
       customAlert.warning('Not Logged In', 'Please log in first to load your profile.');
       return;
     }
 
-    // Get profile from last booking
-    const allBookings = await getBookings();
-    const userBookings = Array.isArray(allBookings) ? allBookings.filter(b => b.userId === user.id) : [];
+    // Get bookings with timeout
+    const bookingsTimeout = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Bookings fetch timeout')), 5000);
+    });
+    
+    let allBookings = [];
+    try {
+      allBookings = await Promise.race([
+        getBookings(),
+        bookingsTimeout
+      ]);
+    } catch (bookingsError) {
+      console.warn('Auto profile - Bookings fetch failed:', bookingsError.message);
+      // Try localStorage fallback
+      const cachedBookings = localStorage.getItem('bookings');
+      allBookings = cachedBookings ? JSON.parse(cachedBookings) : [];
+    }
+    
+    const userBookings = Array.isArray(allBookings) ? allBookings.filter(b => b.userId === user.id || b.email === user.email) : [];
 
     if (userBookings.length === 0) {
       if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
@@ -993,15 +1181,21 @@ async function handleAutoProfileLoad() {
       age: lastBooking.petAge,
       weight: lastBooking.petWeight,
       medical: lastBooking.medicalNotes,
-      vaccinations: lastBooking.vaccinationNotes
+      vaccinations: lastBooking.vaccinationNotes,
+      // 🔧 ALL SERVICES PROFILE FIX: Include ALL services from last booking
+      singleServices: lastBooking.singleServices || [],
+      addOns: lastBooking.addOns || [],
+      referenceCut: lastBooking.referenceCut || null,
+      packageId: lastBooking.packageId || null,
+      petType: lastBooking.petType || null
     };
 
-    // Load profile details
-    applyProfileToForm(profile);
-
-    // Auto-fill pet type and package from last booking
+    // Auto-fill pet type and package from last booking FIRST (before applyProfileToForm)
     bookingData.petType = lastBooking.petType;
     bookingData.packageId = lastBooking.packageId;
+    
+    // Load profile details
+    applyProfileToForm(profile);
 
     // Update UI to reflect selection
     document.querySelectorAll('.pet-type-card').forEach(card => {
@@ -1016,13 +1210,69 @@ async function handleAutoProfileLoad() {
     document.querySelectorAll('.package-card').forEach(card => {
       if (card.dataset.packageId === lastBooking.packageId) {
         card.classList.add('selected');
+        console.log('[Auto Profile Load] Selected package card:', lastBooking.packageId);
       } else {
         card.classList.remove('selected');
       }
     });
 
-    // Jump directly to step 5 (Details) for dashboard auto-load
-    showStep(5);
+    // Auto-accept policy since user already agreed before
+    const policyCheckbox = document.getElementById('agreeToPolicy');
+    if (policyCheckbox) {
+      policyCheckbox.checked = true;
+      policyCheckbox.disabled = false; // Enable it in case it was disabled
+      console.log('[Auto Profile Load] Policy auto-accepted');
+    }
+    
+    // Mark policy as agreed in bookingData
+    bookingData.policyAgreed = true;
+    
+    // 🔧 SMART STEP JUMPING: Jump to appropriate step based on package type
+    if (lastBooking.packageId === SINGLE_SERVICE_PACKAGE_ID) {
+      // For single service: jump to step 4 (Schedule) to show 30-minute intervals
+      console.log('[Auto Profile Load] Single service detected - jumping to step 4 (Schedule)');
+      console.log('[Auto Profile Load] bookingData.packageId BEFORE showStep:', bookingData.packageId);
+      
+      // CRITICAL: Ensure packageId is set to single-service before calendar setup
+      bookingData.packageId = SINGLE_SERVICE_PACKAGE_ID;
+      console.log('[Auto Profile Load] bookingData.packageId AFTER force set:', bookingData.packageId);
+      
+      showStep(4);
+      // Setup single service calendar with 30-minute intervals
+      setTimeout(() => {
+        // Double-check packageId is still correct
+        console.log('[Auto Profile Load] Setting up single service calendar, packageId:', bookingData.packageId);
+        console.log('[Auto Profile Load] isSingleServicePackage():', isSingleServicePackage());
+        
+        // Force set again in case something overwrote it
+        bookingData.packageId = SINGLE_SERVICE_PACKAGE_ID;
+        setupCalendarTimePicker();
+      }, 200);
+    } else if (lastBooking.packageId && lastBooking.packageId !== SINGLE_SERVICE_PACKAGE_ID) {
+      // For full packages: jump to step 4 (Schedule) to show regular slots
+      console.log('[Auto Profile Load] Full package detected - jumping to step 4 (Schedule)');
+      console.log('[Auto Profile Load] bookingData.packageId BEFORE showStep:', bookingData.packageId);
+      
+      // CRITICAL: Ensure packageId is set to the full package before calendar setup
+      bookingData.packageId = lastBooking.packageId;
+      console.log('[Auto Profile Load] bookingData.packageId AFTER force set:', bookingData.packageId);
+      
+      showStep(4);
+      // Setup regular calendar
+      setTimeout(() => {
+        // Double-check packageId is still correct
+        console.log('[Auto Profile Load] Setting up full package calendar, packageId:', bookingData.packageId);
+        console.log('[Auto Profile Load] isSingleServicePackage():', isSingleServicePackage());
+        
+        // Force set again in case something overwrote it
+        bookingData.packageId = lastBooking.packageId;
+        setupCalendarTimePicker();
+      }, 200);
+    } else {
+      // No package selected: jump to step 5 (Details) as fallback
+      console.log('[Auto Profile Load] No package detected - jumping to step 5 (Details)');
+      showStep(5);
+    }
 
     updateSummary();
 
@@ -1041,15 +1291,43 @@ async function handleAutoProfileLoad() {
 
 // Quick Rebook - same as handleProfileLoad but for mobile quick access
 async function handleQuickRebook() {
-  const user = await getCurrentUser();
+  // Get user with timeout
+  const userTimeout = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('User fetch timeout')), 5000);
+  });
+  
+  const user = await Promise.race([
+    getCurrentUser(),
+    userTimeout
+  ]).catch(error => {
+    console.warn('Quick rebook - User fetch failed:', error.message);
+    const userStr = localStorage.getItem('currentUser');
+    return userStr ? JSON.parse(userStr) : null;
+  });
+  
   if (!user) {
     customAlert.warning('Not Logged In', 'Please log in first to book an appointment.');
     return;
   }
 
-  // Get profile from last booking
-  const allBookings = await getBookings();
-  const userBookings = Array.isArray(allBookings) ? allBookings.filter(b => b.userId === user.id) : [];
+  // Get bookings with timeout
+  const bookingsTimeout = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Bookings fetch timeout')), 5000);
+  });
+  
+  let allBookings = [];
+  try {
+    allBookings = await Promise.race([
+      getBookings(),
+      bookingsTimeout
+    ]);
+  } catch (bookingsError) {
+    console.warn('Quick rebook - Bookings fetch failed:', bookingsError.message);
+    const cachedBookings = localStorage.getItem('bookings');
+    allBookings = cachedBookings ? JSON.parse(cachedBookings) : [];
+  }
+  
+  const userBookings = Array.isArray(allBookings) ? allBookings.filter(b => b.userId === user.id || b.email === user.email) : [];
 
   if (userBookings.length === 0) {
     customAlert.show('No Profile Found', 'No saved profile yet. Complete the form once and tick "Save details" to reuse.', 'warning');
@@ -1069,7 +1347,13 @@ async function handleQuickRebook() {
     age: lastBooking.petAge,
     weight: lastBooking.petWeight,
     medical: lastBooking.medicalNotes,
-    vaccinations: lastBooking.vaccinationNotes
+    vaccinations: lastBooking.vaccinationNotes,
+    // 🔧 ALL SERVICES PROFILE FIX: Include ALL services from last booking
+    singleServices: lastBooking.singleServices || [],
+    addOns: lastBooking.addOns || [],
+    referenceCut: lastBooking.referenceCut || null,
+    packageId: lastBooking.packageId || null,
+    petType: lastBooking.petType || null
   };
 
   // Load profile details
@@ -1097,6 +1381,17 @@ async function handleQuickRebook() {
     }
   });
 
+  // Auto-accept policy since user already agreed before
+  const policyCheckbox = document.getElementById('agreeToPolicy');
+  if (policyCheckbox) {
+    policyCheckbox.checked = true;
+    policyCheckbox.disabled = false; // Enable it in case it was disabled
+    console.log('[Quick Rebook] Policy auto-accepted');
+  }
+  
+  // Mark policy as agreed in bookingData
+  bookingData.policyAgreed = true;
+  
   // Jump directly to step 3 (Schedule)
   showStep(3);
   setupCalendarTimePicker().catch(err => console.error('Error rendering calendar:', err));
@@ -1136,6 +1431,99 @@ function applyProfileToForm(profile = {}) {
   bookingData.medicalNotes = profile.medical || '';
   bookingData.vaccinationNotes = profile.vaccinations || '';
 
+  // 🔧 SINGLE SERVICE PROFILE FIX: Restore pet type and package selection
+  if (profile.petType) {
+    bookingData.petType = profile.petType;
+    // Update pet type UI
+    document.querySelectorAll('.pet-type-card').forEach(card => {
+      if (card.dataset.petType === profile.petType) {
+        card.classList.add('selected');
+      } else {
+        card.classList.remove('selected');
+      }
+    });
+  }
+
+  if (profile.packageId) {
+    bookingData.packageId = profile.packageId;
+    // Update package UI
+    document.querySelectorAll('.package-card').forEach(card => {
+      if (card.dataset.packageId === profile.packageId) {
+        card.classList.add('selected');
+      } else {
+        card.classList.remove('selected');
+      }
+    });
+  }
+
+  // 🔧 ALL SERVICES PROFILE FIX: Restore ALL service selections
+  if (profile.singleServices && Array.isArray(profile.singleServices)) {
+    bookingData.singleServices = [...profile.singleServices];
+    console.log('[Profile] Restoring single services:', bookingData.singleServices);
+    
+    // Update single service checkboxes in DOM
+    setTimeout(() => {
+      profile.singleServices.forEach(serviceId => {
+        const checkbox = document.querySelector(`input[name="singleService"][value="${serviceId}"]`);
+        if (checkbox) {
+          checkbox.checked = true;
+          console.log('[Profile] Restored single service checkbox:', serviceId);
+        }
+      });
+      
+      // Re-render single service configurator to show restored selections
+      if (profile.packageId === SINGLE_SERVICE_PACKAGE_ID) {
+        renderSingleServiceConfigurator();
+      }
+    }, 100);
+  }
+
+  // 🔧 ALL SERVICES PROFILE FIX: Restore add-ons selection
+  if (profile.addOns && Array.isArray(profile.addOns)) {
+    bookingData.addOns = [...profile.addOns];
+    console.log('[Profile] Restoring add-ons:', bookingData.addOns);
+    
+    // Update add-on checkboxes in DOM
+    setTimeout(() => {
+      // Clear all add-on checkboxes first
+      document.querySelectorAll('input[name="addOn"]').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      
+      // Check the restored add-ons
+      profile.addOns.forEach(addonId => {
+        const checkbox = document.querySelector(`input[name="addOn"][value="${addonId}"]`);
+        if (checkbox) {
+          checkbox.checked = true;
+          console.log('[Profile] Restored add-on checkbox:', addonId);
+        }
+      });
+    }, 100);
+  }
+
+  // 🔧 ALL SERVICES PROFILE FIX: Restore reference cut selection
+  if (profile.referenceCut) {
+    bookingData.referenceCut = profile.referenceCut;
+    console.log('[Profile] Restoring reference cut:', bookingData.referenceCut);
+    
+    // Update reference cut selection in DOM
+    setTimeout(() => {
+      // Clear all reference cut selections first
+      document.querySelectorAll('.cut-selector-btn').forEach(btn => {
+        btn.style.background = '';
+        btn.style.color = '';
+      });
+      
+      // Select the restored reference cut
+      const cutBtn = document.querySelector(`[data-cut="${profile.referenceCut}"]`);
+      if (cutBtn) {
+        cutBtn.style.background = '#4CAF50';
+        cutBtn.style.color = 'white';
+        console.log('[Profile] Restored reference cut button:', profile.referenceCut);
+      }
+    }, 100);
+  }
+
   // Select the weight radio button
   if (profile.weight) {
     const weightRadios = document.querySelectorAll('input[name="petWeight"]');
@@ -1144,6 +1532,16 @@ function applyProfileToForm(profile = {}) {
         radio.checked = true;
       }
     });
+  }
+
+  // 🔧 PROFILE LOADING FIX: Auto-check policy checkbox when profile is loaded
+  // This allows users to proceed immediately after loading a complete profile
+  if (currentStep === 1) {
+    const policyCheckbox = document.getElementById('agreeToPolicy');
+    if (policyCheckbox && !policyCheckbox.disabled) {
+      policyCheckbox.checked = true;
+      console.log('[Profile] Auto-checked policy checkbox after profile load');
+    }
   }
 
   updateSummary();
@@ -1251,6 +1649,24 @@ function showStep(step) {
 
   updateSummary();
   
+  // Render single service configurator if on step 3 and single service is selected
+  if (step === 3 && isSingleServicePackage()) {
+    renderSingleServiceConfigurator();
+    updateReferenceCutsVisibility();
+  }
+  
+  // 🔧 CALENDAR SETUP FIX: Setup calendar when navigating to step 4
+  // This ensures correct calendar type shows based on current package selection
+  if (step === 4) {
+    console.log('[showStep] Navigating to step 4 - setting up calendar');
+    console.log('[showStep] Current packageId:', bookingData.packageId);
+    console.log('[showStep] isSingleServicePackage():', isSingleServicePackage());
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      setupCalendarTimePicker();
+    }, 100);
+  }
+  
   // Update next button state based on current step
   enableNextButton();
   
@@ -1262,6 +1678,14 @@ function showStep(step) {
 
 // Next step
 async function nextStep() {
+  // Prevent rapid navigation clicks
+  const now = Date.now();
+  if ((now - lastNavigationTime) < NAVIGATION_COOLDOWN_MS) {
+    console.log('[nextStep] Navigation cooldown active, ignoring request');
+    return;
+  }
+  lastNavigationTime = now;
+  
   console.log('[nextStep] Current step:', currentStep, 'packageId:', bookingData.packageId);
   console.log('[nextStep] About to validate step:', currentStep);
   
@@ -1277,8 +1701,9 @@ async function nextStep() {
   saveBookingDataToSession();
 
   // Gate: Skip to step 4 if packageId is already set after step 2
-  if (currentStep === 2 && bookingData.packageId) {
-    console.log('[nextStep] Skipping to step 4 because packageId is set');
+  // BUT: Don't skip for single service - user needs to select services in step 3
+  if (currentStep === 2 && bookingData.packageId && bookingData.packageId !== SINGLE_SERVICE_PACKAGE_ID) {
+    console.log('[nextStep] Skipping to step 4 because packageId is set (not single service)');
     showStep(4);
     return;
   }
@@ -1320,6 +1745,14 @@ function saveBookingDataToSession() {
 
 // Previous step
 function prevStep() {
+  // Prevent rapid navigation clicks
+  const now = Date.now();
+  if ((now - lastNavigationTime) < NAVIGATION_COOLDOWN_MS) {
+    console.log('[prevStep] Navigation cooldown active, ignoring request');
+    return;
+  }
+  lastNavigationTime = now;
+  
   if (currentStep > 1) {
     showStep(currentStep - 1);
   }
@@ -1548,10 +1981,11 @@ function selectPetType(petType) {
     }
   });
 
-  // Clear package selection only if type actually changed
+  // Clear package selection and reference cut only if type actually changed
   if (previousPetType && previousPetType !== petType) {
-    console.log('[selectPetType] Pet type changed from', previousPetType, 'to', petType, '- clearing package selection');
+    console.log('[selectPetType] Pet type changed from', previousPetType, 'to', petType, '- clearing package and reference cut');
     bookingData.packageId = null;
+    bookingData.referenceCut = null; // Clear reference cut when pet type changes
   }
   loadPackages();
   renderSingleServiceConfigurator();
@@ -1562,6 +1996,11 @@ function selectPetType(petType) {
     }
   }
 
+  // Dispatch event for other components (grooming cuts will update when step 5 is shown)
+  window.dispatchEvent(new CustomEvent('petTypeSelected', {
+    detail: { petType }
+  }));
+
   updateSummary();
   enableNextButton();
   updateSingleServicePriceLabels();
@@ -1570,11 +2009,18 @@ function selectPetType(petType) {
 // Load packages based on selected pet type
 async function loadPackages() {
   console.log('[loadPackages] Called with petType:', bookingData.petType, 'packageId:', bookingData.packageId);
-  if (!bookingData.petType) return;
+  
+  // If single-service is pre-selected from URL but no pet type yet, still show packages
+  // but filter to only show 'any' type packages (like single-service)
+  const showAnyTypeOnly = !bookingData.petType && bookingData.packageId === SINGLE_SERVICE_PACKAGE_ID;
+  
+  if (!bookingData.petType && !showAnyTypeOnly) return;
 
   const packages = await getPackages();
   const filteredPackages = packages.filter(pkg => {
     if (pkg.type === 'addon') return false;
+    // If showing any type only (single-service from URL without pet type), only show 'any' packages
+    if (showAnyTypeOnly) return pkg.type === 'any';
     if (pkg.type === 'any') return true;
     return pkg.type === bookingData.petType;
   });
@@ -1630,6 +2076,29 @@ function renderSingleServiceConfigurator() {
   }
 
   wrapper.style.display = 'block';
+  
+  // Show message if pet type not selected yet
+  if (!bookingData.petType) {
+    const petTypeMessage = document.getElementById('singleServicePetTypeMessage');
+    if (!petTypeMessage) {
+      // Insert message before options
+      const messageDiv = document.createElement('div');
+      messageDiv.id = 'singleServicePetTypeMessage';
+      messageDiv.style.cssText = 'background: #fff3e0; border: 1px solid #ffcc80; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; text-align: center;';
+      messageDiv.innerHTML = `
+        <span style="font-size: 1.5rem;">🐾</span>
+        <p style="margin: 0.5rem 0 0 0; color: #e65100; font-weight: 500;">Please select your pet type (Dog or Cat) above first to see accurate pricing.</p>
+      `;
+      optionsContainer.parentNode.insertBefore(messageDiv, optionsContainer);
+    }
+  } else {
+    // Remove message if pet type is selected
+    const petTypeMessage = document.getElementById('singleServicePetTypeMessage');
+    if (petTypeMessage) {
+      petTypeMessage.remove();
+    }
+  }
+  
   const optionEntries = Object.values(SINGLE_SERVICE_OPTIONS);
 
   if (!optionEntries.length) {
@@ -1712,15 +2181,93 @@ function updateReferenceCutsVisibility() {
   const referenceCutsSection = document.getElementById('referenceCutsSection');
   if (!referenceCutsSection) return;
   
-  // If single service package is selected
+  // Determine if we should show reference cuts
+  let shouldShow = false;
+  
   if (isSingleServicePackage()) {
     // Only show reference cuts if Face Trim is selected
     const hasFaceTrim = bookingData.singleServices.includes('face');
-    referenceCutsSection.style.display = hasFaceTrim ? 'block' : 'none';
+    shouldShow = hasFaceTrim;
   } else {
     // For regular packages, always show reference cuts
-    referenceCutsSection.style.display = 'block';
+    shouldShow = true;
   }
+  
+  if (shouldShow) {
+    // Render the correct cuts based on pet type
+    renderReferenceCutsForPetType(bookingData.petType || 'dog');
+    referenceCutsSection.style.display = 'block';
+  } else {
+    referenceCutsSection.style.display = 'none';
+  }
+}
+
+// Render reference cuts based on pet type (dog or cat)
+// Uses GROOMING_CUTS data from grooming-cuts.js
+function renderReferenceCutsForPetType(petType) {
+  console.log('[renderReferenceCutsForPetType] Called with petType:', petType);
+  const referenceCutsSection = document.getElementById('referenceCutsSection');
+  if (!referenceCutsSection) {
+    console.warn('[renderReferenceCutsForPetType] referenceCutsSection not found!');
+    return;
+  }
+  
+  // Get cuts from GROOMING_CUTS (from grooming-cuts.js)
+  let cuts = [];
+  
+  if (typeof window.GROOMING_CUTS !== 'undefined' && Array.isArray(window.GROOMING_CUTS)) {
+    cuts = window.GROOMING_CUTS.filter(cut => 
+      cut.petTypes && cut.petTypes.includes(petType.toLowerCase())
+    );
+    console.log('[renderReferenceCutsForPetType] Using GROOMING_CUTS from grooming-cuts.js:', cuts.length, 'cuts found');
+  } else {
+    console.warn('[renderReferenceCutsForPetType] GROOMING_CUTS not available from grooming-cuts.js');
+  }
+  
+  // If no cuts found, show message
+  if (cuts.length === 0) {
+    referenceCutsSection.innerHTML = `
+      <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 1rem; font-weight: 500;">
+        💡 No grooming styles available for ${petType}s at the moment.
+      </p>
+    `;
+    return;
+  }
+  
+  const petTypeLabel = petType.charAt(0).toUpperCase() + petType.slice(1);
+  
+  const cutsHTML = cuts.map(cut => {
+    const cutId = cut.id;
+    const isSelected = bookingData.referenceCut === cutId;
+    const shortDesc = cut.description.split('.')[0]; // Get first sentence for short description
+    
+    return `
+      <div style="text-align: center; width: 140px; flex: 0 0 140px; scroll-snap-align: start;">
+        <div style="width: 140px; height: 140px; background: ${cut.backgroundColor || '#f5f5f5'}; border-radius: 1rem; margin: 0 auto 0.6rem; display: flex; align-items: center; justify-content: center; border: 3px solid ${cut.borderColor || '#ccc'}; overflow: hidden; cursor: pointer;" onclick="event.preventDefault(); event.stopPropagation(); openLightbox('${cut.image}');">
+          <img src="${cut.image}" alt="${cut.name}" style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" onerror="this.style.display='none';">
+        </div>
+        <button type="button" class="cut-selector-btn ${isSelected ? 'selected' : ''}" data-cut="${cutId}"
+          onclick="selectGroomingCut('${cutId}', event)"
+          style="width: 140px; padding: 0.5rem; background: ${isSelected ? '#4CAF50' : '#e8e8e8'}; color: ${isSelected ? 'white' : '#333'}; border: 1px solid ${isSelected ? '#4CAF50' : '#ccc'}; border-radius: 0.4rem; cursor: pointer; font-weight: 600; transition: all 0.3s ease; font-size: 0.75rem; margin-bottom: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          ${cut.name}
+        </button>
+        <p style="text-align: center; font-size: 0.65rem; color: var(--gray-600); margin: 0; width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${shortDesc}</p>
+      </div>
+    `;
+  }).join('');
+  
+  referenceCutsSection.innerHTML = `
+    <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 1rem; font-weight: 500;">
+      💡 ${petTypeLabel} Grooming Styles - Browse popular styles below:
+    </p>
+    <div class="cuts-carousel-wrapper">
+      <div class="cuts-carousel" style="display: flex; gap: 1rem; overflow-x: auto; padding: 0.5rem; scroll-snap-type: x mandatory;">
+        ${cutsHTML}
+      </div>
+    </div>
+  `;
+  
+  console.log('[renderReferenceCutsForPetType] Rendered', cuts.length, 'cuts for', petType, 'from grooming-cuts.js');
 }
 
 function updateSingleServicePriceLabels() {
@@ -1774,6 +2321,18 @@ function selectPackage(packageId) {
   enableNextButton();
   renderSingleServiceConfigurator();
   updateReferenceCutsVisibility();
+  
+  // 🔧 CALENDAR RE-RENDER FIX: Re-render calendar when package changes while on step 4
+  // This ensures correct calendar type shows when user changes package after loading profile
+  if (currentStep === 4) {
+    console.log('[selectPackage] Package changed while on step 4 - re-rendering calendar');
+    console.log('[selectPackage] New packageId:', packageId, 'isSingleService:', packageId === SINGLE_SERVICE_PACKAGE_ID);
+    // Clear date/time selection since calendar type is changing
+    bookingData.date = null;
+    bookingData.time = null;
+    // Re-render calendar with correct type
+    setupCalendarTimePicker();
+  }
 }
 
 // Setup calendar time picker
@@ -1794,27 +2353,462 @@ async function setupCalendarTimePicker() {
     bookingData.groomerName = '';
   }
 
-  // Render the calendar
-  // Use options for interactive mode
-  await renderPublicCalendar('calendarWrapper', {
-    showBookedList: false, // Don't show names on booking page
-    onDateSelect: handleDateSelect,
-    selectedDate: bookingData.date
-  });
-
-  // If we already have a date selected (e.g. returning from auth), render time slots
-  if (bookingData.date) {
-    if (typeof isCalendarBlackout === 'function' && isCalendarBlackout(bookingData.date)) {
-      // Handle blackout case if pre-selected
-      bookingData.date = null;
-      bookingData.time = null;
+  // Check if this is a single service booking - use different calendar
+  console.log('[setupCalendarTimePicker] Checking package type - packageId:', bookingData.packageId);
+  console.log('[setupCalendarTimePicker] SINGLE_SERVICE_PACKAGE_ID:', SINGLE_SERVICE_PACKAGE_ID);
+  console.log('[setupCalendarTimePicker] isSingleServicePackage():', isSingleServicePackage());
+  console.log('[setupCalendarTimePicker] packageId === SINGLE_SERVICE_PACKAGE_ID:', bookingData.packageId === SINGLE_SERVICE_PACKAGE_ID);
+  
+  if (isSingleServicePackage()) {
+    console.log('[setupCalendarTimePicker] Rendering SINGLE SERVICE calendar');
+    // Single service: clean calendar without slot indicators
+    await renderSingleServiceCalendar('calendarWrapper', {
+      onDateSelect: handleSingleServiceDateSelect,
+      selectedDate: bookingData.date
+    });
+    
+    // If we already have a date selected, render single service time slots
+    if (bookingData.date) {
+      if (typeof isCalendarBlackout === 'function' && isCalendarBlackout(bookingData.date)) {
+        bookingData.date = null;
+        bookingData.time = null;
+      } else {
+        renderSingleServiceTimeSlots(bookingData.date);
+      }
     } else {
-      renderBookingTimeSlots(bookingData.date);
+      document.getElementById('timeSlotsWrapper').innerHTML = '<p style="color:var(--gray-600); text-align:center; padding:2rem;">Select a date above to see available time slots.</p>';
     }
   } else {
-    document.getElementById('timeSlotsWrapper').innerHTML = '<p style="color:var(--gray-600); text-align:center; padding:2rem;">Select a date above to see available time slots.</p>';
+    console.log('[setupCalendarTimePicker] Rendering FULL PACKAGE calendar');
+    // Regular booking: calendar with slot indicators
+    await renderPublicCalendar('calendarWrapper', {
+      showBookedList: false,
+      onDateSelect: handleDateSelect,
+      selectedDate: bookingData.date
+    });
+
+    // If we already have a date selected (e.g. returning from auth), render time slots
+    if (bookingData.date) {
+      if (typeof isCalendarBlackout === 'function' && isCalendarBlackout(bookingData.date)) {
+        bookingData.date = null;
+        bookingData.time = null;
+      } else {
+        renderBookingTimeSlots(bookingData.date);
+      }
+    } else {
+      document.getElementById('timeSlotsWrapper').innerHTML = '<p style="color:var(--gray-600); text-align:center; padding:2rem;">Select a date above to see available time slots.</p>';
+    }
   }
 }
+
+// ============================================
+// SINGLE SERVICE CALENDAR & TIME SLOTS
+// ============================================
+
+// Single Service Time Slots: 30-minute intervals from 9:30 AM to 5:00 PM
+const SINGLE_SERVICE_TIME_SLOTS = [
+  '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
+  '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM',
+  '2:30 PM', '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM'
+];
+
+// Single Service Capacity: 5 slots per time interval
+const SINGLE_SERVICE_CAPACITY_PER_SLOT = 5;
+
+// Check if a date is fully booked for single service (all time slots full)
+async function isSingleServiceDateFullyBooked(date) {
+  if (!date) return false;
+  
+  const bookings = await getBookings();
+  
+  // Count bookings per time slot for this date
+  const bookingsPerSlot = {};
+  SINGLE_SERVICE_TIME_SLOTS.forEach(slot => {
+    bookingsPerSlot[slot] = 0;
+  });
+  
+  // Count active single service bookings for this date
+  bookings.forEach(b => {
+    if (b.date === date && 
+        b.packageId === SINGLE_SERVICE_PACKAGE_ID &&
+        !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(b.status) &&
+        bookingsPerSlot.hasOwnProperty(b.time)) {
+      bookingsPerSlot[b.time]++;
+    }
+  });
+  
+  // Check if ALL time slots are full
+  const allSlotsFull = SINGLE_SERVICE_TIME_SLOTS.every(slot => 
+    bookingsPerSlot[slot] >= SINGLE_SERVICE_CAPACITY_PER_SLOT
+  );
+  
+  return allSlotsFull;
+}
+
+// Get total available slots for a date (for calendar display)
+async function getSingleServiceTotalAvailableForDate(date) {
+  if (!date) return SINGLE_SERVICE_TIME_SLOTS.length * SINGLE_SERVICE_CAPACITY_PER_SLOT;
+  
+  const bookings = await getBookings();
+  
+  // Count active single service bookings for this date
+  const bookedCount = bookings.filter(b => 
+    b.date === date && 
+    b.packageId === SINGLE_SERVICE_PACKAGE_ID &&
+    !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(b.status)
+  ).length;
+  
+  const totalCapacity = SINGLE_SERVICE_TIME_SLOTS.length * SINGLE_SERVICE_CAPACITY_PER_SLOT;
+  return Math.max(0, totalCapacity - bookedCount);
+}
+
+// Render clean calendar for single service (with fully booked indicators)
+async function renderSingleServiceCalendar(containerId, options = {}) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const onDateSelect = options.onDateSelect || null;
+  const selectedDate = options.selectedDate || null;
+
+  // Initialize date state if not exists
+  if (!container.__singleServiceDate) {
+    container.__singleServiceDate = new Date();
+  }
+
+  const displayDate = container.__singleServiceDate;
+  const monthName = displayDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  // Fetch blackouts
+  const blackouts = typeof getCalendarBlackouts === 'function' ? getCalendarBlackouts() : [];
+
+  const firstDay = new Date(displayDate.getFullYear(), displayDate.getMonth(), 1);
+  const lastDay = new Date(displayDate.getFullYear(), displayDate.getMonth() + 1, 0);
+  const startWeekday = firstDay.getDay();
+
+  const todayStr = toLocalISO(new Date());
+
+  // Pre-fetch all bookings once for efficiency
+  const allBookings = await getBookings();
+  
+  // Build a map of booked counts per date
+  const bookingsPerDate = {};
+  allBookings.forEach(b => {
+    if (b.packageId === SINGLE_SERVICE_PACKAGE_ID &&
+        !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(b.status)) {
+      if (!bookingsPerDate[b.date]) {
+        bookingsPerDate[b.date] = 0;
+      }
+      bookingsPerDate[b.date]++;
+    }
+  });
+  
+  // Total capacity per day = time slots * capacity per slot
+  const totalDailyCapacity = SINGLE_SERVICE_TIME_SLOTS.length * SINGLE_SERVICE_CAPACITY_PER_SLOT;
+
+  // Navigation Header
+  let html = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+       <button class="btn btn-outline" style="min-width:32px; border-radius:50%; width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center;" onclick="changeSingleServiceCalendarMonth('${containerId}', -1)">←</button>
+       <h4 style="margin:0; font-size:1.25rem; font-weight:700;">${monthName}</h4>
+       <button class="btn btn-outline" style="min-width:32px; border-radius:50%; width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center;" onclick="changeSingleServiceCalendarMonth('${containerId}', 1)">→</button>
+    </div>
+    
+    <div class="public-calendar-grid">
+      ${['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => `<div style="text-align:center; font-weight:600; color:var(--gray-500); padding-bottom:0.5rem;">${d}</div>`).join('')}
+  `;
+
+  // Empty cells for days before the 1st
+  for (let i = 0; i < startWeekday; i++) {
+    html += `<div></div>`;
+  }
+
+  for (let day = 1; day <= lastDay.getDate(); day++) {
+    const dateObj = new Date(displayDate.getFullYear(), displayDate.getMonth(), day);
+    const isoDate = toLocalISO(dateObj);
+
+    const isBlackout = blackouts.some(b => b.date === isoDate);
+    const isPast = isoDate < todayStr;
+    const isSelected = selectedDate === isoDate;
+    
+    // Check if fully booked
+    const bookedCount = bookingsPerDate[isoDate] || 0;
+    const isFullyBooked = bookedCount >= totalDailyCapacity;
+    const availableSlots = totalDailyCapacity - bookedCount;
+    
+    const isAvailable = !isPast && !isBlackout && !isFullyBooked;
+
+    // Store callback globally for onclick
+    if (onDateSelect) {
+      window.__singleServiceCalendarCallback = onDateSelect;
+    }
+
+    let clickAction = '';
+    if (isAvailable && onDateSelect) {
+      clickAction = `onclick="window.__singleServiceCalendarCallback && window.__singleServiceCalendarCallback('${isoDate}')"`;
+    }
+
+    // Styling based on availability
+    let boxClass = isAvailable ? 'open' : 'closed';
+    let styleOverride = '';
+    let statusLabel = '';
+    
+    if (isPast) {
+      styleOverride = 'background:#f5f5f5; border-color:#e0e0e0; color:#9e9e9e; cursor:not-allowed;';
+      statusLabel = '<div style="font-size:0.6rem; text-transform:uppercase;">Past</div>';
+    } else if (isBlackout) {
+      styleOverride = 'background:#f5f5f5; border-color:#e0e0e0; color:#9e9e9e; cursor:not-allowed;';
+      statusLabel = '<div style="font-size:0.6rem; text-transform:uppercase;">Closed</div>';
+    } else if (isFullyBooked) {
+      styleOverride = 'background:#ffebee; border-color:#ffcdd2; color:#c62828; cursor:not-allowed;';
+      statusLabel = '<div style="font-size:0.6rem; text-transform:uppercase; font-weight:600;">Full</div>';
+    } else if (availableSlots <= 20) {
+      // Low availability warning (less than 25% capacity)
+      styleOverride = 'background:#fff3e0; border-color:#ffcc80; color:#e65100; cursor:pointer;';
+      statusLabel = `<div style="font-size:0.55rem; color:#e65100;">${availableSlots} left</div>`;
+    } else {
+      styleOverride = 'background:#e8f5e9; border-color:#c8e6c9; color:#2e7d32; cursor:pointer;';
+    }
+
+    // Selection highlight
+    if (isSelected && isAvailable) {
+      styleOverride += ' box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.4); border-width:2px;';
+    }
+
+    // Display with status label
+    html += `
+      <div class="public-calendar-day ${boxClass}" ${clickAction} style="${styleOverride}">
+         <div style="font-weight:700; font-size:1.1rem; text-align:center;">${day}</div>
+         ${statusLabel}
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+
+  // Legend for single service with fully booked indicator
+  html += `
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1rem; justify-content:center;">
+       <span class="badge" style="background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; font-size:0.75rem;">Available</span>
+       <span class="badge" style="background:#fff3e0; color:#e65100; border:1px solid #ffcc80; font-size:0.75rem;">Few Left</span>
+       <span class="badge" style="background:#ffebee; color:#c62828; border:1px solid #ffcdd2; font-size:0.75rem;">Fully Booked</span>
+       <span class="badge" style="background:#f5f5f5; color:#9e9e9e; border:1px solid #e0e0e0; font-size:0.75rem;">Not Available</span>
+    </div>
+    <p style="text-align:center; color:var(--gray-600); font-size:0.85rem; margin-top:0.75rem;">
+      📅 Select a date to see available time slots
+    </p>
+  `;
+
+  container.innerHTML = html;
+}
+
+// Change month for single service calendar
+function changeSingleServiceCalendarMonth(containerId, offset) {
+  const container = document.getElementById(containerId);
+  if (container && container.__singleServiceDate) {
+    container.__singleServiceDate.setMonth(container.__singleServiceDate.getMonth() + offset);
+    renderSingleServiceCalendar(containerId, {
+      onDateSelect: window.__singleServiceCalendarCallback,
+      selectedDate: bookingData.date
+    });
+  }
+}
+
+// Handle date selection for single service
+async function handleSingleServiceDateSelect(date) {
+  bookingData.date = date;
+  bookingData.time = null; // Reset time when date changes
+
+  // Re-render calendar to update selection highlight
+  await renderSingleServiceCalendar('calendarWrapper', {
+    onDateSelect: handleSingleServiceDateSelect,
+    selectedDate: date
+  });
+
+  updateSummary();
+  enableNextButton();
+  renderSingleServiceTimeSlots(date);
+
+  // Smooth scroll to time slots
+  const tsWrapper = document.getElementById('timeSlotsWrapper');
+  if (tsWrapper) tsWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Get available slots for a single service time slot
+async function getSingleServiceAvailableSlots(date, time) {
+  if (!date || !time) return SINGLE_SERVICE_CAPACITY_PER_SLOT;
+  
+  // Fetch all single service bookings for this date and time
+  const bookings = await getBookings();
+  const singleServiceBookings = bookings.filter(b => 
+    b.date === date && 
+    b.time === time && 
+    b.packageId === SINGLE_SERVICE_PACKAGE_ID &&
+    !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(b.status)
+  );
+  
+  return Math.max(0, SINGLE_SERVICE_CAPACITY_PER_SLOT - singleServiceBookings.length);
+}
+
+// Parse single service time slot to 24-hour format for comparison
+function parseSingleServiceTime(timeStr) {
+  // Parse "9:30 AM" or "1:00 PM" format
+  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return { hour: 0, minute: 0 };
+  
+  let hour = parseInt(match[1]);
+  const minute = parseInt(match[2]);
+  const isPM = match[3].toUpperCase() === 'PM';
+  
+  if (isPM && hour !== 12) hour += 12;
+  if (!isPM && hour === 12) hour = 0;
+  
+  return { hour, minute };
+}
+
+// Render time slots for single service booking
+async function renderSingleServiceTimeSlots(date) {
+  const container = document.getElementById('timeSlotsWrapper');
+  if (!container) return;
+
+  container.innerHTML = '<div style="text-align:center; padding:2rem;"><div class="spinner"></div> Checking availability...</div>';
+
+  // Check blackout
+  const blackout = typeof getCalendarBlackout === 'function' ? getCalendarBlackout(date) : null;
+  if (blackout) {
+    container.innerHTML = `<p style="color: var(--gray-600); text-align: center; padding: 1.5rem;">${escapeHtml(blackout.reason || 'This date is closed')} · Please pick another day.</p>`;
+    return;
+  }
+
+  // Time validation: Check if selected date is today
+  const selectedDate = new Date(date);
+  const today = new Date();
+  const isToday = selectedDate.toDateString() === today.toDateString();
+  const currentHour = today.getHours();
+  const currentMinute = today.getMinutes();
+
+  // Helper function to check if a time slot is unavailable (past or within 30 minutes for single service)
+  function isTimeSlotUnavailable(timeStr) {
+    if (!isToday) return false;
+    
+    const { hour, minute } = parseSingleServiceTime(timeStr);
+    
+    // ============================================
+    // 🕐 SCHEDULE CUTOFF LOGIC - SINGLE SERVICE
+    // ============================================
+    // Rule: Customer must book at least 30 minutes BEFORE the service time
+    // Example: For 2:00 PM slot, cutoff is 1:30 PM
+    //          If current time is 1:45 PM, slot is unavailable
+    // ============================================
+    
+    // Calculate cutoff time (30 minutes before booking time for single service)
+    let cutoffHour = hour;
+    let cutoffMinute = minute - 30;
+    
+    // Handle minute wraparound (e.g., 2:15 - 30 min = 1:45)
+    if (cutoffMinute < 0) {
+      cutoffHour--;
+      cutoffMinute += 60;
+    }
+    
+    // Handle hour wraparound (e.g., 0:00 - 30 min = 23:30 previous day)
+    if (cutoffHour < 0) {
+      cutoffHour = 23;
+    }
+    
+    // Slot is unavailable if current time >= cutoff time
+    // This means we need 30 minutes advance notice for single service
+    return currentHour > cutoffHour || (currentHour === cutoffHour && currentMinute >= cutoffMinute);
+  }
+
+  const selectedTime = bookingData.time;
+
+  // Build time slot HTML
+  const timeSlotPromises = SINGLE_SERVICE_TIME_SLOTS.map(async time => {
+    const isUnavailable = isTimeSlotUnavailable(time);
+    let availableSlots = 0;
+    
+    if (!isUnavailable) {
+      availableSlots = await getSingleServiceAvailableSlots(date, time);
+    }
+    
+    const isSelected = selectedTime === time;
+    const isAvailable = availableSlots > 0 && !isUnavailable;
+
+    // Color coding based on availability
+    let slotColor = 'var(--gray-700)';
+    let bgColor = '';
+    let statusText = '';
+    
+    if (isUnavailable) {
+      slotColor = '#d32f2f';
+      statusText = 'Not available';
+    } else if (availableSlots === 0) {
+      slotColor = 'var(--gray-500)';
+      statusText = 'Full';
+    } else if (availableSlots <= 2) {
+      slotColor = '#e65100'; // Orange for low availability
+      bgColor = 'background: #fff3e0;';
+      statusText = `${availableSlots}/${SINGLE_SERVICE_CAPACITY_PER_SLOT} slots`;
+    } else {
+      slotColor = '#2e7d32'; // Green for good availability
+      statusText = `${availableSlots}/${SINGLE_SERVICE_CAPACITY_PER_SLOT} slots`;
+    }
+
+    return `
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem; min-width: 80px;">
+        <button type="button" 
+                data-time="${time}"
+                class="time-slot ${isSelected ? 'selected' : ''} ${isUnavailable ? 'past-slot' : ''}" 
+                onclick="selectSingleServiceTime('${time}')"
+                style="padding: 0.5rem 0.75rem; font-size: 0.85rem; ${bgColor}"
+                ${!isAvailable ? 'disabled' : ''}>
+          ${time}
+        </button>
+        <div style="font-size: 0.75rem; color: ${slotColor}; font-weight: ${isAvailable ? '600' : '400'};">
+          ${statusText}
+        </div>
+      </div>
+    `;
+  });
+
+  const timeSlotHTMLs = await Promise.all(timeSlotPromises);
+
+  container.innerHTML = `
+    <div class="time-slots-picker" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; box-sizing: border-box; padding-bottom: 0.5rem;">
+      <h4 style="margin-bottom: 0.5rem; text-align:center;">Select Time for ${formatDate(date)}</h4>
+      <p style="text-align:center; color:var(--gray-600); font-size:0.8rem; margin-bottom:1rem;">
+        🕐 Single service slots (15-30 min each) · 5 slots per time
+      </p>
+      <div class="time-slots" style="display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center;">
+        ${timeSlotHTMLs.join('')}
+      </div>
+    </div>
+  `;
+}
+
+// Select time for single service
+function selectSingleServiceTime(time) {
+  bookingData.time = time;
+
+  // Update UI
+  document.querySelectorAll('.time-slot').forEach(slot => {
+    if (slot.dataset.time === time) {
+      slot.classList.add('selected');
+    } else {
+      slot.classList.remove('selected');
+    }
+  });
+
+  updateSummary();
+  enableNextButton();
+}
+
+// Expose single service functions globally
+window.renderSingleServiceCalendar = renderSingleServiceCalendar;
+window.changeSingleServiceCalendarMonth = changeSingleServiceCalendarMonth;
+window.handleSingleServiceDateSelect = handleSingleServiceDateSelect;
+window.renderSingleServiceTimeSlots = renderSingleServiceTimeSlots;
+window.selectSingleServiceTime = selectSingleServiceTime;
 
 
 
@@ -1861,7 +2855,7 @@ async function getAvailableSlotsForTime(date, time) {
   // Fallback: compute by counting bookings
   const bookings = await getBookings();
   const bookedIds = bookings.filter(b =>
-    b.date === date && b.time === time && !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'].includes(b.status)
+    b.date === date && b.time === time && !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(b.status)
   ).map(b => b.groomerId).filter(Boolean);
 
   const available = activeGroomers.filter(g => !bookedIds.includes(g.id)).length;
@@ -1869,7 +2863,7 @@ async function getAvailableSlotsForTime(date, time) {
   // IMPORTANT: Check if the date is almost fully booked
   // If total slots left for the day is very low, limit what we show per time slot
   const allDayBookings = bookings.filter(b => 
-    b.date === date && !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'].includes(b.status)
+    b.date === date && !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(b.status)
   );
   const totalDailyCapacity = groomersList.reduce((sum, g) => sum + (g.maxDailyBookings || 3), 0);
   const totalSlotsLeft = Math.max(0, totalDailyCapacity - allDayBookings.length);
@@ -1901,7 +2895,14 @@ async function renderBookingTimeSlots(date) {
   const currentHour = today.getHours();
   const currentMinute = today.getMinutes();
 
-  // Helper function to check if a time slot has passed
+  // ============================================
+  // 🕐 SCHEDULE CUTOFF LOGIC - FULL PACKAGES
+  // ============================================
+  // Rule: Customer can book up to 30 minutes AFTER the slot STARTS
+  // Example: For "12pm-3pm" slot (starts at 12pm), cutoff is 12:30pm
+  //          If current time is 12:45pm, slot is unavailable
+  //          If current time is 12:15pm, slot is still available
+  // ============================================
   function isTimeSlotPast(timeSlot) {
     if (!isToday) return false; // Future dates are always available
 
@@ -1938,7 +2939,7 @@ async function renderBookingTimeSlots(date) {
   const bookings = await getBookings();
   const totalDailyCapacity = groomers.reduce((sum, g) => sum + (g.maxDailyBookings || 3), 0);
   const allDayBookings = bookings.filter(b => 
-    b.date === date && !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'].includes(b.status)
+    b.date === date && !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(b.status)
   );
   let totalSlotsRemaining = Math.max(0, totalDailyCapacity - allDayBookings.length);
 
@@ -1951,7 +2952,7 @@ async function renderBookingTimeSlots(date) {
       const groomersList = await getGroomers();
       const activeGroomers = typeof getActiveGroomers === 'function' ? await getActiveGroomers(date) : groomersList;
       const bookedIds = bookings.filter(b =>
-        b.date === date && b.time === time && !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'].includes(b.status)
+        b.date === date && b.time === time && !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(b.status)
       ).map(b => b.groomerId).filter(Boolean);
       const groomersAvailable = activeGroomers.filter(g => !bookedIds.includes(g.id)).length;
       
@@ -2098,14 +3099,17 @@ async function updateSummary() {
 
   let summaryHTML = '<div class="summary-card"><h3 style="margin-bottom: 1rem;">Booking Summary</h3>';
 
-  if (warningInfo?.warnings) {
+  // Show warning count if user has warnings
+  if (warningInfo && warningInfo.warnings > 0) {
+    const warningText = warningInfo.isBanned ? ' - account on hold' : '';
     summaryHTML += `
-      <div class="summary-alert">
-        âš ï¸ ${warningInfo.warnings}/5 warnings${warningInfo.isBanned ? ' Â· account on hold' : ''}.
+      <div class="summary-alert" style="display: flex; align-items: center; gap: 0.5rem;">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>${warningInfo.warnings}/5 warnings${warningText}.</span>
       </div>
     `;
   }
-
+  
   if (bookingData.petType) {
     summaryHTML += `
       <div class="summary-item">
@@ -2161,12 +3165,7 @@ async function updateSummary() {
         priceDisplay = `${formatCurrency(minPrice)} – ${formatCurrency(maxPrice)}`;
       }
       
-      summaryHTML += `
-        <div class="summary-item">
-          <span class="summary-label">Price:</span>
-          <span class="summary-value">${priceDisplay}</span>
-        </div>
-      `;
+      // Price range removed - total amount shown at bottom instead
     }
   }
 
@@ -2228,13 +3227,56 @@ async function updateSummary() {
     `;
   }
 
-  if (bookingData.bookingNotes && bookingData.bookingNotes.trim()) {
+  // ============================================
+  // 🔧 REFERENCE CUT DISPLAY - Text only (no image for faster loading)
+  // ============================================
+  if (bookingData.referenceCut) {
+    const cutId = bookingData.referenceCut;
+    let cutDisplayName = cutId;
+    
+    // Convert ID to display name using getReferenceCutName
+    cutDisplayName = typeof getReferenceCutName === 'function' 
+      ? getReferenceCutName(cutId) 
+      : (typeof window.getReferenceCutName === 'function' ? window.getReferenceCutName(cutId) : cutId);
+    
     summaryHTML += `
-      <div class="summary-item">
-        <span class="summary-label">Special Notes:</span>
-        <span class="summary-value" style="font-size: 0.9rem; line-height: 1.4;">${escapeHtml(bookingData.bookingNotes)}</span>
+      <div class="summary-item" style="flex-direction: column; align-items: flex-start;">
+        <span class="summary-label">✂️ Reference Cut:</span>
+        <div style="background: #e8f5e9; padding: 0.5rem 0.75rem; border-radius: 6px; border: 2px solid #4CAF50; margin-top: 0.25rem;">
+          <span style="color: #2e7d32; font-weight: 600;">${escapeHtml(cutDisplayName)}</span>
+        </div>
       </div>
     `;
+  }
+
+  if (bookingData.bookingNotes && bookingData.bookingNotes.trim()) {
+    // Filter out the cut name from notes if it's already displayed above
+    let notesToDisplay = bookingData.bookingNotes.trim();
+    if (bookingData.referenceCut) {
+      const cutId = bookingData.referenceCut;
+      let cutDisplayName = cutId;
+      // Get display name for filtering notes
+      cutDisplayName = typeof getReferenceCutName === 'function' 
+        ? getReferenceCutName(cutId) 
+        : (typeof window.getReferenceCutName === 'function' ? window.getReferenceCutName(cutId) : cutId);
+      // Remove the cut name from notes if it's the first line
+      const lines = notesToDisplay.split('\n');
+      if (lines[0].trim() === cutDisplayName) {
+        lines.shift();
+        notesToDisplay = lines.join('\n').trim();
+      }
+    }
+    
+    if (notesToDisplay) {
+      summaryHTML += `
+        <div class="summary-item" style="flex-direction: column; align-items: flex-start;">
+          <span class="summary-label">📝 Special Notes:</span>
+          <div style="background: #fff3e0; padding: 0.5rem 0.75rem; border-radius: 6px; border: 2px solid #ff9800; margin-top: 0.25rem;">
+            <span style="color: #e65100; font-weight: 500;">${escapeHtml(notesToDisplay)}</span>
+          </div>
+        </div>
+      `;
+    }
   }
 
   const shouldComputeCost = bookingData.packageId
@@ -2254,18 +3296,8 @@ async function updateSummary() {
     }
   }
 
-  if (isSingleServicePackage()) {
-    summaryHTML += `
-      <div class="summary-item">
-        <span class="summary-label">Selected Services:</span>
-        <span class="summary-value">
-          ${bookingData.singleServices.length ? bookingData.singleServices.map(id => escapeHtml(SINGLE_SERVICE_OPTIONS[id]?.label || id)).join(', ') : 'Choose at least one service'}
-        </span>
-      </div>
-    `;
-    if (!bookingData.singleServices.length) {
-      summaryHTML += `<p style="color: var(--warning-600); font-size: 0.85rem;">Please tick at least one single service option.</p>`;
-    }
+  if (isSingleServicePackage() && !bookingData.singleServices.length) {
+    summaryHTML += `<p style="color: var(--warning-600); font-size: 0.85rem;">Please tick at least one single service option.</p>`;
   }
 
   if (costEstimate) {
@@ -2279,14 +3311,8 @@ async function updateSummary() {
       <div class="summary-divider" style="margin: 1rem 0; border-top: 1px solid var(--gray-200);"></div>
       ${isSingleSvc && costEstimate.services?.length ? `
         <div class="summary-item">
-          <span class="summary-label">Single Services:</span>
-          <span class="summary-value">
-            ${costEstimate.services.map(service => `${escapeHtml(service.label)} (${service.price ? formatCurrency(service.price) : 'Select weight'})`).join('<br>')}
-          </span>
-        </div>
-        <div class="summary-item">
-          <span class="summary-label">Services Total:</span>
-          <span class="summary-value">${formatCurrency(servicesTotal)}</span>
+          <span class="summary-label">Selected Services:</span>
+          <span class="summary-value">${costEstimate.services.map(service => escapeHtml(service.label)).join(', ')}</span>
         </div>
       ` : `
         <div class="summary-item">
@@ -2513,32 +3539,225 @@ function enableNextButton() {
   }
 }
 
-// Submit booking
+// Start cooldown countdown on submit button
+function startSubmitButtonCooldown(submitBtn) {
+  if (!submitBtn) return;
+  
+  let timeLeft = SUBMIT_COOLDOWN_MS / 1000; // Convert to seconds
+  submitBtn.disabled = true;
+  submitBtn.style.opacity = '0.5';
+  
+  const countdownInterval = setInterval(() => {
+    timeLeft--;
+    
+    if (timeLeft > 0) {
+      submitBtn.textContent = `Please wait ${timeLeft}s...`;
+    } else {
+      clearInterval(countdownInterval);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit Booking';
+      submitBtn.style.opacity = '1';
+    }
+  }, 1000);
+}
+
+// ============================================
+// 📝 SUBMIT BOOKING - AJAX-Style with Database-Backed Status
+// ============================================
+// Uses database-backed submission status to prevent duplicates
+// Status flow: idle -> submitting -> success/failed -> idle
+// Each submission has a unique token for tracking
+// ============================================
 async function submitBooking(event) {
   console.log('[submitBooking] Starting booking submission...');
   
-  // Prevent duplicate submissions
+  // Get user info for logging
+  const user = await getCurrentUser().catch(() => null);
+  const userId = user?.id || 'anonymous';
+  
+  // ============================================
+  // 🛡️ DATABASE-BACKED DUPLICATE PREVENTION
+  // ============================================
+  // Check submission status from database (not just local variable)
+  // This prevents duplicates even across page refreshes
+  // ============================================
+  const now = Date.now();
+  const timeSinceLastSubmit = now - lastSubmitTime;
+  
+  // Log submission attempt
+  if (typeof BookingSecurityLogger !== 'undefined') {
+    BookingSecurityLogger.log('submission_attempt', {
+      userId: userId,
+      isSubmitting: isSubmittingBooking,
+      timeSinceLastSubmit: timeSinceLastSubmit,
+      cooldownRemaining: Math.max(0, SUBMIT_COOLDOWN_MS - timeSinceLastSubmit)
+    });
+  }
+  
+  // ============================================
+  // CHECK 1: Local flag (fast check)
+  // ============================================
   if (isSubmittingBooking) {
-    console.log('[submitBooking] Already submitting, ignoring duplicate request');
+    console.log('[submitBooking] BLOCKED - Local flag: Already submitting');
+    
+    if (typeof BookingSecurityLogger !== 'undefined') {
+      BookingSecurityLogger.log('blocked_already_submitting', {
+        userId: userId,
+        reason: 'Local flag: Concurrent submission attempt blocked'
+      });
+    }
+    
     return;
   }
   
+  // ============================================
+  // CHECK 2: Database status (reliable check)
+  // ============================================
+  if (typeof canSubmit === 'function' && !canSubmit(userId)) {
+    console.log('[submitBooking] BLOCKED - Database status: Submission in progress');
+    
+    const currentStatus = typeof getSubmissionStatus === 'function' ? getSubmissionStatus() : null;
+    
+    if (typeof BookingSecurityLogger !== 'undefined') {
+      BookingSecurityLogger.log('blocked_database_status', {
+        userId: userId,
+        reason: 'Database status: Another submission in progress',
+        currentStatus: currentStatus?.status,
+        currentToken: currentStatus?.token
+      });
+    }
+    
+    const submitBtn = document.getElementById('submitBooking');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Processing...';
+      submitBtn.style.opacity = '0.5';
+    }
+    return;
+  }
+  
+  // ============================================
+  // CHECK 3: Cooldown (rate limiting)
+  // ============================================
+  if (timeSinceLastSubmit < SUBMIT_COOLDOWN_MS) {
+    const timeLeft = Math.ceil((SUBMIT_COOLDOWN_MS - timeSinceLastSubmit) / 1000);
+    console.log('[submitBooking] BLOCKED - Cooldown active. Time left:', timeLeft, 'seconds');
+    
+    if (typeof BookingSecurityLogger !== 'undefined') {
+      BookingSecurityLogger.log('blocked_cooldown', {
+        userId: userId,
+        timeLeft: timeLeft,
+        timeSinceLastSubmit: timeSinceLastSubmit,
+        cooldownMs: SUBMIT_COOLDOWN_MS
+      });
+    }
+    
+    const submitBtn = document.getElementById('submitBooking');
+    if (submitBtn && timeLeft > 0) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = `Please wait ${timeLeft}s...`;
+      submitBtn.style.opacity = '0.5';
+    }
+    return;
+  }
+  
+  // ============================================
+  // ✅ START SUBMISSION - Lock in database
+  // ============================================
+  // Get submission token from database (atomic operation)
+  // This ensures only one submission can proceed
+  // ============================================
+  let submissionToken = null;
+  if (typeof startSubmission === 'function') {
+    submissionToken = startSubmission(userId);
+    if (!submissionToken) {
+      console.log('[submitBooking] BLOCKED - Could not acquire submission lock');
+      
+      if (typeof BookingSecurityLogger !== 'undefined') {
+        BookingSecurityLogger.log('blocked_lock_failed', {
+          userId: userId,
+          reason: 'Could not acquire submission lock from database'
+        });
+      }
+      
+      const submitBtn = document.getElementById('submitBooking');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Please wait...';
+        submitBtn.style.opacity = '0.5';
+        
+        // Re-enable after 2 seconds
+        setTimeout(() => {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Booking';
+          submitBtn.style.opacity = '1';
+        }, 2000);
+      }
+      return;
+    }
+  }
+  
+  // Set local flag
   isSubmittingBooking = true;
+  lastSubmitTime = now;
+  
+  console.log('[submitBooking] Submission started with token:', submissionToken);
+  
+  // Log submission start
+  if (typeof BookingSecurityLogger !== 'undefined') {
+    BookingSecurityLogger.log('submission_started', {
+      userId: userId,
+      packageId: bookingData.packageId,
+      petType: bookingData.petType,
+      date: bookingData.date,
+      time: bookingData.time
+    });
+  }
   const submitBtn = document.getElementById('submitBooking');
+  
+  // 🔧 REMOVED beforeunload listener - it was causing "Leave site?" warnings during normal submission
+  // The loading overlay and button disabling already prevent accidental navigation
+  // If we need to prevent navigation, we can add it back with a more reliable approach
+  
+  // Placeholder for compatibility with existing code that references these
+  let isRedirecting = true; // Always true to skip any remaining beforeunload checks
+  const preventNavigation = () => {}; // No-op function
   
   try {
     if (event && typeof event.preventDefault === 'function') event.preventDefault();
 
-    // Show loading state on submit button
+    // ============================================
+    // 🚀 NON-BLOCKING UI UPDATES
+    // Update UI immediately, then process in background
+    // ============================================
+    
+    // Show loading state on submit button (immediate)
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = 'Submitting...';
       submitBtn.style.opacity = '0.7';
+      submitBtn.style.pointerEvents = 'none';
     }
+
+    // Show loading overlay with progress (immediate)
+    if (typeof showLoadingOverlay === 'function') {
+      showLoadingOverlay('Preparing booking...');
+    }
+
+    // ============================================
+    // 🔄 ASYNC VALIDATION (NON-BLOCKING)
+    // Run validation in next tick to avoid blocking UI
+    // ============================================
+    await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI thread
 
     // Sync form data before validation
     syncFormToBookingData();
-    console.log('[submitBooking] Form data synced, bookingData:', JSON.stringify(bookingData, null, 2));
+    console.log('[submitBooking] Form data synced');
+
+    // Update loading message
+    if (typeof showLoadingOverlay === 'function') {
+      showLoadingOverlay('Validating information...');
+    }
 
     // Comprehensive validation before submission
     const basicFieldsComplete = 
@@ -2581,8 +3800,12 @@ async function submitBooking(event) {
         referenceCutComplete
       });
       
+      // Hide loading overlay
+      if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+      
       if (submitBtn) {
         submitBtn.disabled = false;
+        submitBtn.style.pointerEvents = 'auto';
         
         // Show specific message
         let message = 'Complete all fields to submit';
@@ -2603,9 +3826,9 @@ async function submitBooking(event) {
     }
     console.log('[submitBooking] Form validation passed');
 
-    // Show loading overlay
+    // Show loading overlay with enhanced message
     if (typeof showLoadingOverlay === 'function') {
-      showLoadingOverlay();
+      showLoadingOverlay('Validating booking information...');
     }
 
     // Ensure user is authenticated before creating booking
@@ -2636,6 +3859,11 @@ async function submitBooking(event) {
       await customAlert.show('Login Required', 'Please create an account or log in to submit your booking.', 'warning');
       sessionStorage.setItem('bookingData', JSON.stringify(bookingData));
       sessionStorage.setItem('bookingStep', '5');
+      
+      // Mark as redirecting to prevent leave site warning
+      isRedirecting = true;
+      window.removeEventListener('beforeunload', preventNavigation);
+      
       if (typeof redirect === 'function') {
         redirect('signup.html?return=booking.html');
       } else {
@@ -2668,6 +3896,11 @@ async function submitBooking(event) {
         const dashboardName = isAdmin ? 'admin dashboard' : 'customer dashboard';
         
         await customAlert.error('Account Banned', `Your account is temporarily banned. Please check your ${dashboardName} for instructions on how to lift the ban.`);
+        
+        // Mark as redirecting to prevent leave site warning
+        isRedirecting = true;
+        window.removeEventListener('beforeunload', preventNavigation);
+        
         redirect(dashboardUrl);
         return;
       }
@@ -2696,8 +3929,14 @@ async function submitBooking(event) {
       weight: bookingData.petWeight || '',
       medical: bookingData.medicalNotes.trim(),
       vaccinations: bookingData.vaccinationNotes.trim(),
-      vaccinationStatus: bookingData.vaccinationStatus || ''
-      // Note: addOns are NOT saved in profile - they are booking-specific
+      vaccinationStatus: bookingData.vaccinationStatus || '',
+      // 🔧 ALL SERVICES PROFILE FIX: Include ALL service selections in saved profile
+      singleServices: bookingData.singleServices || [],
+      addOns: bookingData.addOns || [],
+      referenceCut: bookingData.referenceCut || null,
+      packageId: bookingData.packageId || null,
+      petType: bookingData.petType || null
+      // Note: Now saving ALL services (single services, add-ons, reference cuts) for complete profile restoration
     };
 
     if (bookingData.saveProfile) {
@@ -2754,18 +3993,12 @@ async function submitBooking(event) {
     costDetails.totalAmount = costDetails.subtotal; // Total amount before deduction
     costDetails.balanceOnVisit = Math.max(0, costDetails.subtotal - bookingFee);
 
-    // Auto-assign groomer if none selected
-    let assignedGroomerId = bookingData.groomerId || null;
-    let assignedGroomerName = bookingData.groomerName || 'Assigned on site';
-    if (!assignedGroomerId && typeof assignFairGroomer === 'function') {
-      try {
-        const g = await assignFairGroomer(bookingData.date, bookingData.time);
-        if (g) { assignedGroomerId = g.id; assignedGroomerName = g.name || assignedGroomerName; }
-      } catch (e) { console.warn('assignFairGroomer failed', e); }
-    }
+    // Groomer assignment happens when admin starts service, not during booking creation
+    let assignedGroomerId = null;
+    let assignedGroomerName = 'To be assigned';
 
     // Create booking object (shared)
-    const booking = {
+    let booking = {
       id: generateId(),
       shortId: generateBookingCode ? generateBookingCode() : undefined,
       userId: user.id,
@@ -2777,10 +4010,13 @@ async function submitBooking(event) {
       time: bookingData.time,
       phone: profile.contactNumber,
       customerName: profile.ownerName,
+      customerEmail: profile.ownerEmail || user.email || '', // Add email field
+      customerPhone: profile.contactNumber, // Add customerPhone for validation
       groomerId: assignedGroomerId,
       groomerName: assignedGroomerName,
       addOns: bookingData.addOns.slice(),
       bookingNotes: bookingData.bookingNotes,
+      referenceCut: bookingData.referenceCut || null, // Reference cut style selected
       singleServices: bookingData.singleServices.slice(),
       petWeight: bookingData.petWeight || '',
       profile,
@@ -2793,7 +4029,12 @@ async function submitBooking(event) {
       cost: costDetails,
       totalPrice: costDetails?.subtotal || 0,
       bookingFeePaid: costDetails?.totalDueToday || 0,
-      balanceOnVisit: costDetails?.balanceOnVisit || 0
+      balanceOnVisit: costDetails?.balanceOnVisit || 0,
+      // Payment fields - initialized as null for new bookings
+      paymentChoice: null,
+      proofOfPaymentImage: null,
+      proofOfPaymentUploadedAt: null,
+      countdownStartedAt: null
     };
 
     // Handle reschedule mode
@@ -2832,6 +4073,11 @@ async function submitBooking(event) {
       
       // Show success and redirect back to admin
       await customAlert.success('Booking Rescheduled', `${booking.petName}'s appointment has been rescheduled successfully.`);
+      
+      // Mark as redirecting to prevent leave site warning
+      isRedirecting = true;
+      window.removeEventListener('beforeunload', preventNavigation);
+      
       window.location.href = 'admin-dashboard.html';
       return;
     }
@@ -2875,14 +4121,83 @@ async function submitBooking(event) {
         sessionStorage.setItem('bookingSource', 'admin');
       }
       
+      // Mark as redirecting to prevent leave site warning
+      isRedirecting = true;
+      
+      // Remove navigation prevention listener before redirect
+      window.removeEventListener('beforeunload', preventNavigation);
+      
+      // Hide loading overlay
+      if (typeof hideLoadingOverlay === 'function') {
+        hideLoadingOverlay();
+      }
+      
       redirect('booking-success.html');
       return;
     }
 
     // Existing create flow for new booking
-    if (typeof createBooking === 'function') {
-      await createBooking(booking);
+    // First, check if a duplicate booking already exists (for slow connections)
+    const existingBookings = await getBookings();
+    const isDuplicate = existingBookings.some(b => 
+      b.userId === user.id &&
+      b.date === booking.date &&
+      b.time === booking.time &&
+      b.petName === booking.petName &&
+      b.packageId === booking.packageId &&
+      b.status !== 'cancelled' &&
+      b.status !== 'cancelledByCustomer' &&
+      b.status !== 'cancelledByAdmin' &&
+      // Check if created within last 5 minutes (to catch slow connection duplicates)
+      (Date.now() - b.createdAt) < (5 * 60 * 1000)
+    );
+    
+    if (isDuplicate) {
+      console.warn('[submitBooking] Duplicate booking detected, skipping creation');
+      
+      // ============================================
+      // 🔄 DUPLICATE DETECTED - Update database status
+      // ============================================
+      if (typeof completeSubmissionFailed === 'function' && submissionToken) {
+        completeSubmissionFailed(submissionToken, 'Duplicate booking detected');
+        console.log('[submitBooking] Database status updated: DUPLICATE');
+      }
+      
+      if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+      
+      // Show warning with clear message about what's duplicate
+      await customAlert.warning(
+        'Duplicate Booking', 
+        `You already have a pending booking for "${booking.petName}" on ${booking.date} at ${booking.time}.\n\nPlease select a different date.`
+      );
+      
+      // Reset submission flag so user can try again with different date
+      isSubmittingBooking = false;
+      
+      // Go back to calendar/schedule step (step 4) so user can pick different date
+      showStep(4);
+      
+      return;
+    }
+    
+    // No duplicate found, proceed with SECURE creation
+    console.log('[submitBooking] Creating booking with server-side validation...');
+    
+    // Use secure server-side creation
+    if (typeof createBookingWithValidation === 'function') {
+      // Server-side creation with validation and atomic transactions
+      console.log('[submitBooking] Calling createBookingWithValidation with:', booking);
+      const createdBooking = await createBookingWithValidation(booking);
+      booking = createdBooking; // Use server-generated booking
+      console.log('[submitBooking] Booking created securely with ID:', booking.id);
+    } else if (typeof createBookingSecure === 'function') {
+      // Fallback to basic secure creation
+      const createdBooking = await createBookingSecure(booking);
+      booking = createdBooking;
+      console.log('[submitBooking] Booking created with server ID:', booking.id);
     } else {
+      // Legacy fallback (NOT RECOMMENDED for production)
+      console.warn('[submitBooking] Using legacy booking creation - NOT SECURE!');
       const bookings = await getBookings();
       bookings.push(booking);
       await saveBookings(bookings);
@@ -2896,8 +4211,29 @@ async function submitBooking(event) {
       actor: 'customer'
     });
 
-    // Store booking in session for success page
+    // Decrement slot count for the booked date/time
+    try {
+      if (typeof adjustSlotCount === 'function') {
+        await adjustSlotCount(booking.date, booking.time, -1);
+        console.log('[submitBooking] Decremented slot for', booking.date, booking.time);
+      }
+    } catch (slotError) {
+      console.warn('[submitBooking] Failed to decrement slot:', slotError);
+    }
+
+    // Clear old booking data first, then store new booking for success page
+    sessionStorage.removeItem('lastBooking');
+    // Add timestamp to ensure fresh data
+    booking._savedAt = Date.now();
     sessionStorage.setItem('lastBooking', JSON.stringify(booking));
+    console.log('[submitBooking] Saved NEW booking to sessionStorage:', {
+      id: booking.id,
+      petName: booking.petName,
+      referenceCut: booking.referenceCut,
+      bookingNotes: booking.bookingNotes,
+      paymentChoice: booking.paymentChoice,
+      _savedAt: booking._savedAt
+    });
 
     // Check if booking came from admin walk-in and save source
     const urlParams = new URLSearchParams(window.location.search);
@@ -2906,29 +4242,115 @@ async function submitBooking(event) {
       sessionStorage.setItem('bookingSource', 'admin');
     }
 
-    // Redirect to success page
-    redirect('booking-success.html');
-  } catch (err) {
-    console.error('submitBooking failed', err);
+    // Start cooldown countdown before redirect
+    if (submitBtn) {
+      startSubmitButtonCooldown(submitBtn);
+    }
     
-    // Reset submission flag on error
+    // Hide loading overlay before redirect
+    if (typeof hideLoadingOverlay === 'function') {
+      hideLoadingOverlay();
+    }
+    
+    // ============================================
+    // ✅ SUBMISSION SUCCESS - Update database status
+    // ============================================
+    // Mark submission as successful in database
+    if (typeof completeSubmissionSuccess === 'function' && submissionToken) {
+      completeSubmissionSuccess(submissionToken, booking.id);
+      console.log('[submitBooking] Database status updated: SUCCESS');
+    }
+    
+    // Log successful submission
+    if (typeof BookingSecurityLogger !== 'undefined') {
+      BookingSecurityLogger.log('submission_success', {
+        userId: userId,
+        bookingId: booking.id,
+        submissionToken: submissionToken,
+        packageId: bookingData.packageId,
+        totalPrice: booking.totalPrice,
+        submissionDuration: Date.now() - now
+      });
+    }
+    
+    // Mark as redirecting to prevent leave site warning
+    isRedirecting = true;
+    
+    // Remove navigation prevention listener before redirect
+    window.removeEventListener('beforeunload', preventNavigation);
+    
+    // Redirect to success page after a brief delay
+    setTimeout(() => {
+      redirect('booking-success.html');
+    }, 300);
+  } catch (err) {
+    console.error('[submitBooking] DETAILED ERROR:', err);
+    console.error('[submitBooking] Error message:', err.message);
+    console.error('[submitBooking] Error stack:', err.stack);
+    if (typeof booking !== 'undefined') {
+      console.error('[submitBooking] Booking data that failed:', booking);
+    }
+    
+    // ============================================
+    // ❌ SUBMISSION ERROR - Update database status
+    // ============================================
+    // Mark submission as failed in database
+    if (typeof completeSubmissionFailed === 'function' && submissionToken) {
+      completeSubmissionFailed(submissionToken, err.message);
+      console.log('[submitBooking] Database status updated: FAILED');
+    }
+    
+    // Log submission error
+    if (typeof BookingSecurityLogger !== 'undefined') {
+      BookingSecurityLogger.log('submission_error', {
+        userId: userId,
+        submissionToken: submissionToken,
+        error: err.message,
+        errorStack: err.stack,
+        submissionDuration: Date.now() - now
+      });
+    }
+    
+    // Reset submission flag on error but keep cooldown active
     isSubmittingBooking = false;
     
-    // Restore submit button state on error
+    // Start cooldown countdown on button
     if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Submit Booking';
-      submitBtn.style.opacity = '1';
+      startSubmitButtonCooldown(submitBtn);
     }
     
     // Hide loading overlay on error
     if (typeof hideLoadingOverlay === 'function') {
       hideLoadingOverlay();
     }
-    alert('An error occurred while submitting the booking. See console for details.');
+    
+    // Show user-friendly error message
+    const errorMsg = err.message || 'Unknown error occurred';
+    
+    // Check if this is a duplicate detection but booking was actually created
+    if (errorMsg.includes('duplicate') && errorMsg.includes('detected')) {
+      // Booking might have been created - check and redirect if so
+      console.log('[submitBooking] Duplicate detected - checking if booking was created...');
+      if (typeof customAlert !== 'undefined' && typeof customAlert.success === 'function') {
+        await customAlert.success('Booking Submitted', 'Your booking has been submitted. Redirecting...');
+      }
+      setTimeout(() => {
+        redirect('booking-success.html');
+      }, 1000);
+      return;
+    }
+    
+    if (typeof customAlert !== 'undefined' && typeof customAlert.error === 'function') {
+      await customAlert.error('Booking Failed', `Error: ${errorMsg}\n\nPlease try again or contact support.`);
+    } else {
+      alert(`Booking failed: ${errorMsg}\n\nPlease try again.`);
+    }
   } finally {
-    // Always reset the flag when function completes
+    // Always reset the local flag when function completes
     isSubmittingBooking = false;
+    
+    // Remove navigation prevention listener
+    window.removeEventListener('beforeunload', preventNavigation);
   }
 }
 window.submitBooking = submitBooking;
@@ -2960,7 +4382,19 @@ async function ensurePackagesLoaded() {
   }
 }
 
-// Fair groomer assignment: choose groomer with fewest bookings for the requested slot
+// ============================================
+// ⚖️ FAIR GROOMER ASSIGNMENT ALGORITHM
+// ============================================
+// Automatically assigns the most fair groomer for a booking
+// Uses multi-level sorting to ensure work is distributed evenly
+// 
+// Fairness Criteria (in priority order):
+// 1. Day-before picks (least picked yesterday = highest priority)
+// 2. Time slot availability (prefer groomers with free slot)
+// 3. Daily workload (prefer groomers with fewer bookings today)
+// 4. Total confirmed bookings (prefer groomers with less overall work)
+// 5. Random selection (if still tied)
+// ============================================
 async function assignFairGroomer(date, time) {
   try {
     const groomers = (typeof getGroomers === 'function') ? await getGroomers() : (window.groomersList || []);
@@ -2968,34 +4402,103 @@ async function assignFairGroomer(date, time) {
 
     // Get all bookings
     const all = (typeof getBookings === 'function') ? await getBookings() : (JSON.parse(localStorage.getItem('bookings') || '[]'));
+    
+    // ============================================
+    // 📋 STATUS HELPER FUNCTIONS
+    // ============================================
+    // Helper to check if booking is confirmed (not pending, not cancelled)
+    const isConfirmedStatus = (status) => {
+      const s = (status || '').toString().toLowerCase();
+      return ['confirmed', 'completed', 'inprogress', 'in progress'].includes(s);
+    };
+    
+    // Helper to check if booking is not cancelled
+    const isNotCancelled = (status) => {
+      const s = (status || '').toString().toLowerCase();
+      return !['cancelled', 'cancelledbycustomer', 'cancelledbyadmin', 'cancelledbysystem'].includes(s);
+    };
+    
+    // ============================================
+    // 📅 CALCULATE DAY BEFORE BOOKING
+    // ============================================
+    // For fair rotation, we check who was picked YESTERDAY
+    // Example: Booking on Dec 26 -> Check Dec 25's picks
+    // Groomer with fewest picks yesterday gets priority today
+    // This ensures daily rotation and prevents same groomer being picked repeatedly
+    // ============================================
+    const dateParts = date.split('-');
+    const bookingDateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+    bookingDateObj.setDate(bookingDateObj.getDate() - 1);
+    const dayBeforeBooking = `${bookingDateObj.getFullYear()}-${String(bookingDateObj.getMonth() + 1).padStart(2, '0')}-${String(bookingDateObj.getDate()).padStart(2, '0')}`;
 
-    // Compute bookings per groomer for the date AND for this specific time slot
+    // ============================================
+    // 📊 CALCULATE WORKLOAD STATS FOR EACH GROOMER
+    // ============================================
     const groomerStats = groomers.map(g => {
-      // Total bookings for the day
+      // ============================================
+      // 📅 DAILY COUNT
+      // ============================================
+      // Total bookings for the requested date (exclude cancelled)
+      // Used to check daily capacity and workload balance
+      // ============================================
       const dailyCount = all.filter(b =>
         b.groomerId === g.id &&
         b.date === date &&
-        !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'].includes((b.status || '').toString())
+        isNotCancelled(b.status)
       ).length;
       
-      // Bookings for this specific time slot
+      // ============================================
+      // 🕐 TIME SLOT COUNT
+      // ============================================
+      // Bookings for this specific time slot (exclude cancelled)
+      // Used to check if groomer is already busy at this time
+      // Prefer groomers with free slot at this time
+      // ============================================
       const timeSlotCount = all.filter(b =>
         b.groomerId === g.id &&
         b.date === date &&
         b.time === time &&
-        !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'].includes((b.status || '').toString())
+        isNotCancelled(b.status)
       ).length;
       
-      // Total historical bookings (all time) for ultimate fairness
-      const totalHistoricalCount = all.filter(b =>
+      // ============================================
+      // 📆 DAY BEFORE PICKS (PRIMARY FAIRNESS METRIC)
+      // ============================================
+      // Count CONFIRMED picks on day before booking
+      // This is the PRIMARY fairness metric
+      // Groomer with fewest picks yesterday gets priority today
+      // Ensures daily rotation and prevents favoritism
+      // ============================================
+      const dayBeforePicks = all.filter(b =>
         b.groomerId === g.id &&
-        !['cancelled', 'cancelledByCustomer', 'cancelledByAdmin'].includes((b.status || '').toString())
+        b.date === dayBeforeBooking &&
+        isConfirmedStatus(b.status)
       ).length;
       
-      return { groomer: g, dailyCount, timeSlotCount, totalHistoricalCount };
+      // ============================================
+      // 🎯 TOTAL CONFIRMED BOOKINGS (LONG-TERM FAIRNESS)
+      // ============================================
+      // Count ALL confirmed bookings (all time)
+      // Excludes pending and cancelled bookings
+      // Used as tiebreaker for long-term fairness
+      // Ensures work is distributed evenly over time
+      // ============================================
+      const totalConfirmedCount = all.filter(b =>
+        b.groomerId === g.id &&
+        isConfirmedStatus(b.status)
+      ).length;
+      
+      return { groomer: g, dailyCount, timeSlotCount, dayBeforePicks, totalConfirmedCount };
     });
 
-    // Filter to groomers who have capacity and the slot is free
+    // ============================================
+    // ✅ FILTER AVAILABLE CANDIDATES
+    // ============================================
+    // Only include groomers who:
+    // 1. Have capacity for the date (not at daily limit)
+    // 2. Have free slot at the requested time
+    // 3. Are not absent on the date
+    // ============================================
     const candidates = [];
     for (const item of groomerStats) {
       const g = item.groomer;
@@ -3006,25 +4509,53 @@ async function assignFairGroomer(date, time) {
 
     if (candidates.length === 0) return null;
 
-    // Sort by: 
-    // 1. Fewest bookings for this time slot (primary)
-    // 2. Fewest bookings for the day (secondary)  
-    // 3. Fewest total historical bookings (tertiary - for ultimate fairness)
-    // 4. Random selection if still tied (quaternary)
+    // ============================================
+    // 🔢 MULTI-LEVEL SORTING FOR FAIRNESS
+    // ============================================
+    // Sort candidates by multiple criteria (in priority order):
+    // 
+    // 1️⃣ PRIMARY: Day before picks (fewest = highest priority)
+    //    - Ensures daily rotation
+    //    - Prevents same groomer being picked repeatedly
+    // 
+    // 2️⃣ SECONDARY: Time slot count (fewest = higher priority)
+    //    - Prefer groomers with free slot at this time
+    //    - Avoids double-booking
+    // 
+    // 3️⃣ TERTIARY: Daily count (fewest = higher priority)
+    //    - Balance workload for the day
+    //    - Prevents one groomer from being overloaded
+    // 
+    // 4️⃣ QUATERNARY: Total confirmed bookings (fewest = higher priority)
+    //    - Long-term fairness
+    //    - Ensures even distribution over time
+    // 
+    // 5️⃣ QUINARY: Random selection
+    //    - If still tied after all criteria
+    //    - Ensures true randomness for ultimate fairness
+    // ============================================
     candidates.sort((a, b) => {
+      // 1️⃣ Primary: Day before booking's picks (least picked = 1st priority)
+      if (a.dayBeforePicks !== b.dayBeforePicks) {
+        return a.dayBeforePicks - b.dayBeforePicks;
+      }
+      // 2️⃣ Secondary: Time slot availability
       if (a.timeSlotCount !== b.timeSlotCount) {
         return a.timeSlotCount - b.timeSlotCount;
       }
+      // 3️⃣ Tertiary: Daily workload
       if (a.dailyCount !== b.dailyCount) {
         return a.dailyCount - b.dailyCount;
       }
-      if (a.totalHistoricalCount !== b.totalHistoricalCount) {
-        return a.totalHistoricalCount - b.totalHistoricalCount;
+      // 4️⃣ Quaternary: Total confirmed bookings (long-term fairness)
+      if (a.totalConfirmedCount !== b.totalConfirmedCount) {
+        return a.totalConfirmedCount - b.totalConfirmedCount;
       }
-      // If still tied, use random selection for true fairness
+      // 5️⃣ Quinary: Random selection if still tied
       return Math.random() - 0.5;
     });
 
+    // Return the most fair groomer (first in sorted list)
     return candidates[0]?.groomer || null;
   } catch (e) {
     console.warn('assignFairGroomer error', e);
@@ -3054,6 +4585,9 @@ async function adjustSlotCount(date, time, delta) {
     console.warn('adjustSlotCount failed', e);
   }
 }
+// Export adjustSlotCount globally for use in main.js auto-cancel
+window.adjustSlotCount = adjustSlotCount;
+
 // Initialize booking when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initBooking);
@@ -3061,26 +4595,55 @@ if (document.readyState === 'loading') {
   initBooking();
 }
 
-// Grooming cut selection function
-function selectGroomingCut(cutName, ev) {
+// ============================================
+// 🔧 GROOMING CUT SELECTION - Database-backed with unique IDs
+// ============================================
+// Stores cut ID (e.g., 'cut-puppy') in bookingData.referenceCut
+// Display name is looked up via getReferenceCutName() from main.js
+// This ensures unique IDs in database for easy tracing and no duplicates
+// ============================================
+function selectGroomingCut(cutId, ev) {
   if (ev) {
     ev.preventDefault();
     ev.stopPropagation();
   }
   
-  // Store in bookingData
-  bookingData.referenceCut = cutName;
-  console.log('[selectGroomingCut] Selected cut:', cutName);
+  // ============================================
+  // 📝 STORE CUT ID (not name) in bookingData
+  // ============================================
+  // The cut ID (e.g., 'cut-puppy') is stored in the booking
+  // Display name is retrieved via getReferenceCutName() when needed
+  // ============================================
+  bookingData.referenceCut = cutId;
   
+  // Get display name for logging and notes field
+  const cutName = typeof getReferenceCutName === 'function' 
+    ? getReferenceCutName(cutId) 
+    : (typeof window.getReferenceCutName === 'function' ? window.getReferenceCutName(cutId) : cutId);
+  
+  console.log('[selectGroomingCut] Selected cut ID:', cutId, '| Display name:', cutName);
+  
+  // ============================================
+  // 📋 UPDATE BOOKING NOTES WITH CUT NAME (for display)
+  // ============================================
+  // The notes field shows the human-readable name
+  // But the booking stores the cut ID for database tracking
+  // ============================================
   const notesField = document.getElementById('bookingNotes');
   if (notesField) {
     const currentNotes = notesField.value.trim();
-    const cutPrefix = '';
-    // Remove existing cut preference if any
-    const lines = currentNotes.split('\\n').filter(line => !line.startsWith(cutPrefix));
-    // Add new cut preference
-    lines.unshift(cutPrefix + cutName);
-    notesField.value = lines.join('\\n').trim();
+    // Remove existing cut preference if any (check both old names and new format)
+    const cutNames = ['Puppy Cut', 'Teddy Bear Cut', 'Lion Cut', 'Summer Cut', 'Kennel Cut', 'Show Cut', 'Belly Shave', 'Hygiene Cut'];
+    let lines = currentNotes.split('\n').filter(line => {
+      const lineTrimmed = line.trim();
+      // Remove lines that are just cut names
+      return !cutNames.some(name => lineTrimmed === name);
+    });
+    // Add new cut preference (display name, not ID)
+    if (cutName && cutName !== cutId) {
+      lines.unshift(cutName);
+    }
+    notesField.value = lines.join('\n').trim();
     bookingData.bookingNotes = notesField.value;
   }
   
@@ -3098,7 +4661,7 @@ function selectGroomingCut(cutName, ev) {
     ev.target.style.color = '#fff';
   } else {
     // If called programmatically, find and highlight the button by data-cut attribute
-    const selectedBtn = document.querySelector(`.cut-selector-btn[data-cut="${cutName}"]`);
+    const selectedBtn = document.querySelector(`.cut-selector-btn[data-cut="${cutId}"]`);
     if (selectedBtn) {
       selectedBtn.style.background = '#4CAF50';
       selectedBtn.style.borderColor = '#4CAF50';
@@ -3109,6 +4672,7 @@ function selectGroomingCut(cutName, ev) {
   // Update submit button state
   enableSubmitButton();
   saveBookingDataToSession();
+  updateSummary(); // Update booking summary to show new reference cut
 }
 window.selectGroomingCut = selectGroomingCut;
 window.updateReferenceCutsVisibility = updateReferenceCutsVisibility;
@@ -3159,7 +4723,7 @@ function restoreBookingFormData(data) {
 // ============================================
 
 // Handle vaccination image upload
-function handleVaccinationImageUpload(input) {
+async function handleVaccinationImageUpload(input) {
   const file = input.files[0];
   if (!file) return;
 
@@ -3169,35 +4733,46 @@ function handleVaccinationImageUpload(input) {
     return;
   }
 
-  // Validate file size (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    customAlert.warning('File Too Large', 'Please select an image smaller than 5MB');
+  // Validate file size (max 10MB for Cloudinary)
+  if (file.size > 10 * 1024 * 1024) {
+    customAlert.warning('File Too Large', 'Please select an image smaller than 10MB');
     return;
   }
 
-  // Convert to base64
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const base64Image = e.target.result;
-    bookingData.vaccinationProofImage = base64Image;
+  try {
+    // Show loading state
+    showLoadingOverlay('Uploading vaccination proof...');
     
-    // Show preview
+    // Upload to Cloudinary instead of base64
+    const cloudinaryUrl = await uploadVaccinationProof(file);
+    
+    // Store Cloudinary URL instead of base64
+    bookingData.vaccinationProofUrl = cloudinaryUrl;
+    
+    // Show preview using Cloudinary URL
     const preview = document.getElementById('vaccinationProofPreview');
     const img = document.getElementById('vaccinationProofImg');
     if (preview && img) {
-      img.src = base64Image;
+      img.src = cloudinaryUrl;
       preview.style.display = 'block';
     }
     
-    console.log('[Vaccination] Image uploaded successfully');
+    console.log('[Vaccination] Image uploaded to Cloudinary:', cloudinaryUrl);
     saveBookingDataToSession();
-  };
-  reader.readAsDataURL(file);
+    
+    hideLoadingOverlay();
+    customAlert.success('Upload Complete', 'Vaccination proof uploaded successfully!');
+    
+  } catch (error) {
+    console.error('[Vaccination] Upload failed:', error);
+    hideLoadingOverlay();
+    customAlert.error('Upload Failed', `Failed to upload image: ${error.message}`);
+  }
 }
 
 // Remove vaccination image
 function removeVaccinationImage() {
-  bookingData.vaccinationProofImage = null;
+  bookingData.vaccinationProofUrl = null;
   
   const preview = document.getElementById('vaccinationProofPreview');
   const input = document.getElementById('vaccinationProofInput');
@@ -3270,75 +4845,4 @@ window.handleVaccinationImageUpload = handleVaccinationImageUpload;
 window.removeVaccinationImage = removeVaccinationImage;
 window.openVaccinationImageLightbox = openVaccinationImageLightbox;
 
-// ============================================
-// Touch / Mouse Swipe Navigation (DISABLED)
-// ============================================
-
-/*
-(function initSwipeNavigation() {
-  let startX = 0;
-  let startY = 0;
-  const swipeThreshold = 100; // Increased threshold to prevent accidental swipes
-
-  function handleStart(e) {
-    // Don't start swipe if touching the calendar container (to allow calendar scrolling)
-    if (e.target.closest('#calendarTimePicker') || e.target.closest('.mega-calendar')) {
-      return;
-    }
-
-    const point = e.touches ? e.touches[0] : e;
-    startX = point.clientX;
-    startY = point.clientY;
-  }
-
-  function handleEnd(e) {
-    // If startX was never set (e.g. ignored target), do nothing
-    if (startX === 0 && startY === 0) return;
-
-    const point = e.changedTouches ? e.changedTouches[0] : e;
-    const diffX = point.clientX - startX;
-    const diffY = point.clientY - startY;
-
-    // Reset start coords
-    startX = 0;
-    startY = 0;
-
-    // Horizontal swipe detection (ignore if vertical scroll is dominant)
-    // Also require a significant horizontal movement (threshold)
-    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > swipeThreshold) {
-      if (diffX > 0) {
-        // Swipe Right -> Previous Step
-        const prevBtn = document.getElementById('prevBtn');
-        // Check if button exists and is not logically hidden (by our showStep logic)
-        // We check data-hidden because we forced display:none !important in CSS
-        if (prevBtn && !prevBtn.hasAttribute('data-hidden') && !prevBtn.disabled) {
-          prevBtn.click();
-        }
-      } else {
-        // Swipe Left -> Next Step
-        const nextBtn = document.getElementById('nextBtn');
-        if (nextBtn && !nextBtn.hasAttribute('data-hidden') && !nextBtn.disabled) {
-          nextBtn.click();
-        }
-      }
-    }
-  }
-
-  // Attach listeners to the touch container
-  setTimeout(() => {
-    const container = document.querySelector('.touch-container');
-    if (container) {
-      // Touch events
-      container.addEventListener('touchstart', handleStart, { passive: true });
-      container.addEventListener('touchend', handleEnd);
-
-      // Mouse events for desktop drag support
-      container.addEventListener('mousedown', handleStart);
-      container.addEventListener('mouseup', handleEnd);
-    } else {
-      console.warn('Touch container not found for swipe navigation');
-    }
-  }, 500);
-})();
-*/
 

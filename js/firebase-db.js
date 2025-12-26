@@ -36,25 +36,45 @@ async function getCurrentUser() {
       return userStr ? JSON.parse(userStr) : null;
     }
 
-    // Get user profile from Firebase Database
+    // Get user profile from Firebase Database with timeout
     const db = getDatabase();
     if (db) {
-      const userRef = ref(db, `users/${user.uid}`);
-      const snapshot = await get(userRef);
+      try {
+        const userRef = ref(db, `users/${user.uid}`);
+        
+        // Add timeout to Firebase call
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Firebase timeout')), 5000);
+        });
+        
+        const snapshot = await Promise.race([
+          get(userRef),
+          timeoutPromise
+        ]);
 
-      if (snapshot.exists()) {
-        const userProfile = snapshot.val();
-        userProfile.id = user.uid;
+        if (snapshot.exists()) {
+          const userProfile = snapshot.val();
+          userProfile.id = user.uid;
 
-        // Debug: Log what we got from Firebase
-        console.log('User profile from Firebase:', userProfile);
-        console.log('User name from Firebase:', userProfile.name);
+          // Debug: Log what we got from Firebase
+          console.log('User profile from Firebase:', userProfile);
+          console.log('User name from Firebase:', userProfile.name);
 
-        // Cache in localStorage
-        setCurrentUser(userProfile);
-        return userProfile;
-      } else {
-        console.warn('User profile not found in Firebase for UID:', user.uid);
+          // Cache in localStorage
+          setCurrentUser(userProfile);
+          return userProfile;
+        } else {
+          console.warn('User profile not found in Firebase for UID:', user.uid);
+        }
+      } catch (firebaseError) {
+        console.warn('Firebase user fetch failed, using fallback:', firebaseError.message);
+        
+        // Check localStorage cache first
+        const cachedProfile = localStorage.getItem(`firebase_user_${user.uid}`);
+        if (cachedProfile) {
+          console.log('Using cached user profile');
+          return JSON.parse(cachedProfile);
+        }
       }
     }
 
@@ -65,17 +85,29 @@ async function getCurrentUser() {
     }
 
     // Return basic user info if profile doesn't exist yet
-    return {
+    const basicUser = {
       id: user.uid,
       email: user.email,
-      name: user.displayName || user.email,
+      name: user.displayName || user.email?.split('@')[0] || 'Customer',
       role: 'customer'
     };
+    
+    // Cache the basic user info
+    setCurrentUser(basicUser);
+    return basicUser;
+    
   } catch (error) {
     console.error('Error getting current user:', error);
+    
     // Fallback to localStorage
     const userStr = localStorage.getItem('currentUser');
-    return userStr ? JSON.parse(userStr) : null;
+    if (userStr) {
+      console.log('Using localStorage fallback user');
+      return JSON.parse(userStr);
+    }
+    
+    // Last resort: return null (will trigger login redirect)
+    return null;
   }
 }
 
@@ -100,14 +132,33 @@ function clearCurrentUser() {
 // Database Helpers - Users
 // ============================================
 
+// Cache for users to prevent repeated Firebase calls
+let usersCache = null;
+let usersCacheTime = 0;
+const USERS_CACHE_DURATION = 60000; // 1 minute cache
+let usersPermissionDenied = false; // Track if permission was denied
+
 async function getUsers() {
+  // If permission was already denied, use localStorage directly
+  if (usersPermissionDenied) {
+    const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+    return localUsers;
+  }
+  
+  // Return cached data if still valid
+  if (usersCache && (Date.now() - usersCacheTime) < USERS_CACHE_DURATION) {
+    return usersCache;
+  }
+  
   // Prefer an externally-provided implementation
   if (typeof window.getUsersImpl === 'function') {
     try {
-      return await window.getUsersImpl();
+      const users = await window.getUsersImpl();
+      usersCache = users;
+      usersCacheTime = Date.now();
+      return users;
     } catch (e) {
-      console.warn('getUsersImpl failed:', e);
-      // fallthrough to other fallbacks
+      // Silent fallthrough
     }
   }
 
@@ -124,10 +175,16 @@ async function getUsers() {
       return [];
     }
   } catch (e) {
-    console.warn('Error getting users from Realtime DB:', e);
-    // If permission denied, return empty array so UI can continue with local fallbacks
+    // Handle permission errors silently
     if (e && (e.code === 'PERMISSION_DENIED' || (e.message && e.message.toLowerCase().includes('permission')))) {
-      return [];
+      // Set flag to prevent repeated Firebase calls
+      usersPermissionDenied = true;
+      
+      // Return local users if available
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      usersCache = localUsers;
+      usersCacheTime = Date.now();
+      return localUsers;
     }
     // otherwise fallthrough to try Firestore/localStorage
   }
@@ -192,10 +249,46 @@ async function saveUsers(users) {
 // Database Helpers - Bookings
 // ============================================
 
+// Cache for bookings to prevent repeated Firebase calls
+let bookingsCache = null;
+let bookingsCacheTime = 0;
+const BOOKINGS_CACHE_DURATION = 30000; // 30 seconds cache
+let bookingsPermissionDenied = false; // Track if permission was denied
+
+// Function to update bookings cache from real-time listener
+function updateBookingsCache(bookings) {
+  bookingsCache = bookings;
+  bookingsCacheTime = Date.now();
+  // Try to save to localStorage but don't fail if quota exceeded
+  try {
+    localStorage.setItem('bookings', JSON.stringify(bookings));
+  } catch (e) {
+    console.warn('[firebase-db] localStorage quota exceeded, using memory cache only');
+    // Clear old bookings data to free up space
+    try {
+      localStorage.removeItem('bookings');
+    } catch (clearError) {
+      // Ignore
+    }
+  }
+}
+window.updateBookingsCache = updateBookingsCache;
+
 async function getBookings() {
+  // If permission was already denied, use localStorage directly
+  if (bookingsPermissionDenied) {
+    return JSON.parse(localStorage.getItem('bookings') || '[]');
+  }
+  
+  // Return cached data if still valid AND not empty (empty cache might be stale)
+  if (bookingsCache && bookingsCache.length > 0 && (Date.now() - bookingsCacheTime) < BOOKINGS_CACHE_DURATION) {
+    return bookingsCache;
+  }
+  
   try {
     const db = getDatabase();
     if (!db) {
+      console.log('[getBookings] No database, using localStorage');
       return JSON.parse(localStorage.getItem('bookings') || '[]');
     }
 
@@ -204,21 +297,49 @@ async function getBookings() {
 
     if (snapshot.exists()) {
       const bookingsData = snapshot.val();
-      return Object.keys(bookingsData).map(key => ({
+      const bookings = Object.keys(bookingsData).map(key => ({
         id: key,
         ...bookingsData[key]
       }));
+      
+      // Cache the result in memory
+      bookingsCache = bookings;
+      bookingsCacheTime = Date.now();
+      
+      // Try to save to localStorage but don't fail if quota exceeded
+      try {
+        localStorage.setItem('bookings', JSON.stringify(bookings));
+      } catch (e) {
+        console.warn('[getBookings] localStorage quota exceeded, using memory cache only');
+      }
+      
+      return bookings;
     }
 
+    console.log('[getBookings] No bookings in Firebase snapshot');
     return [];
   } catch (error) {
-    console.error('Error getting bookings:', error);
-    // If permission denied, fall back to localStorage and show helpful message
+    console.error('[getBookings] Error:', error.message);
+    
+    // Handle permission errors silently
     if (error.message && error.message.includes('Permission denied')) {
-      console.warn('Permission denied reading bookings. Please update Firebase security rules to allow reading bookings. See FIX_BOOKING_PERMISSION_ERROR.md');
+      bookingsPermissionDenied = true;
     }
-    // Fallback to localStorage
-    return JSON.parse(localStorage.getItem('bookings') || '[]');
+    
+    // If we have memory cache, use it even if expired
+    if (bookingsCache && bookingsCache.length > 0) {
+      console.log('[getBookings] Using memory cache fallback:', bookingsCache.length, 'bookings');
+      return bookingsCache;
+    }
+    
+    // Last resort: try localStorage
+    try {
+      const localBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+      console.log('[getBookings] Using localStorage fallback:', localBookings.length, 'bookings');
+      return localBookings;
+    } catch (e) {
+      return [];
+    }
   }
 }
 
@@ -252,11 +373,19 @@ async function saveBookings(bookings) {
     });
     try {
       await Promise.all(writePromises);
+      console.log('[saveBookings] Successfully saved', bookings.length, 'bookings to Firebase');
+      
+      // Invalidate cache so next getBookings fetches fresh data
+      bookingsCache = null;
+      bookingsCacheTime = 0;
     } catch (e) {
       // If any child write failed due to permissions, try writing root (may still fail)
       console.warn('Per-child booking writes failed, attempting root set', e);
       try {
         await set(bookingsRef, bookingsObj);
+        // Invalidate cache on success
+        bookingsCache = null;
+        bookingsCacheTime = 0;
       } catch (rootErr) {
         // Mark write denial if applicable and rethrow so caller can handle
         if (rootErr && (rootErr.code === 'PERMISSION_DENIED' || (rootErr.message && rootErr.message.toLowerCase().includes('permission')))) {
@@ -296,20 +425,14 @@ async function createBooking(booking) {
     // Notify UI
     try { window.dispatchEvent(new CustomEvent('booking:created', { detail: booking })); } catch (e) { }
 
-    // If booking flow page, navigate to customer dashboard
-    const p = window.location.pathname.toLowerCase();
-    if (p.endsWith('booking.html') || p.endsWith('booking-success.html')) {
-      window.location.href = 'customer-dashboard.html';
-    }
+    // Don't redirect here - let the calling code (booking.js) handle the redirect
+    // This allows proper flow to booking-success.html
+    console.log('[createBooking] Booking created successfully:', booking.id);
     return booking;
   } catch (e) {
     console.error('createBooking failed', e);
-    // best-effort notify + redirect so user still reaches dashboard
+    // best-effort notify
     try { window.dispatchEvent(new CustomEvent('booking:created', { detail: booking })); } catch (e) { }
-    const p = window.location.pathname.toLowerCase();
-    if (p.endsWith('booking.html') || p.endsWith('booking-success.html')) {
-      window.location.href = 'customer-dashboard.html';
-    }
     throw e;
   }
 }
@@ -342,6 +465,10 @@ async function updateBooking(booking) {
     await set(bookingRef, booking);
     
     console.log('[updateBooking] Successfully updated booking:', booking.id);
+    
+    // Invalidate cache so next getBookings fetches fresh data
+    bookingsCache = null;
+    bookingsCacheTime = 0;
     
     // Notify UI
     try { 
@@ -515,11 +642,36 @@ async function savePackages(packages) {
 // Database Helpers - Groomers
 // ============================================
 
+// Default groomers fallback when no data available
+const DEFAULT_GROOMERS = [
+  { id: 'groomer-1', name: 'Groomer 1', maxDailyBookings: 5, isActive: true },
+  { id: 'groomer-2', name: 'Groomer 2', maxDailyBookings: 5, isActive: true },
+  { id: 'groomer-3', name: 'Groomer 3', maxDailyBookings: 5, isActive: true }
+];
+
+// Cache for groomers
+let groomersCache = null;
+let groomersCacheTime = 0;
+const GROOMERS_CACHE_DURATION = 60000; // 1 minute
+let groomersPermissionDenied = false;
+
 async function getGroomers() {
+  // If permission was already denied, use localStorage directly
+  if (groomersPermissionDenied) {
+    const localGroomers = JSON.parse(localStorage.getItem('groomers') || 'null');
+    return localGroomers && localGroomers.length > 0 ? localGroomers : DEFAULT_GROOMERS;
+  }
+  
+  // Return cached data if still valid
+  if (groomersCache && groomersCache.length > 0 && (Date.now() - groomersCacheTime) < GROOMERS_CACHE_DURATION) {
+    return groomersCache;
+  }
+  
   try {
     const db = getDatabase();
     if (!db) {
-      return JSON.parse(localStorage.getItem('groomers') || '[]');
+      const localGroomers = JSON.parse(localStorage.getItem('groomers') || 'null');
+      return localGroomers && localGroomers.length > 0 ? localGroomers : DEFAULT_GROOMERS;
     }
 
     const groomersRef = ref(db, 'groomers');
@@ -527,16 +679,32 @@ async function getGroomers() {
 
     if (snapshot.exists()) {
       const groomersData = snapshot.val();
-      return Object.keys(groomersData).map(key => ({
+      const groomers = Object.keys(groomersData).map(key => ({
         id: key,
         ...groomersData[key]
       }));
+      
+      // Cache the result
+      groomersCache = groomers;
+      groomersCacheTime = Date.now();
+      localStorage.setItem('groomers', JSON.stringify(groomers));
+      
+      return groomers;
     }
 
-    return [];
+    // No data in Firebase, use defaults
+    return DEFAULT_GROOMERS;
   } catch (error) {
-    console.error('Error getting groomers:', error);
-    return JSON.parse(localStorage.getItem('groomers') || '[]');
+    // Handle permission errors silently
+    if (error.message && error.message.includes('Permission denied')) {
+      groomersPermissionDenied = true;
+    }
+    
+    const localGroomers = JSON.parse(localStorage.getItem('groomers') || 'null');
+    const result = localGroomers && localGroomers.length > 0 ? localGroomers : DEFAULT_GROOMERS;
+    groomersCache = result;
+    groomersCacheTime = Date.now();
+    return result;
   }
 }
 
@@ -585,6 +753,210 @@ window.getGroomers = getGroomers;
 window.saveUpliftRequest = saveUpliftRequest;
 window.saveGroomers = saveGroomers;
 
+// Aliases for auto-cancel system in main.js
+window.firebaseGetBookings = getBookings;
+window.firebaseSaveBookings = saveBookings;
+
+// ============================================
+// Real-time Listeners for Auto-Refresh
+// ============================================
+
+/**
+ * Setup real-time listener for packages (add-ons)
+ * Automatically refreshes the add-ons table when data changes
+ */
+function setupPackagesListener(callback) {
+  try {
+    const db = getDatabase();
+    if (!db) {
+      console.warn('Database not available for real-time listener');
+      return null;
+    }
+
+    const packagesRef = ref(db, 'packages');
+    
+    // Listen for changes
+    const unsubscribe = onValue(packagesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const packagesData = snapshot.val();
+        const packagesArray = Array.isArray(packagesData) 
+          ? packagesData 
+          : Object.values(packagesData || {});
+        
+        console.log('[Real-time] Packages updated:', packagesArray.length);
+        
+        // Call the callback with updated data
+        if (typeof callback === 'function') {
+          callback(packagesArray);
+        }
+      } else {
+        console.log('[Real-time] No packages data');
+        if (typeof callback === 'function') {
+          callback([]);
+        }
+      }
+    }, (error) => {
+      console.error('[Real-time] Error listening to packages:', error);
+    });
+
+    // Return unsubscribe function
+    return unsubscribe;
+  } catch (error) {
+    console.error('Error setting up packages listener:', error);
+    return null;
+  }
+}
+
+/**
+ * Setup real-time listener for bookings
+ * Automatically refreshes booking tables when data changes
+ */
+function setupBookingsListener(callback) {
+  try {
+    const db = getDatabase();
+    if (!db) {
+      console.warn('Database not available for real-time listener');
+      return null;
+    }
+
+    const bookingsRef = ref(db, 'bookings');
+    
+    // Listen for changes
+    const unsubscribe = onValue(bookingsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const bookingsData = snapshot.val();
+        // Convert to array with IDs preserved
+        const bookingsArray = Object.keys(bookingsData).map(key => ({
+          id: key,
+          ...bookingsData[key]
+        }));
+        
+        // Update the global cache so getBookings() returns fresh data
+        updateBookingsCache(bookingsArray);
+        
+        // Call the callback with updated data
+        if (typeof callback === 'function') {
+          callback(bookingsArray);
+        }
+      } else {
+        console.log('[Real-time] No bookings data');
+        updateBookingsCache([]);
+        if (typeof callback === 'function') {
+          callback([]);
+        }
+      }
+    }, (error) => {
+      console.error('[Real-time] Error listening to bookings:', error);
+    });
+
+    // Return unsubscribe function
+    return unsubscribe;
+  } catch (error) {
+    console.error('Error setting up bookings listener:', error);
+    return null;
+  }
+}
+
+/**
+ * Remove/cleanup a real-time listener
+ */
+function removeListener(unsubscribe) {
+  if (typeof unsubscribe === 'function') {
+    unsubscribe();
+    console.log('[Real-time] Listener removed');
+  }
+}
+
+// Make available globally
+window.setupPackagesListener = setupPackagesListener;
+window.setupBookingsListener = setupBookingsListener;
+window.removeListener = removeListener;
+
+// ============================================
+// Payment Settings Functions
+// ============================================
+
+/**
+ * Get payment settings from Firebase
+ */
+async function getPaymentSettings() {
+  console.log('[getPaymentSettings] Fetching payment settings...');
+  try {
+    const db = getDatabase();
+    if (!db) {
+      console.log('[getPaymentSettings] No database, using localStorage');
+      // Fallback to localStorage
+      const settings = localStorage.getItem('paymentSettings');
+      console.log('[getPaymentSettings] localStorage settings:', settings);
+      return settings ? JSON.parse(settings) : null;
+    }
+
+    const settingsRef = ref(db, 'settings/payment');
+    const snapshot = await get(settingsRef);
+
+    if (snapshot.exists()) {
+      const settings = snapshot.val();
+      console.log('[getPaymentSettings] Firebase settings found:', settings);
+      // Cache in localStorage
+      localStorage.setItem('paymentSettings', JSON.stringify(settings));
+      return settings;
+    }
+
+    console.log('[getPaymentSettings] No settings in Firebase, checking localStorage');
+    // Try localStorage as fallback
+    const localSettings = localStorage.getItem('paymentSettings');
+    if (localSettings) {
+      console.log('[getPaymentSettings] Found in localStorage:', localSettings);
+      return JSON.parse(localSettings);
+    }
+
+    return null;
+  } catch (error) {
+    console.error('[getPaymentSettings] Error:', error);
+    // Fallback to localStorage
+    const settings = localStorage.getItem('paymentSettings');
+    console.log('[getPaymentSettings] Error fallback, localStorage:', settings);
+    return settings ? JSON.parse(settings) : null;
+  }
+}
+
+/**
+ * Save payment settings to Firebase
+ */
+async function savePaymentSettings(settings) {
+  console.log('[savePaymentSettings] Saving settings:', settings);
+  try {
+    const db = getDatabase();
+    if (!db) {
+      console.log('[savePaymentSettings] No database, using localStorage only');
+      // Fallback to localStorage
+      localStorage.setItem('paymentSettings', JSON.stringify(settings));
+      return true;
+    }
+
+    const settingsRef = ref(db, 'settings/payment');
+    await set(settingsRef, settings);
+
+    // Also cache in localStorage
+    localStorage.setItem('paymentSettings', JSON.stringify(settings));
+
+    console.log('[savePaymentSettings] Settings saved successfully to Firebase and localStorage');
+    return true;
+  } catch (error) {
+    console.error('[savePaymentSettings] Error:', error);
+    // Fallback to localStorage
+    localStorage.setItem('paymentSettings', JSON.stringify(settings));
+    console.log('[savePaymentSettings] Saved to localStorage as fallback');
+    return true;
+  }
+}
+
+// Make payment settings functions globally available
+// Note: Don't set window.savePaymentSettings here - that's handled by admin.js for form submission
+window.getPaymentSettings = getPaymentSettings;
+window.firebaseGetPaymentSettings = getPaymentSettings;
+window.firebaseSavePaymentSettings = savePaymentSettings;
+
 // Export for module use
 export {
   getCurrentUser,
@@ -598,6 +970,11 @@ export {
   getPackages,
   savePackages,
   getGroomers,
-  saveGroomers
+  saveGroomers,
+  setupPackagesListener,
+  setupBookingsListener,
+  removeListener,
+  getPaymentSettings,
+  savePaymentSettings
 };
 

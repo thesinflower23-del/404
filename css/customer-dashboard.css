@@ -2,6 +2,99 @@
    BestBuddies Pet Grooming - Customer Dashboard Styles
    ============================================ */
 
+/* ============================================
+   Skeleton Loading Styles (Lazy Loading)
+   ============================================ */
+
+/* Base Skeleton Animation */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Skeleton Stat Card */
+.skeleton-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+}
+
+.skeleton-stat-number {
+  height: 36px;
+  width: 60px;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-stat-label {
+  height: 14px;
+  width: 80px;
+}
+
+/* Skeleton Booking Card */
+.skeleton-booking {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.skeleton-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-booking-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeleton-text {
+  height: 16px;
+}
+
+.skeleton-text.short { width: 40%; }
+.skeleton-text.medium { width: 60%; }
+.skeleton-text.long { width: 90%; }
+
+/* Fade in animation for loaded content */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hide skeleton when content is loaded */
+.skeleton-stat.loaded,
+.skeleton-booking.loaded {
+  display: none;
+}
+
+/* ============================================
+   Main Dashboard Styles
+   ============================================ */
+
 /* Full-width dashboard container override */
 #customerDashboard.container-lg {
   max-width: 100% !important;
@@ -466,10 +559,17 @@
   /* Dashboard header adjustments */
   .dashboard-header {
     flex-direction: column;
-    align-items: stretch !important;
+    align-items: center !important;
     gap: 1rem;
     padding: 1.25rem !important;
     text-align: center;
+  }
+
+  .dashboard-header > div {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .dashboard-header h1 {
@@ -481,8 +581,10 @@
   }
 
   .dashboard-header .btn {
-    width: 100%;
+    width: auto !important;
+    min-width: 200px;
     text-align: center;
+    margin: 0 auto;
   }
 
   /* Quick Stats */
@@ -612,14 +714,17 @@
   /* Dashboard header adjustments */
   .dashboard-header {
     flex-direction: column;
-    align-items: flex-start !important;
+    align-items: center !important;
     gap: 1rem;
     padding: 1.25rem !important;
+    text-align: center;
   }
 
   .dashboard-header .btn {
-    width: 100%;
+    width: auto !important;
+    min-width: 200px;
     text-align: center;
+    margin: 0 auto;
   }
 }
 
@@ -1039,3 +1144,870 @@
   }
 }
 
+
+/* ============================================
+   BOOKING NOTIFICATION TOAST ANIMATIONS
+   ============================================ */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.booking-notification-toast {
+  animation: slideInRight 0.3s ease-out;
+}
+
+
+/* ============================================
+   CUSTOMER NOTIFICATION BELL STYLES
+   ============================================ */
+@keyframes bellShake {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(15deg); }
+  40% { transform: rotate(-15deg); }
+  60% { transform: rotate(10deg); }
+  80% { transform: rotate(-10deg); }
+}
+
+#customerNotificationBell {
+  transition: transform 0.2s ease;
+}
+
+#customerNotificationBell:hover {
+  transform: scale(1.1);
+}
+
+#customerNotificationBell:hover i {
+  color: var(--primary) !important;
+}
+
+#customerNotificationBadge {
+  animation: pulse 2s infinite;
+}
+
+#customerNotificationPanel {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDownCustomer {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile responsive for notification panel */
+@media (max-width: 768px) {
+  #customerNotificationPanel {
+    width: calc(100% - 40px) !important;
+    right: 20px !important;
+    left: 20px !important;
+  }
+}
+/* ============================================
+   Customer Notification Bell in Header
+   ============================================ */
+
+/* Desktop notification bell styling */
+#customerNotificationBell {
+  transition: all 0.3s ease;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+#customerNotificationBell:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: scale(1.1);
+}
+
+#customerNotificationBell i {
+  transition: color 0.3s ease;
+}
+
+#customerNotificationBell:hover i {
+  color: var(--primary) !important;
+}
+
+/* Mobile notification bell styling */
+#customerNotificationBellMobile {
+  transition: all 0.3s ease;
+  border-radius: var(--radius-sm);
+}
+
+#customerNotificationBellMobile:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Bell shake animation */
+@keyframes bellShake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+}
+
+/* Notification badge positioning */
+#customerNotificationBadge,
+#customerNotificationBadgeMobile {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  /* Notification panel - bottom sheet overlay above content */
+  #customerNotificationPanel {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 60px !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 55vh !important;
+    border-radius: 16px 16px 0 0 !important;
+    z-index: 99999 !important;
+    box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.25) !important;
+    animation: slideUpPanel 0.3s ease-out !important;
+  }
+  
+  #customerNotificationPanel > div:first-child {
+    border-radius: 16px 16px 0 0 !important;
+  }
+  
+  #customerNotificationList {
+    max-height: calc(55vh - 60px) !important;
+  }
+  
+  @keyframes slideUpPanel {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+
+/* ============================================
+   BOTTOM NAVIGATION - Mobile Only
+   ============================================ */
+
+/* ============================================
+   LIVE COUNTDOWN BANNER (All Screen Sizes)
+   ============================================ */
+.mobile-countdown-banner {
+  display: block;
+  background: linear-gradient(135deg, #ffe0b2 0%, #ffcc80 100%);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hide when JS sets display: none */
+.mobile-countdown-banner[style*="display: none"] {
+  display: none !important;
+}
+
+.mobile-countdown-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+}
+
+.mobile-countdown-banner.pending {
+  background: linear-gradient(135deg, #ffe0b2 0%, #ffcc80 100%);
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.2);
+}
+
+.mobile-countdown-banner.urgent {
+  background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%);
+  box-shadow: 0 4px 15px rgba(244, 67, 54, 0.2);
+  animation: urgentPulse 2s ease-in-out infinite;
+}
+
+@keyframes urgentPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.01); }
+}
+
+.countdown-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+
+.countdown-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.countdown-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.countdown-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.countdown-pet {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e65100;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-countdown-banner.pending .countdown-pet {
+  color: #e65100;
+}
+
+.mobile-countdown-banner.urgent .countdown-pet {
+  color: #b71c1c;
+}
+
+.countdown-timer {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.countdown-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 32px;
+}
+
+.countdown-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #e65100;
+  line-height: 1;
+  font-family: 'Inter', monospace;
+}
+
+.mobile-countdown-banner.pending .countdown-value {
+  color: #e65100;
+}
+
+.mobile-countdown-banner.urgent .countdown-value {
+  color: #c62828;
+}
+
+.countdown-unit {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.countdown-separator {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.3);
+  margin: 0 0.1rem;
+  align-self: flex-start;
+  margin-top: 0.1rem;
+}
+
+.countdown-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f57c00;
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+.mobile-countdown-banner.pending .status-dot {
+  background: #f57c00;
+}
+
+.mobile-countdown-banner.urgent .status-dot {
+  background: #d32f2f;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.9); }
+}
+
+#countdownStatusText {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Mobile adjustments for countdown banner */
+@media (max-width: 768px) {
+  .mobile-countdown-banner {
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+  }
+  
+  .countdown-icon {
+    font-size: 1.75rem;
+  }
+  
+  .countdown-pet {
+    font-size: 0.95rem;
+  }
+  
+  .countdown-value {
+    font-size: 1.1rem;
+  }
+  
+  /* Fix hamburger menu button - bordered style with lines */
+  body.customer-dashboard-page header .menu-toggle,
+  body:has(#customerDashboard) header .menu-toggle {
+    background: transparent !important;
+    color: #000 !important;
+    border: 2px solid #000 !important;
+    border-radius: 6px !important;
+    font-size: 1.5rem !important;
+    padding: 0.3rem 0.5rem !important;
+    line-height: 1 !important;
+  }
+  
+  body.customer-dashboard-page header .menu-toggle:hover,
+  body:has(#customerDashboard) header .menu-toggle:hover {
+    background: rgba(0, 0, 0, 0.05) !important;
+  }
+  
+  /* Semi-transparent mobile drawer - frosted glass effect */
+  body.customer-dashboard-page .mobile-drawer,
+  body:has(#customerDashboard) .mobile-drawer {
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(25px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(25px) saturate(180%) !important;
+    width: 200px !important;
+    max-width: 60vw !important;
+  }
+  
+  /* Make drawer header also transparent */
+  body.customer-dashboard-page .mobile-drawer-header,
+  body:has(#customerDashboard) .mobile-drawer-header {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+    padding: 0.75rem 1rem !important;
+  }
+  
+  /* Hide logo text in drawer - only show logo image */
+  body.customer-dashboard-page .mobile-drawer-header .logo-text,
+  body:has(#customerDashboard) .mobile-drawer-header .logo-text {
+    display: none !important;
+  }
+  
+  /* Make drawer links compact */
+  body.customer-dashboard-page .mobile-drawer-links,
+  body:has(#customerDashboard) .mobile-drawer-links {
+    background: transparent !important;
+    padding: 0.75rem !important;
+  }
+  
+  body.customer-dashboard-page .mobile-drawer-links li a,
+  body:has(#customerDashboard) .mobile-drawer-links li a {
+    background: transparent !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1.1rem !important;
+    font-weight: 500 !important;
+  }
+  
+  /* Blurred overlay when drawer is open */
+  body.customer-dashboard-page .mobile-drawer-overlay.active,
+  body:has(#customerDashboard) .mobile-drawer-overlay.active {
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(5px) !important;
+    -webkit-backdrop-filter: blur(5px) !important;
+  }
+}
+
+/* ============================================
+   MOBILE NOTIFICATION BAR
+   ============================================ */
+.mobile-notification-bar {
+  display: none;
+  background: var(--white);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--gray-200);
+  cursor: pointer;
+  position: relative;
+  z-index: 10;
+}
+
+.notification-bar-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+}
+
+.notification-bar-content:active {
+  transform: scale(0.98);
+}
+
+.notification-bar-icon {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notification-bar-icon i {
+  font-size: 1.1rem;
+  color: #f57c00;
+}
+
+.notification-bar-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #dc3545;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 10px;
+  min-width: 16px;
+  text-align: center;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.notification-bar-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-bar-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.notification-bar-preview {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.1rem;
+}
+
+.notification-bar-arrow {
+  color: var(--gray-400);
+  font-size: 1rem;
+}
+
+/* Has notifications state */
+.mobile-notification-bar.has-notifications .notification-bar-icon {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+}
+
+.mobile-notification-bar.has-notifications .notification-bar-icon i {
+  color: #d32f2f;
+  animation: bellRing 0.5s ease-in-out;
+}
+
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(10deg); }
+  75% { transform: rotate(-10deg); }
+}
+
+.mobile-notification-bar.has-notifications .notification-bar-preview {
+  color: #d32f2f;
+  font-weight: 500;
+}
+
+/* Show notification bar only on mobile */
+@media (max-width: 768px) {
+  .mobile-notification-bar {
+    display: block;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 380px) {
+  .countdown-content {
+    flex-wrap: wrap;
+  }
+  
+  .countdown-timer {
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
+  
+  .countdown-info {
+    flex: 1;
+  }
+}
+
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border-top: 1px solid var(--gray-200);
+  padding: 0.5rem 0;
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  z-index: 1000;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.bottom-nav-items {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bottom-nav-items li {
+  flex: 1;
+}
+
+.bottom-nav-items a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.5rem;
+  color: var(--gray-600);
+  text-decoration: none;
+  font-size: 0.65rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.bottom-nav-items a i {
+  font-size: 1.3rem;
+  transition: transform 0.2s ease;
+}
+
+.bottom-nav-items a.active {
+  color: var(--purple, #7c3aed);
+}
+
+.bottom-nav-items a.active i {
+  transform: scale(1.15);
+}
+
+.bottom-nav-items a:hover {
+  color: var(--purple, #7c3aed);
+}
+
+/* Show bottom nav on mobile, hide sidebar menu */
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: block;
+  }
+
+  /* Hide the sidebar menu (navigation list) on mobile - bottom nav replaces it */
+  .customer-layout .sidebar .sidebar-menu {
+    display: none !important;
+  }
+
+  /* Show left sidebar on mobile - but only the countdown will be visible */
+  .customer-layout .sidebar:first-child {
+    display: block !important;
+    position: relative !important;
+    top: auto !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    margin-bottom: 0 !important;
+  }
+  
+  /* Sidebar countdown - JS controls display via inline style */
+  .customer-layout .sidebar:first-child .sidebar-countdown {
+    margin: 0 0 1rem 0;
+  }
+
+  /* Adjust main content padding for bottom nav */
+  .customer-layout {
+    padding-bottom: 80px !important;
+  }
+
+  /* Hide right sidebar on mobile too for cleaner look */
+  .customer-layout .sidebar:last-child {
+    display: none !important;
+  }
+
+  footer {
+    padding-bottom: 90px !important;
+  }
+}
+
+
+/* ============================================
+   LIVE COUNTDOWN TIMER STYLES
+   ============================================ */
+.live-countdown-container {
+  transition: all 0.3s ease;
+}
+
+.live-countdown-container.urgent {
+  animation: urgentCountdownPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes urgentCountdownPulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(198, 40, 40, 0.2);
+  }
+  50% { 
+    transform: scale(1.01);
+    box-shadow: 0 4px 12px rgba(198, 40, 40, 0.3);
+  }
+}
+
+.live-countdown-timer {
+  font-variant-numeric: tabular-nums;
+}
+
+.live-countdown-timer span[class^="countdown-"] {
+  transition: all 0.2s ease;
+}
+
+/* Tick animation for seconds */
+.live-countdown-container:not(.expired) .countdown-secs {
+  animation: tickPulse 1s ease-in-out infinite;
+}
+
+@keyframes tickPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Responsive adjustments for countdown */
+@media (max-width: 480px) {
+  .live-countdown-container {
+    padding: 0.6rem 0.75rem !important;
+  }
+  
+  .live-countdown-timer {
+    font-size: 0.95rem !important;
+  }
+  
+  .live-countdown-timer span[class^="countdown-"] {
+    padding: 0.2rem 0.3rem !important;
+    min-width: 24px !important;
+  }
+}
+
+
+/* ============================================
+   SIDEBAR LIVE COUNTDOWN (Mobile)
+   ============================================ */
+.sidebar-countdown {
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ffcc80;
+}
+
+.sidebar-countdown.urgent {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+  border-color: #ef9a9a;
+  animation: sidebarUrgentPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes sidebarUrgentPulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(198, 40, 40, 0.2); }
+  50% { box-shadow: 0 4px 16px rgba(198, 40, 40, 0.35); }
+}
+
+.sidebar-countdown-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-countdown-icon {
+  font-size: 1.25rem;
+}
+
+.sidebar-countdown-label {
+  font-weight: 700;
+  color: #e65100;
+  font-size: 0.9rem;
+}
+
+.sidebar-countdown.urgent .sidebar-countdown-label {
+  color: #c62828;
+}
+
+.sidebar-countdown-pet {
+  font-size: 0.85rem;
+  color: #5d4037;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.sidebar-countdown-timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-countdown-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  min-width: 42px;
+}
+
+.sidebar-countdown-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #e65100;
+  font-family: 'Inter', monospace;
+  line-height: 1;
+}
+
+.sidebar-countdown.urgent .sidebar-countdown-value {
+  color: #c62828;
+}
+
+.sidebar-countdown-unit {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+
+.sidebar-countdown-sep {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.3);
+  margin: 0 0.1rem;
+}
+
+.sidebar-countdown-expires {
+  font-size: 0.7rem;
+  color: rgba(0, 0, 0, 0.6);
+  text-align: center;
+}
+
+/* Tick animation for seconds */
+.sidebar-countdown:not(.expired) #sidebarCountdownSeconds {
+  animation: sidebarTickPulse 1s ease-in-out infinite;
+}
+
+@keyframes sidebarTickPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Sidebar countdown visibility - controlled by JS */
+/* On mobile: show only when JS sets display:block */
+/* On desktop: show in sidebar, on mobile: show in sidebar */
+@media (max-width: 768px) {
+  .sidebar-countdown {
+    /* Mobile: show in sidebar */
+  }
+}
+
+@media (min-width: 769px) {
+  .sidebar-countdown {
+    /* Desktop: also show in sidebar */
+  }
+}
