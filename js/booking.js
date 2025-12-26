@@ -1753,6 +1753,10 @@ function prevStep() {
   }
   lastNavigationTime = now;
   
+  // Clear submission lock when navigating back
+  isSubmittingBooking = false;
+  lastSubmitTime = 0;
+  
   if (currentStep > 1) {
     showStep(currentStep - 1);
   }
@@ -3399,6 +3403,24 @@ function enableSubmitButton() {
   // Sync form data first
   syncFormToBookingData();
   
+  // In reschedule mode, only require date and time to be changed
+  if (isRescheduleMode) {
+    const rescheduleValid = !!bookingData.date && !!bookingData.time;
+    
+    if (rescheduleValid) {
+      submitBtn.disabled = false;
+      submitBtn.removeAttribute('disabled');
+      submitBtn.textContent = 'Submit Reschedule';
+      submitBtn.style.opacity = '1';
+    } else {
+      submitBtn.disabled = true;
+      submitBtn.setAttribute('disabled', 'disabled');
+      submitBtn.textContent = 'Select date and time';
+      submitBtn.style.opacity = '0.5';
+    }
+    return;
+  }
+  
   // Check basic required fields
   const basicFieldsValid = 
     !!bookingData.petType &&
@@ -3914,6 +3936,18 @@ async function submitBooking(event) {
       return;
     }
 
+    // Validate that the selected date is not in the past
+    const selectedDate = new Date(bookingData.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+      customAlert.warning('Invalid Date', 'Please select a date in the future. You cannot book appointments for past dates.');
+      return;
+    }
+
     console.log('[submitBooking] Loading packages and creating booking...');
     const packages = await getPackages();
     const selectedPackage = packages.find(p => p.id === bookingData.packageId);
@@ -4042,26 +4076,42 @@ async function submitBooking(event) {
       booking.id = rescheduleData.originalBookingId;
       booking.status = 'pending'; // Reset to pending for admin approval
       
+      // IMPORTANT: Preserve the original customer's userId (don't use admin's userId)
+      // Get the original booking to preserve customer ownership
+      const bookings = await getBookings();
+      const originalBooking = bookings.find(b => b.id === rescheduleData.originalBookingId);
+      if (originalBooking && originalBooking.userId) {
+        booking.userId = originalBooking.userId; // Keep original customer's userId
+      }
+      
       // Update the existing booking
       if (typeof updateBooking === 'function') {
         await updateBooking(booking);
       } else {
         // fallback local update
-        const bookings = await getBookings();
-        const idx = bookings.findIndex(b => b.id === rescheduleData.originalBookingId);
+        const allBookings = await getBookings();
+        const idx = allBookings.findIndex(b => b.id === rescheduleData.originalBookingId);
         if (idx >= 0) {
-          bookings[idx] = booking;
-          await saveBookings(bookings);
+          allBookings[idx] = booking;
+          await saveBookings(allBookings);
         }
       }
       
       // Log the reschedule action
       if (typeof logBookingHistory === 'function') {
+        const actor = rescheduleData.rescheduleBy === 'admin' ? 'Admin' : 'Customer';
+        
+        // Format dates and times for display
+        const oldDateFormatted = typeof formatDate === 'function' ? formatDate(rescheduleData.currentDate) : rescheduleData.currentDate;
+        const newDateFormatted = typeof formatDate === 'function' ? formatDate(booking.date) : booking.date;
+        const oldTimeFormatted = rescheduleData.currentTime || '';
+        const newTimeFormatted = booking.time || '';
+        
         logBookingHistory({
           bookingId: booking.id,
           action: 'Rescheduled',
-          message: `Rescheduled from ${rescheduleData.currentDate} ${rescheduleData.currentTime} to ${booking.date} ${booking.time}`,
-          actor: 'Admin'
+          message: `Rescheduled from ${oldDateFormatted} (${oldTimeFormatted}) to ${newDateFormatted} (${newTimeFormatted})`,
+          actor: actor
         });
       }
       
@@ -4071,14 +4121,34 @@ async function submitBooking(event) {
       // Hide loading overlay
       if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
       
-      // Show success and redirect back to admin
+      // Show success message
       await customAlert.success('Booking Rescheduled', `${booking.petName}'s appointment has been rescheduled successfully.`);
       
-      // Mark as redirecting to prevent leave site warning
-      isRedirecting = true;
-      window.removeEventListener('beforeunload', preventNavigation);
+      // Determine where to redirect based on who initiated the reschedule
+      const rescheduleBy = rescheduleData.rescheduleBy || 'customer';
       
-      window.location.href = 'admin-dashboard.html';
+      if (rescheduleBy === 'admin') {
+        // Admin reschedule - redirect to admin dashboard
+        isRedirecting = true;
+        window.removeEventListener('beforeunload', preventNavigation);
+        window.location.href = 'admin-dashboard.html';
+      } else {
+        // Customer reschedule - show step 4 (date/time) to confirm the new selection
+        // Clear submission lock BEFORE navigating to step 4
+        isSubmittingBooking = false;
+        lastSubmitTime = 0;
+        
+        currentStep = 4;
+        showStep(4);
+        
+        // Show confirmation message
+        customAlert.success('Reschedule Confirmed', `Your appointment has been rescheduled to ${formatDate(booking.date)} at ${formatTime(booking.time)}`);
+        
+        // Clear reschedule mode
+        isRescheduleMode = false;
+        sessionStorage.removeItem('rescheduleData');
+        sessionStorage.removeItem('mode');
+      }
       return;
     }
 

@@ -3587,6 +3587,7 @@ async function openRescheduleModal(bookingId) {
   // Store the booking data for reschedule in sessionStorage
   const rescheduleData = {
     isReschedule: true,
+    rescheduleBy: 'admin', // Mark that admin is rescheduling
     originalBookingId: booking.id,
     customerName: booking.customerName,
     customerEmail: booking.customerEmail,

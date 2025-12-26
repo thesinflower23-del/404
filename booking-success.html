@@ -102,24 +102,43 @@
               </div>
             </div>
 
-            <!-- Payment Button - Only Pay Now -->
+            <!-- Payment Buttons - Pay Now and Pay Later Options -->
             <div style="display: flex; gap: 1rem; flex-wrap: wrap;" id="paymentButtons">
-              <button class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1rem;" onclick="handlePayNow()">
-                💰 Upload Payment Proof
+              <button class="btn btn-primary" style="flex: 1; min-width: 200px; padding: 1rem; font-size: 1rem;" onclick="handlePayNow()">
+                💰 Pay Now - Upload Proof
+              </button>
+              <button class="btn btn-outline" style="flex: 1; min-width: 200px; padding: 1rem; font-size: 1rem;" onclick="handlePayLater()">
+                ⏰ Pay Later 
               </button>
             </div>
 
             <!-- Upload Proof Section (hidden by default) -->
-            <div id="uploadProofSection" style="display: none; margin-top: 1.5rem; padding: 1rem; background: #e8f5e9; border-radius: 8px; border: 2px solid #4CAF50;">
-              <p style="font-weight: 600; color: #2e7d32; margin-bottom: 1rem;">📤 Upload Proof of Payment</p>
-              <input type="file" id="proofOfPaymentInput" accept="image/*" style="margin-bottom: 1rem; width: 100%;">
-              <div id="proofPreview" style="display: none; margin-bottom: 1rem; text-align: center;">
-                <img id="proofPreviewImg" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid #4CAF50;">
+            <div id="uploadProofSection" style="display: none; margin-top: 1.5rem; padding: 1.5rem; background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-radius: 12px; border: 2px solid #4CAF50;">
+              <p style="font-weight: 600; color: #2e7d32; margin-bottom: 1.5rem; font-size: 1.1rem;">📤 Upload Proof of Payment</p>
+              
+              <!-- File Input with Custom Styling -->
+              <div style="margin-bottom: 1.5rem;">
+                <input type="file" id="proofOfPaymentInput" accept="image/*" style="display: none;" onchange="handleProofFileSelect(this)">
+                <button type="button" onclick="document.getElementById('proofOfPaymentInput').click()" 
+                  style="width: 100%; padding: 1rem; background: white; border: 2px dashed #4CAF50; border-radius: 8px; cursor: pointer; font-weight: 600; color: #2e7d32; font-size: 1rem; transition: all 0.3s ease;">
+                  📁 Choose Payment Proof Image
+                </button>
+                <p style="font-size: 0.85rem; color: #2e7d32; margin-top: 0.5rem; text-align: center;">JPG, PNG, or GIF (Max 10MB)</p>
               </div>
-              <button class="btn btn-primary" style="width: 100%;" onclick="submitProofOfPayment()" id="submitProofBtn">
+              
+              <!-- Image Preview -->
+              <div id="proofPreview" style="display: none; margin-bottom: 1.5rem; text-align: center;">
+                <p style="font-size: 0.9rem; color: #2e7d32; margin-bottom: 0.75rem; font-weight: 500;">Preview:</p>
+                <div style="background: white; padding: 1rem; border-radius: 8px; display: inline-block;">
+                  <img id="proofPreviewImg" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid #4CAF50;">
+                </div>
+              </div>
+              
+              <!-- Submit Button -->
+              <button class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600;" onclick="submitProofOfPayment()" id="submitProofBtn">
                 ✅ Submit Payment Proof
               </button>
-              <p style="font-size: 0.85rem; color: var(--gray-600); margin-top: 0.75rem; text-align: center;">
+              <p style="font-size: 0.85rem; color: #2e7d32; margin-top: 1rem; text-align: center; font-weight: 500;">
                 After uploading, your booking will be confirmed once we verify the payment.
               </p>
             </div>
@@ -132,7 +151,7 @@
             <div style="margin-bottom: 0.75rem;"> No refunds for no-shows. Rescheduling requires a new booking.</div>
             <div style="margin-bottom: 0.75rem;"> Three warnings = close monitoring. Five warnings trigger an automatic
               temporary ban.</div>
-            <div style="margin-bottom: 0.75rem;"> Need to lift a ban? Visit the shop or email hello@bestbuddies.pet with
+            <div style="margin-bottom: 0.75rem;"> Need to lift a ban? Visit the shop or email yenspetshop@gmail.com with
               proof of payment.</div>
           </div>
           <div style="margin-top: 1.5rem; padding: 1rem; background: var(--gray-100); border-radius: var(--radius-sm);">
@@ -212,25 +231,22 @@
       if (paymentButtons) paymentButtons.style.display = 'none';
       if (countdownSection) countdownSection.style.display = 'none';
       if (uploadSection) uploadSection.style.display = 'block';
-      
-      // Setup file input preview
-      const fileInput = document.getElementById('proofOfPaymentInput');
-      if (fileInput) {
-        fileInput.addEventListener('change', function(e) {
-          const file = e.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-              const preview = document.getElementById('proofPreview');
-              const previewImg = document.getElementById('proofPreviewImg');
-              if (preview && previewImg) {
-                previewImg.src = event.target.result;
-                preview.style.display = 'block';
-              }
-            };
-            reader.readAsDataURL(file);
+    }
+
+    // Handle proof file selection and preview
+    function handleProofFileSelect(fileInput) {
+      const file = fileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const preview = document.getElementById('proofPreview');
+          const previewImg = document.getElementById('proofPreviewImg');
+          if (preview && previewImg) {
+            previewImg.src = event.target.result;
+            preview.style.display = 'block';
           }
-        });
+        };
+        reader.readAsDataURL(file);
       }
     }
 
@@ -434,10 +450,10 @@
         let imageUrl = null;
         if (typeof uploadImageToCloudinary === 'function') {
           imageUrl = await uploadImageToCloudinary(file, 'payment-proofs');
-          console.log('[PaymentProof] Uploaded to Cloudinary:', imageUrl);
+          console.log('[PaymentProof] Uploading:', imageUrl);
         } else {
           // Fallback to base64 if Cloudinary not available
-          console.warn('[PaymentProof] Cloudinary not available, using base64');
+          console.warn('[PaymentProof] Upload Failed, using base64');
           imageUrl = await new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = (e) => resolve(e.target.result);

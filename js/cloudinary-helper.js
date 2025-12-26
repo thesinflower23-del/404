@@ -130,6 +130,33 @@ async function uploadProfilePicture(imageFile) {
 }
 
 /**
+ * Upload before grooming image
+ * @param {File} imageFile - Before grooming image
+ * @returns {Promise<string>} - Cloudinary URL
+ */
+async function uploadBeforeImage(imageFile) {
+  return await uploadImageToCloudinary(imageFile, 'grooming-before-after/before');
+}
+
+/**
+ * Upload after grooming image
+ * @param {File} imageFile - After grooming image
+ * @returns {Promise<string>} - Cloudinary URL
+ */
+async function uploadAfterImage(imageFile) {
+  return await uploadImageToCloudinary(imageFile, 'grooming-before-after/after');
+}
+
+/**
+ * Upload payment QR code
+ * @param {File} imageFile - Payment QR code image
+ * @returns {Promise<string>} - Cloudinary URL
+ */
+async function uploadPaymentQR(imageFile) {
+  return await uploadImageToCloudinary(imageFile, 'payment-qr-codes');
+}
+
+/**
  * Generate optimized Cloudinary URL
  * @param {string} publicId - Cloudinary public ID
  * @param {Object} options - Transformation options
@@ -194,6 +221,9 @@ window.compressImage = compressImage;
 window.uploadVaccinationProof = uploadVaccinationProof;
 window.uploadGroomingReference = uploadGroomingReference;
 window.uploadProfilePicture = uploadProfilePicture;
+window.uploadBeforeImage = uploadBeforeImage;
+window.uploadAfterImage = uploadAfterImage;
+window.uploadPaymentQR = uploadPaymentQR;
 window.getOptimizedImageUrl = getOptimizedImageUrl;
 window.handleImageUpload = handleImageUpload;
 window.CLOUDINARY_CONFIG = CLOUDINARY_CONFIG;

@@ -242,7 +242,53 @@ async function loadQuickStatsWithAnimation() {
   const bookings = customerBookingsCache || [];
   const totalBookings = bookings.length;
   const cancelledStatuses = ['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'];
-  const pendingBookings = bookings.filter(b => (b.status || '').toLowerCase() === 'pending').length;
+  
+  // Filter pending bookings - exclude expired ones
+  const pendingBookings = bookings.filter(b => {
+    if (normalizeStatus(b.status) !== 'pending') return false;
+    
+    // Check if booking is expired (past appointment time)
+    if (b.date && b.time) {
+      const bookingDate = new Date(b.date);
+      const now = new Date();
+      
+      // Parse time to get hours and minutes - handle both range (12pm-3pm) and single time (2:00 PM)
+      let bookingHour = 0;
+      let bookingMinute = 0;
+      
+      // First try to match time range format (e.g., "12pm-3pm" or "12 PM - 3 PM")
+      const rangeMatch = (b.time || '').match(/(\d{1,2})\s*(am|pm)?\s*[-–]\s*(\d{1,2})\s*(am|pm)?/i);
+      if (rangeMatch) {
+        // For range, use the END time to determine expiration
+        bookingHour = parseInt(rangeMatch[3], 10);
+        bookingMinute = 0;
+        const endPeriod = rangeMatch[4] || rangeMatch[2] || 'pm';
+        const isPM = /pm/i.test(endPeriod);
+        if (isPM && bookingHour !== 12) bookingHour += 12;
+        else if (!isPM && bookingHour === 12) bookingHour = 0;
+      } else {
+        // Try single time format
+        const timeMatch = (b.time || '').match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/i);
+        if (timeMatch) {
+          bookingHour = parseInt(timeMatch[1], 10);
+          bookingMinute = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+          const isPM = /pm/i.test(b.time);
+          if (isPM && bookingHour !== 12) bookingHour += 12;
+          else if (!/pm/i.test(b.time) && /am/i.test(b.time) && bookingHour === 12) bookingHour = 0;
+        }
+      }
+      
+      bookingDate.setHours(bookingHour, bookingMinute, 0, 0);
+      
+      // If appointment time has passed, it's expired
+      if (now > bookingDate) {
+        return false; // Don't count as pending
+      }
+    }
+    
+    return true;
+  }).length;
+  
   const confirmedBookings = bookings.filter(b => {
     const s = (b.status || '').toLowerCase().replace(/\s+/g, '');
     return s === 'confirmed' || s === 'inprogress';
@@ -581,7 +627,53 @@ async function loadQuickStats() {
   const totalBookings = bookings.length;
   // Slots removed
   const cancelledStatuses = ['cancelled', 'cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'];
-  const pendingBookings = bookings.filter(b => normalizeStatus(b.status) === 'pending').length;
+  
+  // Filter pending bookings - exclude expired ones
+  const pendingBookings = bookings.filter(b => {
+    if (normalizeStatus(b.status) !== 'pending') return false;
+    
+    // Check if booking is expired (past appointment time)
+    if (b.date && b.time) {
+      const bookingDate = new Date(b.date);
+      const now = new Date();
+      
+      // Parse time to get hours and minutes - handle both range (12pm-3pm) and single time (2:00 PM)
+      let bookingHour = 0;
+      let bookingMinute = 0;
+      
+      // First try to match time range format (e.g., "12pm-3pm" or "12 PM - 3 PM")
+      const rangeMatch = (b.time || '').match(/(\d{1,2})\s*(am|pm)?\s*[-–]\s*(\d{1,2})\s*(am|pm)?/i);
+      if (rangeMatch) {
+        // For range, use the END time to determine expiration
+        bookingHour = parseInt(rangeMatch[3], 10);
+        bookingMinute = 0;
+        const endPeriod = rangeMatch[4] || rangeMatch[2] || 'pm';
+        const isPM = /pm/i.test(endPeriod);
+        if (isPM && bookingHour !== 12) bookingHour += 12;
+        else if (!isPM && bookingHour === 12) bookingHour = 0;
+      } else {
+        // Try single time format
+        const timeMatch = (b.time || '').match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/i);
+        if (timeMatch) {
+          bookingHour = parseInt(timeMatch[1], 10);
+          bookingMinute = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+          const isPM = /pm/i.test(b.time);
+          if (isPM && bookingHour !== 12) bookingHour += 12;
+          else if (!/pm/i.test(b.time) && /am/i.test(b.time) && bookingHour === 12) bookingHour = 0;
+        }
+      }
+      
+      bookingDate.setHours(bookingHour, bookingMinute, 0, 0);
+      
+      // If appointment time has passed, it's expired
+      if (now > bookingDate) {
+        return false; // Don't count as pending
+      }
+    }
+    
+    return true;
+  }).length;
+  
   const confirmedBookings = bookings.filter(b => normalizeStatus(b.status) === 'confirmed' || isInProgressStatus(b.status)).length;
   const cancelledBookings = bookings.filter(b => cancelledStatuses.includes(b.status)).length;
 
@@ -1956,6 +2048,12 @@ async function openBookingDetailModal(bookingId) {
         <button class="btn btn-outline" onclick="closeModal(); openBookingEditModal('${booking.id}')">Edit</button>
         <button class="btn btn-danger" onclick="closeModal(); startCancelBooking('${booking.id}')">Cancel</button>
       ` : ''}
+      ${booking.status === 'cancelledByCustomer' || booking.status === 'cancelledByAdmin' || booking.status === 'cancelledBySystem' ? `
+        <button class="btn btn-outline" onclick="closeModal(); openBookingEditModal('${booking.id}')">Reschedule</button>
+      ` : ''}
+      ${booking.status === 'confirmed' || booking.status === 'In Progress' ? `
+        <button class="btn btn-danger" onclick="closeModal(); startCancelBooking('${booking.id}')">Cancel</button>
+      ` : ''}
       <button class="btn btn-primary" onclick="closeModal()">Close</button>
     </div>
   `);
@@ -2009,8 +2107,23 @@ async function openBookingEditModal(bookingId) {
     // mark editing id so booking page can update existing booking instead of creating new
     sessionStorage.setItem('editingBookingId', booking.id);
     sessionStorage.setItem('bookingData', JSON.stringify(formData));
-    // go to review/summary step so user can edit fields or navigate steps
-    sessionStorage.setItem('bookingStep', '4');
+    
+    // Check if this is a reschedule (booking was cancelled)
+    const isCancelled = ['cancelledByCustomer', 'cancelledByAdmin', 'cancelledBySystem'].includes(booking.status);
+    if (isCancelled) {
+      // Set reschedule mode
+      const rescheduleData = {
+        ...formData,
+        rescheduleBy: 'customer' // Mark that customer is rescheduling
+      };
+      sessionStorage.setItem('rescheduleData', JSON.stringify(rescheduleData));
+      sessionStorage.setItem('mode', 'reschedule');
+      // Start from step 4 (schedule) to let customer pick new date/time
+      sessionStorage.setItem('bookingStep', '4');
+    } else {
+      // Regular edit mode - go to review/summary step
+      sessionStorage.setItem('bookingStep', '4');
+    }
 
     // navigate to booking page
     if (typeof redirect === 'function') redirect('booking.html');

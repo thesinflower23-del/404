@@ -1335,37 +1335,48 @@ async function checkAndCancelPendingBookings() {
       // ============================================
       // ❌ CANCEL BOOKING IF EXPIRED (Pay Later only)
       // ============================================
+      // BUT: Don't cancel if payment proof was submitted
+      // ============================================
       if (shouldCancel) {
-        booking.status = 'cancelledBySystem';
-        let reason;
-        if (booking.paymentChoice === 'payNow') {
-          reason = 'Pay Now booking expired - appointment time passed';
-        } else if (booking.paymentChoice === 'payLater') {
-          reason = 'Pay Later booking expired - payment not received before appointment time';
+        // Check if payment proof was submitted
+        const hasPaymentProof = booking.paymentProofUrl || booking.paymentProof;
+        
+        if (hasPaymentProof) {
+          // Payment proof submitted - don't auto-cancel, let admin review
+          console.log(`[AutoCancel] Booking ${booking.id} has payment proof - skipping auto-cancel, admin will review`);
         } else {
-          reason = 'Booking expired - no payment received before appointment time';
+          // No payment proof - proceed with cancellation
+          booking.status = 'cancelledBySystem';
+          let reason;
+          if (booking.paymentChoice === 'payNow') {
+            reason = 'Pay Now booking expired - appointment time passed';
+          } else if (booking.paymentChoice === 'payLater') {
+            reason = 'Pay Later booking expired - payment not received before appointment time';
+          } else {
+            reason = 'Booking expired - no payment received before appointment time';
+          }
+          booking.cancellationNote = `Auto-cancelled: ${reason}`;
+          booking.cancelledAt = Date.now();
+          hasChanges = true;
+          
+          // Track this booking to release its slot
+          cancelledBookings.push({
+            id: booking.id,
+            date: bookingDate,
+            time: bookingTime
+          });
+          
+          // Track for admin notification
+          autoCancelledBookings.push({
+            id: booking.id,
+            customerName: booking.customerName,
+            petName: booking.petName,
+            date: bookingDate,
+            time: bookingTime,
+            reason: reason,
+            cancelledAt: Date.now()
+          });
         }
-        booking.cancellationNote = `Auto-cancelled: ${reason}`;
-        booking.cancelledAt = Date.now();
-        hasChanges = true;
-        
-        // Track this booking to release its slot
-        cancelledBookings.push({
-          id: booking.id,
-          date: bookingDate,
-          time: bookingTime
-        });
-        
-        // Track for admin notification
-        autoCancelledBookings.push({
-          id: booking.id,
-          customerName: booking.customerName,
-          petName: booking.petName,
-          date: bookingDate,
-          time: bookingTime,
-          reason: reason,
-          cancelledAt: Date.now()
-        });
       }
     });
 
